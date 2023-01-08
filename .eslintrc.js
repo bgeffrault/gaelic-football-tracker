@@ -1,0 +1,25 @@
+module.exports = {
+  env: {
+    browser: true,
+    es2021: true,
+  },
+  extends: [
+    "plugin:react/recommended",
+    "airbnb",
+    "airbnb/hooks",
+    "eslint:recommended",
+    "prettier",
+  ],
+  overrides: [],
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
+  plugins: ["react", "react-native"],
+  rules: {
+    quotes: ["error", "double"],
+    react: {
+      reactInJsxScope: "off",
+    },
+  },
+};
