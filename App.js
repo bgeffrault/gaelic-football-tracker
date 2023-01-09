@@ -12,6 +12,7 @@ import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { FieldZone } from "./src/Components/FielZone";
 import field from "./assets/field.png";
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -24,7 +25,7 @@ export default function App() {
   );
 }
 
-const Home = () => {
+function Home() {
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
@@ -52,4 +53,4 @@ const Home = () => {
         /> */}
     </SafeAreaView>
   );
-};
+}

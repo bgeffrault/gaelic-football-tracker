@@ -11,12 +11,13 @@ export const ShootPoint = memo(({ x, y, disabled }) => {
   const pan = useRef(
     new Animated.ValueXY({ x, y }, { useNativeDriver: false })
   ).current;
-
+  const test = "";
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         pan.setOffset({
+          // eslint-disable-next-line no-underscore-dangle
           x: pan.x._value,
           y: pan.y._value,
         });

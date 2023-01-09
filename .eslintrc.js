@@ -3,13 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: [
-    "plugin:react/recommended",
-    "airbnb",
-    "airbnb/hooks",
-    "eslint:recommended",
-    "prettier",
-  ],
+  extends: ["plugin:react/recommended", "airbnb", "prettier"],
   overrides: [],
   parserOptions: {
     ecmaVersion: "latest",
@@ -17,9 +11,15 @@ module.exports = {
   },
   plugins: ["react", "react-native"],
   rules: {
+    "react/prop-types": "off",
+    "import/prefer-default-export": "off",
     quotes: ["error", "double"],
-    react: {
-      reactInJsxScope: "off",
-    },
+    "no-unused-vars": ["error", { ignoreRestSiblings: true }],
+    "comma-dangle": "off",
+    "no-underscore-dangle": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-filename-extension": "off",
+    "no-use-before-define": "warn",
+    "react/jsx-props-no-spreading": "off",
   },
 };
