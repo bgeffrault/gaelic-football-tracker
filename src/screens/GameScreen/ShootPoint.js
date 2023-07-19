@@ -7,11 +7,11 @@ const OPACITIES = {
   inactive: 0.8,
   disabled: 0.5,
 };
-export const ShootPoint = memo(({ x, y, disabled }) => {
+
+export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }) => {
   const pan = useRef(
     new Animated.ValueXY({ x, y }, { useNativeDriver: false })
   ).current;
-  const test = "";
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
@@ -22,10 +22,11 @@ export const ShootPoint = memo(({ x, y, disabled }) => {
           y: pan.y._value,
         });
       },
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-        useNativeDriver: false,
-      }),
-      onPanResponderRelease: (event) => {
+      onPanResponderMove: (e, gestureState) =>
+        Animated.event([null, { dx: pan.x, dy: pan.y }], {
+          useNativeDriver: false,
+        })(e, gestureState),
+      onPanResponderRelease: () => {
         pan.flattenOffset();
       },
     })
@@ -37,7 +38,22 @@ export const ShootPoint = memo(({ x, y, disabled }) => {
         position: "absolute",
         x: -POINT_SIZE / 2,
         y: -POINT_SIZE / 2,
-        transform: [{ translateX: pan.x }, { translateY: pan.y }],
+        transform: [
+          {
+            translateX: pan.x.interpolate({
+              inputRange: [0, fieldSize.width],
+              outputRange: [0, fieldSize.width],
+              extrapolate: "clamp",
+            }),
+          },
+          {
+            translateY: pan.y.interpolate({
+              inputRange: [0, fieldSize.height],
+              outputRange: [0, fieldSize.height],
+              extrapolate: "clamp",
+            }),
+          },
+        ],
         zIndex: 100,
         width: POINT_SIZE,
         height: POINT_SIZE,
@@ -52,7 +68,7 @@ export const ShootPoint = memo(({ x, y, disabled }) => {
           ],
           height: POINT_SIZE,
           width: POINT_SIZE,
-          backgroundColor: "blue",
+          backgroundColor: color,
           borderRadius: "50%",
           opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
           zIndex: 100,
