@@ -112,6 +112,14 @@ export function GameScreen({ navigation, route }) {
 
   return (
     <View className="flex-1">
+      <FieldZone
+        cn="mt-2"
+        addingScore={addingScore}
+        scoreAdded={setAddingScore}
+        teamState={teamAState}
+        updateTeamState={updateTeamAState}
+        gameId={game.id}
+      />
       <ScoreTable
         onTeamAScored={handleScored("A")}
         onTeamAMissed={handleMissed}
@@ -121,14 +129,6 @@ export function GameScreen({ navigation, route }) {
         teamAName="Rennes GAA"
         teamBName="Nantes A"
         result={result}
-      />
-      <FieldZone
-        cn="mt-2"
-        addingScore={addingScore}
-        scoreAdded={setAddingScore}
-        teamState={teamAState}
-        updateTeamState={updateTeamAState}
-        gameId={game.id}
       />
     </View>
   );
