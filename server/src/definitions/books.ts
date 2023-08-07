@@ -15,8 +15,10 @@ export const typeDefs = `#graphql
   # case, the "books" query returns an array of zero or more Books (defined above).
   type Query {
     books: [Book]
+    book: Book
   }
 `;
+
 const books = [
   {
     title: "The Awakening",
@@ -27,10 +29,12 @@ const books = [
     author: "Paul Auster",
   },
 ];
+
 // Resolvers define how to fetch the types defined in your schema.
 // This resolver retrieves books from the "books" array above.
 export const resolvers = {
   Query: {
     books: () => books,
+    book: () => books[0],
   },
 };
