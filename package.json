@@ -1,0 +1,12 @@
+{
+  "name": "gaelic-football-tracker",
+  "private": true,
+  "scripts": {
+    "start:client": "cd client && npm start",
+    "start:server": "cd server && npm start",
+    "start:both": "npm-run-all --parallel start:client start:server"
+  },
+  "devDependencies": {
+    "npm-run-all": "^9.8.1"
+  }
+}
