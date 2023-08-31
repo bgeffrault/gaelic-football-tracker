@@ -11,8 +11,10 @@ import { AddMember } from "./src/screens/AddMember";
 import { AddGame } from "./src/screens/AddGame";
 import { store } from "./src/stores/store";
 import { SelectPlayer } from "./src/screens/SelectPlayer";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const Stack = createNativeStackNavigator();
+const queryClient = new QueryClient();
 
 const defaultScreenOptions: NativeStackNavigationOptions = {
   headerStyle: {
@@ -29,6 +31,7 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
 
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <NavigationContainer>
         <Stack.Navigator
@@ -51,5 +54,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>
+    </QueryClientProvider>
   );
 }

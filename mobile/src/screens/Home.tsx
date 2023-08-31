@@ -11,10 +11,25 @@ import { gameResult, gameResultColors } from "../utils/gameResult";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { Game, Score } from "../domain/types";
+import { graphql } from "../gql/gql";
+
+const gamesQuery = graphql(/* GraphQL */ `
+  query gamesQuery($first: Int!) {
+    gamesCollection(first: $first) {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+`)
 
 export function Home({}: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
   const { gameList } = useAppSelector((state) => state.games);
+  
   const gamesInProgress = gameList.filter((game) => !game.gameEnded);
   const gamesEnded = gameList.filter((game) => game.gameEnded);
 
