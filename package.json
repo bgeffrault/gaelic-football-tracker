@@ -2,11 +2,23 @@
   "name": "gaelic-football-tracker",
   "private": true,
   "scripts": {
-    "start:client": "cd client && npm start",
-    "start:server": "cd server && npm start",
-    "start:both": "npm-run-all --parallel start:client start:server"
+    "start": "cd mobile && npm start",
+    "fetch-schema": "node --no-warnings scripts/fetchGraphQLSchema "
   },
   "devDependencies": {
-    "npm-run-all": "^9.8.1"
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/client-preset": "^4.1.0",
+    "@graphql-codegen/gql-tag-operations-preset": "^2.1.0",
+    "cross-undici-fetch": "^0.4.10",
+    "gradient-string": "^2.0.2",
+    "progress": "^2.0.3"
+  },
+  "description": "App that tracks gaelic football game data",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Baptiste Geffrault",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1"
   }
 }

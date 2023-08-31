@@ -2,11 +2,12 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import { View } from "react-native";
 import clsx from "clsx";
 import { AntDesign } from "@expo/vector-icons";
-import { useSelector } from "react-redux";
 import { FieldZone } from "./FielZone";
 import { StyledText } from "../../components/StyledText";
 import { CustomButton } from "../../components/CustomButton";
 import { gameResultColors } from "../../utils/gameResult";
+import { useAppSelector } from "../../stores/store";
+import { AppNavigationProp, AppRouteProp } from "../../navigators";
 
 const useScore = (teamState) =>
   useMemo(() => {
@@ -21,8 +22,7 @@ const useScore = (teamState) =>
       accuracy: Math.round(
         ((totalPoints + totalGoals) /
           (totalPoints + totalGoals + totalMissed + totalBlocked)) *
-          100,
-        0
+          100
       ),
     };
   }, [teamState]);
@@ -36,21 +36,21 @@ const useTeam = (initialState) =>
     initialState
   );
 
-const useGame = (route) => {
-  const gameId = route?.params?.gameId;
-  const game = useSelector((state) =>
+const useGame = (route: AppRouteProp<"Games">) => {
+  const gameId = route.params.gameId;
+  const game = useAppSelector((state) =>
     state.games.gameList.find((g) => g.id === gameId)
   );
   return game;
 };
 
-const useTeamName = () => useSelector((state) => state.club.teamName);
+const useTeamName = () => useAppSelector((state) => state.club.teamName);
 
-export function GameScreen({ navigation, route }) {
+export function GameScreen({ navigation, route }: AppNavigationProp<"Games">) {
   const game = useGame(route);
   const teamName = useTeamName();
 
-  const [addingScore, setAddingScore] = useState();
+  const [addingScore, setAddingScore] = useState<"points" | "goals" | "missed" | "blocked">();
   const [teamAState, updateTeamAState] = useTeam(game.teamsScore.us);
   const [teamBState, updateTeamBState] = useTeam(game.teamsScore.them);
 
@@ -108,7 +108,7 @@ export function GameScreen({ navigation, route }) {
     if (teamAScore.total > teamBScore.total) return "win";
     if (teamAScore.total < teamBScore.total) return "lose";
     return "draw";
-  });
+  }, [teamAScore, teamBScore]);
 
   return (
     <View className="flex-1">
@@ -193,7 +193,11 @@ function Timer() {
   );
 }
 
-function PointsControl({ onScored, onMissed, hideMissedButtons }) {
+function PointsControl({ onScored, onMissed, hideMissedButtons }: {
+  onScored: (score: number) => void;
+  onMissed?: (action: "missed" | "blocked") => void;
+  hideMissedButtons?: boolean;
+}) {
   return (
     <View>
       <View className="flex-row">

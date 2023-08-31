@@ -2,14 +2,14 @@ import { ScrollView, View } from "react-native";
 import { useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import clsx from "clsx";
-import { useSelector } from "react-redux";
 import { StyledText } from "../components/StyledText";
 
 import { CustomButton } from "../components/CustomButton";
+import { useAppSelector } from "../stores/store";
 
 export function SelectPlayer({ navigation, route }) {
   const gameId = route?.params?.gameId;
-  const { players } = useSelector((state) =>
+  const { players } = useAppSelector((state) =>
     state.games.gameList.find((g) => g.id === gameId)
   );
 
@@ -24,7 +24,6 @@ export function SelectPlayer({ navigation, route }) {
       {players.map((member, i, arr) => (
         <MemberItem
           key={member.id}
-          win={i % 2 === 0}
           first={i === 0}
           last={i === arr.length - 1}
           member={member}

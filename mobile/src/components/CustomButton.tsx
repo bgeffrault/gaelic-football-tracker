@@ -7,6 +7,12 @@ export function CustomButton({
   cn,
   children,
   variant = "text",
+}: {
+  disabled?: boolean;
+  onPress: () => void;
+  cn?: string;
+  children: React.ReactNode;
+  variant?: "iconButton" | "contained" | "text" | "outlined";
 }) {
   return (
     <TouchableOpacity

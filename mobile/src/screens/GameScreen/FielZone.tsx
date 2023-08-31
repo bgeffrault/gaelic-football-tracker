@@ -1,10 +1,10 @@
 import { View, PanResponder, Animated, Image } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 
 import clsx from "clsx";
 import { clone } from "lodash";
 import { ShootPoint } from "./ShootPoint";
 import { Field, Goal } from "../../../assets";
+import { useAppNavigation } from "../../navigators";
 
 export const FIELD_SIZE = {
   width: 350,
@@ -32,6 +32,9 @@ const addingShoot = (teamState, key, location) => {
   return shoots;
 };
 
+
+
+
 export function FieldZone({
   addingScore,
   scoreAdded,
@@ -40,7 +43,7 @@ export function FieldZone({
   updateTeamState,
   gameId,
 }) {
-  const navigation = useNavigation();
+  const navigation = useAppNavigation();
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,

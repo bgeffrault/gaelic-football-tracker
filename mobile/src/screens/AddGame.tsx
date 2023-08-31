@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
 import { LabelledTextInput } from "../components/StyledTextInput";
 import { Card } from "../components/Card";
@@ -13,14 +13,27 @@ import {
   setOpponentName,
 } from "../stores/slices/gameSlice";
 import { addGame, generateGameInitialState } from "../stores/slices/gamesSlice";
+import { useAppSelector } from "../stores/store";
 
 export function AddGame({ navigation }) {
-  const game = useSelector((state) => state.game);
+  const game = useAppSelector((state) => state.game);
   const { opponentName, duration, gameName, players, date } = game;
 
   const dispatch = useDispatch();
 
-  const fields = [
+  const fields: {
+    label: string;
+    placeholder?: string;
+    value: string | number | DateTime;
+    onChangeText?: (value: string) => void;
+    onPress?: () => void;
+    required: boolean;
+    type?: "select";
+    setDate?: (value: string) => void;
+    displayType?: "date" | "number";
+    keyboardType?: "number-pad" | "default";
+    inputType?: "number";
+  }[] = [
     {
       label: "Nom de l'équipe adverse",
       placeholder: "Nantes A",

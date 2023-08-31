@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
 import { createSlice } from "@reduxjs/toolkit";
+import { ClubType } from "../../domain/types";
 
-const initialState = {
+const initialState: ClubType = {
   members: [
     { firstName: "Jean", lastName: "Dupont", id: 1, categoryId: 1 },
     { firstName: "Jeff", lastName: "Dupont", id: 2, categoryId: 1 },
@@ -21,7 +22,7 @@ const clubSlice = createSlice({
       state.members.push({ ...action.payload, id: state.members.length + 1 });
     },
     removeMember: (state, action) => {
-      state.players = state.players.filter(
+      state.members = state.members.filter(
         (player) => player.id !== action.payload.id
       );
     },

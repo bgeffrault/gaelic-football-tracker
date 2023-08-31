@@ -1,7 +1,7 @@
 import { memo } from "react";
 import Checkbox from "expo-checkbox";
 
-export const CustomCheckbox = memo(({ isChecked, setChecked }) => (
+export const CustomCheckbox = memo(({ isChecked, setChecked }: { isChecked: boolean, setChecked: (value: boolean) => void}) => (
   <Checkbox
     value={isChecked}
     onValueChange={setChecked}

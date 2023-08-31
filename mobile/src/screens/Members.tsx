@@ -1,16 +1,20 @@
 import { View } from "react-native";
 import { memo, useEffect } from "react";
-import { useNavigation } from "@react-navigation/native";
 import clsx from "clsx";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
 import { CustomCheckbox } from "../components/CustomCheckbox";
 import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
+import { useAppSelector } from "../stores/store";
+import { useAppNavigation } from "../navigators";
+import { MemberType } from "../domain/types";
 
-const MembersHeaderButton = memo(({ selectMode }) => {
-  const navigation = useNavigation();
+const MembersHeaderButton = memo(({ selectMode }: {
+  selectMode: boolean;
+}) => {
+  const navigation = useAppNavigation();
 
   return selectMode ? (
     <CustomButton onPress={() => navigation.goBack()}>
@@ -22,7 +26,7 @@ const MembersHeaderButton = memo(({ selectMode }) => {
 });
 
 export function Members({ navigation, route }) {
-  const { members } = useSelector((state) => state.club);
+  const { members } = useAppSelector((state) => state.club);
   const mode = route.params?.mode;
   const selectMode = mode === "select";
   useEffect(() => {
@@ -37,7 +41,6 @@ export function Members({ navigation, route }) {
       {members.map((member, i, arr) => (
         <MemberItem
           key={member.id}
-          win={i % 2 === 0}
           first={i === 0}
           last={i === arr.length - 1}
           selectMode={selectMode}
@@ -48,9 +51,14 @@ export function Members({ navigation, route }) {
   );
 }
 
-function MemberItem({ member, first, last, selectMode }) {
+function MemberItem({ member, first, last, selectMode }: {
+  member: MemberType;
+  first: boolean;
+  last: boolean;
+  selectMode: boolean;
+}) {
   const isSelected = Boolean(
-    useSelector(
+    useAppSelector(
       (state) => state.game.players.filter((p) => p.id === member.id).length
     )
   );

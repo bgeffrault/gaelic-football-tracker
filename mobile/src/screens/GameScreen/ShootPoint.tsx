@@ -8,7 +8,13 @@ const OPACITIES = {
   disabled: 0.5,
 };
 
-export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }) => {
+export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }:{
+  x: number;
+  y: number;
+  disabled: boolean;
+  fieldSize: { width: number; height: number; };
+  color: string;
+}) => {
   const pan = useRef(
     new Animated.ValueXY({ x, y }, { useNativeDriver: false })
   ).current;
@@ -17,8 +23,9 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }) => {
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         pan.setOffset({
-          // eslint-disable-next-line no-underscore-dangle
+          // @ts-ignore
           x: pan.x._value,
+          // @ts-ignore
           y: pan.y._value,
         });
       },
@@ -36,6 +43,7 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }) => {
     <Animated.View
       style={{
         position: "absolute",
+        // @ts-ignore
         x: -POINT_SIZE / 2,
         y: -POINT_SIZE / 2,
         transform: [
@@ -69,7 +77,7 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }) => {
           height: POINT_SIZE,
           width: POINT_SIZE,
           backgroundColor: color,
-          borderRadius: "50%",
+          borderRadius: "50%" as unknown as number, // Check it works
           opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
           zIndex: 100,
         }}

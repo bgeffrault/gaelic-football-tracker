@@ -4,7 +4,7 @@ import { TextInput, View } from "react-native";
 import { CustomButton } from "./CustomButton";
 import { StyledText } from "./StyledText";
 
-export function StyledTextInput({ cn, ...props }) {
+export function StyledTextInput({ cn, ...props } : { cn?: string } & React.ComponentProps<typeof TextInput>) {
   return (
     <TextInput
       className={clsx(
@@ -17,7 +17,12 @@ export function StyledTextInput({ cn, ...props }) {
 }
 
 export const LabelledTextInput = memo(
-  ({ label, buttonProps, inputProps, cn }) => (
+  ({ label, buttonProps, inputProps, cn }: {
+    label: string;
+    buttonProps?: Omit<React.ComponentProps<typeof CustomButton>, "children">;
+    inputProps: React.ComponentProps<typeof StyledTextInput>;
+    cn?: string;
+  }) => (
     <View className={clsx("justify-center items-start flex", cn)}>
       <StyledText cn="text-lg">{label}</StyledText>
       <View className="flex-row justify-center items-center">

@@ -1,5 +1,6 @@
+import React from 'react';
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { NativeStackNavigationOptions, createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Provider } from "react-redux";
 import { Home } from "./src/screens/Home";
 // import { Login } from "./src/screens/Login";
@@ -13,7 +14,7 @@ import { SelectPlayer } from "./src/screens/SelectPlayer";
 
 const Stack = createNativeStackNavigator();
 
-const defaultScreenOptions = {
+const defaultScreenOptions: NativeStackNavigationOptions = {
   headerStyle: {
     backgroundColor: "#df8c5f",
   },
@@ -39,7 +40,7 @@ export default function App() {
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="CreateClub" component={CreateClub} />
             <Stack.Screen name="Members" component={Members} />
-            <Stack.Screen name="New game" component={AddGame} />
+            <Stack.Screen name="NewGame" component={AddGame} />
             <Stack.Screen name="Game" component={GameScreen} />
           </Stack.Group>
           <Stack.Group screenOptions={{ presentation: "modal" }}>

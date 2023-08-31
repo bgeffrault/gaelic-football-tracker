@@ -4,8 +4,9 @@ import { CustomButton } from "../components/CustomButton";
 import { Card } from "../components/Card";
 import { StyledText } from "../components/StyledText";
 import { LabelledTextInput } from "../components/StyledTextInput";
+import { AppNavigationProp } from "../navigators";
 
-export function Login({ navigation }) {
+export function Login({ navigation }: AppNavigationProp<"Login">) {
   const [clubId, setClubId] = useState("");
   const disabled = !clubId;
 
@@ -17,7 +18,7 @@ export function Login({ navigation }) {
 
   return (
     <View className="flex-1 justify-center items-center">
-      <Card className="">
+      <Card>
         <LabelledTextInput
           label="Rejoindre un club"
           inputProps={{
@@ -34,7 +35,7 @@ export function Login({ navigation }) {
           style={{
             marginVertical: 8,
             borderBottomColor: "#737373",
-            borderBottomWidth: "2px",
+            borderBottomWidth: "2px" as any,
           }}
         />
         <View className="justify-center items-start mt-4">
@@ -42,7 +43,7 @@ export function Login({ navigation }) {
             variant="text"
             onPress={() => navigation.navigate("CreateClub")}
           >
-            <StyledText className="text-lg">Créer un club →</StyledText>
+            <StyledText cn="text-lg">Créer un club →</StyledText>
           </CustomButton>
         </View>
       </Card>

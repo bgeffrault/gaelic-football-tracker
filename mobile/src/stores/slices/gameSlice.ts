@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   players: [],
   opponentName: "",
-  duration: "60",
+  duration: 60,
   gameName: "",
   date: new Date().toISOString(),
 };

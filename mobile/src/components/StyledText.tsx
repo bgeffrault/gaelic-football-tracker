@@ -6,7 +6,7 @@ import clsx from "clsx";
 
 SplashScreen.preventAutoHideAsync();
 
-export function StyledText({ children, cn }) {
+export function StyledText({ children, cn }: { children: React.ReactNode, cn?: string }) {
   const [fontsLoaded] = useFonts({
     // eslint-disable-next-line global-require
     "Lexend-Regular": require("../../assets/fonts/Lexend-Regular.ttf"),

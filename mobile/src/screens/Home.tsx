@@ -1,8 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
 import clsx from "clsx";
 import { useEffect } from "react";
 import { ScrollView, View } from "react-native";
-import { useSelector } from "react-redux";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
@@ -10,17 +8,20 @@ import { StyledText } from "../components/StyledText";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
 import { sumScore } from "../utils/sumScore";
 import { gameResult, gameResultColors } from "../utils/gameResult";
+import { useAppSelector } from "../stores/store";
+import { AppNavigationProp, useAppNavigation } from "../navigators";
+import { Game, Score } from "../domain/types";
 
-export function Home() {
-  const navigation = useNavigation();
-  const { gameList } = useSelector((state) => state.games);
+export function Home({}: AppNavigationProp<"Home">) {
+  const navigation = useAppNavigation();
+  const { gameList } = useAppSelector((state) => state.games);
   const gamesInProgress = gameList.filter((game) => !game.gameEnded);
   const gamesEnded = gameList.filter((game) => game.gameEnded);
 
   useEffect(() => {
     navigation.setOptions({
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => <HeaderRightAddButton nav="New game" />,
+      headerRight: () => <HeaderRightAddButton nav="NewGame" />,
     });
   }, [navigation]);
 
@@ -65,9 +66,13 @@ function GamesSection({ games, title }) {
   );
 }
 
-function GameListItem({ game, first, last }) {
+function GameListItem({ game, first, last }: {
+  game: Game;
+  first: boolean;
+  last: boolean;
+}) {
   const result = gameResult(game);
-  const navigation = useNavigation();
+  const navigation = useAppNavigation();
   const handleOnPress = () => {
     navigation.navigate("Game", { gameId: game.id });
   };
@@ -108,7 +113,11 @@ function GameListItem({ game, first, last }) {
   );
 }
 
-function TeamScore({ score, teamName }) {
+function TeamScore({ score, teamName, inProgress }: {
+  score: Score;
+  teamName: string;
+  inProgress?: boolean;
+}) {
   return (
     <View className="items-center">
       <StyledText cn="text-lg ">{teamName}</StyledText>

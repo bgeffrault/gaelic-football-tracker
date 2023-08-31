@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
 import { createSlice } from "@reduxjs/toolkit";
+import { Game } from "../../domain/types";
 
-export const generateGameInitialState = (state) => ({
+export const generateGameInitialState: (state?: Partial<Game>) => Game = (state) => ({
   id: null,
   players: [],
   opponentName: "",
