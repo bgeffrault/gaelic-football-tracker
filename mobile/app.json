@@ -28,6 +28,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "supabaseUrl": "https://vityhzsxcycxasojifxd.supabase.co/graph",
+    "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpdHloenN4Y3ljeGFzb2ppZnhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTMyMDMxMzcsImV4cCI6MjAwODc3OTEzN30.tBPPdHu_KN7N3RovZ1G3z7fvFMHAV6qwdwUz9f832is"
   }
 }
