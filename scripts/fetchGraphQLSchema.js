@@ -49,7 +49,7 @@ function fetchGraphQLSchema(url, options) {
 }
 
 const filePath = path.join(__dirname, "../mobile/src/gql/",
-"schema.graphql");
+  "schema.graphql");
 
 console.log();
 

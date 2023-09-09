@@ -98,86 +98,6 @@ input FloatFilter {
   neq: Float
 }
 
-type Games implements Node {
-  """Globally Unique Record Identifier"""
-  nodeId: ID!
-  id: BigInt!
-  created_at: Datetime!
-  date: Datetime
-  name: String
-  durationMinutes: Int
-  opponentName: String
-}
-
-type GamesConnection {
-  edges: [GamesEdge!]!
-  pageInfo: PageInfo!
-}
-
-type GamesDeleteResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Games!]!
-}
-
-type GamesEdge {
-  cursor: String!
-  node: Games!
-}
-
-input GamesFilter {
-  id: BigIntFilter
-  created_at: DatetimeFilter
-  date: DatetimeFilter
-  name: StringFilter
-  durationMinutes: IntFilter
-  opponentName: StringFilter
-  nodeId: IDFilter
-}
-
-input GamesInsertInput {
-  created_at: Datetime
-  date: Datetime
-  name: String
-  durationMinutes: Int
-  opponentName: String
-}
-
-type GamesInsertResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Games!]!
-}
-
-input GamesOrderBy {
-  id: OrderByDirection
-  created_at: OrderByDirection
-  date: OrderByDirection
-  name: OrderByDirection
-  durationMinutes: OrderByDirection
-  opponentName: OrderByDirection
-}
-
-input GamesUpdateInput {
-  created_at: Datetime
-  date: Datetime
-  name: String
-  durationMinutes: Int
-  opponentName: String
-}
-
-type GamesUpdateResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Games!]!
-}
-
 """
 Boolean expression comparing fields on type "ID"
 """
@@ -201,39 +121,6 @@ input IntFilter {
 
 """A Javascript Object Notation value serialized as a string"""
 scalar JSON
-
-"""The root type for creating and mutating data"""
-type Mutation {
-  """Deletes zero or more records from the `Games` collection"""
-  deleteFromGamesCollection(
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: GamesFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): GamesDeleteResponse!
-
-  """Adds one or more `Games` records to the collection"""
-  insertIntoGamesCollection(objects: [GamesInsertInput!]!): GamesInsertResponse
-
-  """Updates zero or more records in the `Games` collection"""
-  updateGamesCollection(
-    """
-    Fields that are set will be updated for all records matching the `filter`
-    """
-    set: GamesUpdateInput!
-
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: GamesFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): GamesUpdateResponse!
-}
 
 interface Node {
   """Retrieves a record by `ID`"""
@@ -275,27 +162,6 @@ type PageInfo {
 
 """The root type for querying data"""
 type Query {
-  """A pagable collection of type `Games`"""
-  gamesCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: GamesFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [GamesOrderBy!]
-  ): GamesConnection
-
   """Retrieve a record by its `ID`"""
   node(
     """The record's `ID`"""

@@ -19,7 +19,7 @@ const gamesQuery = graphql(/* GraphQL */ `
       edges {
         node {
           id
-          name
+          gameName
         }
       }
     }

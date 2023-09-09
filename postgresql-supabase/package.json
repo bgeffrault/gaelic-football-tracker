@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node script.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "migrate-diff": "npx prisma migrate dev --name"
   },
   "devDependencies": {
     "@types/node": "18.17.12",
@@ -16,8 +17,5 @@
   },
   "dependencies": {
     "@prisma/client": "5.2.0"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 }
