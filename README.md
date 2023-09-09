@@ -7,8 +7,7 @@ App that tracks gaelic football game data
 ## Démarrer les apps
 Depuis la root du projet:</br>
 `npm run start:mobile` -> Lance la version mobile</br>
-`npm run start:server` -> Lance la version server</br>
-`npm run start:both` -> Lance tout le projet</br>
+`npm run codegen` -> Valide le schema client graphQL utilisé et met à jour les types côté client si modifié côté back</br>
 </br>
 Si la base  de données a été mise à jour, il faut regénérer le schema GraphQL:</br>
 `npm run fetch-schema`

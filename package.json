@@ -4,7 +4,9 @@
   "scripts": {
     "start": "cd mobile && npm start",
     "fetch-schema": "node --no-warnings scripts/fetchGraphQLSchema ",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch",
+    "migrate-diff": "cd postgresql-supabase && npm run migrate-diff"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",
