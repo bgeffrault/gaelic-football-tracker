@@ -2,7 +2,7 @@
 App that tracks gaelic football game data
 
 # Mono repos avec mobile & server
-@To do: Installer les libs deouis la racine
+@To do: Installer les libs depuis la racine
 
 ## Démarrer les apps
 Depuis la root du projet:</br>
