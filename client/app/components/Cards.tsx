@@ -1,67 +1,84 @@
 import { Box } from "@mui/material";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import React from "react";
-import { CardsProps } from "../types";
-import team from "../testArray";
 
-const Cards = ({ firstTeam, secondTeam, title, test }: CardsProps) => {
+export interface CardsProps {
+  firstTeam: {
+    name: string;
+    goalCage: number;
+    goalDrop: number;
+    score: number;
+  };
+  secondTeam: {
+    name: string;
+    goalCage: number;
+    goalDrop: number;
+    score: number;
+  };
+  progress: number;
+  matchIsProgress: boolean;
+}
+
+const Cards = ({
+  firstTeam,
+  secondTeam,
+  matchIsProgress,
+  progress,
+}: CardsProps) => {
+  const win = firstTeam.score < secondTeam.score;
   return (
-    <>
-      <Box sx={{ padding: "30px" }}>
-        <h3
-          style={{ backgroundColor: "rgb(209, 130, 73)", marginBottom: "10px" }}
-        >
-          {title}
-        </h3>
-
-        <Box
-          sx={{
-            border: "1px solid black",
-            borderRadius: "10px",
-            padding: "10px",
-            height: "100px",
-            backgroundColor: "rgb(167, 196, 197)",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <h4>{firstTeam}</h4>
-            <h4>4 - 1 (7)</h4>
-            <p>Accuracy: 60%</p>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <h5>60'</h5>
-            {test === true ? <PlayCircleOutlineIcon /> : "-"}
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <h4>{secondTeam}</h4>
-            <h4>1 - 0 (1)</h4>
-          </Box>
-        </Box>
+    <Box
+      sx={{
+        border: "1px solid black",
+        borderRadius: "10px",
+        padding: "10px",
+        height: "100px",
+        // backgroundColor: "rgb(167, 196, 197)",
+        backgroundColor: !win ? "rgb(167, 196, 197)" : "red",
+        display: "flex",
+        justifyContent: "space-between",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div>
+          <h4 style={{ marginBottom: "15px" }}>{firstTeam.name}</h4>
+          <h4>
+            {firstTeam.goalCage} - {firstTeam.goalDrop} ({firstTeam.score})
+          </h4>
+        </div>
+        <p>Accuracy: {progress} </p>
       </Box>
-      {/* {team.map((el) => {
-        return <li>{el} </li>;
-      })} */}
-    </>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <h5>60'</h5>
+        {matchIsProgress === true ? <PlayCircleOutlineIcon /> : "-"}
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div>
+          <h4 style={{ marginBottom: "15px" }}>{secondTeam.name}</h4>
+          <h4>
+            {secondTeam.goalCage} - {secondTeam.goalDrop} ({secondTeam.score})
+          </h4>
+        </div>
+      </Box>
+    </Box>
   );
 };
 
