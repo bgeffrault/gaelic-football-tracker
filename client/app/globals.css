@@ -1,0 +1,49 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.dialog-container {
+  height: 70vh;
+  width: 30vw;
+}
+.dialog-title {
+  background-color: rgb(209, 130, 73);
+  text-align: center;
+  margin-bottom: 90px;
+}
+.dialog-content {
+  background-color: rgb(246, 243, 243);
+  border: 1px solid rgb(177, 176, 176);
+  border-radius: 5px;
+  margin: 70px;
+  height: 40vh;
+  margin-top: 50px;
+  padding-top: 50px;
+}
+.dialog-content-team {
+  background-color: rgb(246, 243, 243);
+  border: 1px solid rgb(177, 176, 176);
+  border-radius: 5px;
+  margin: 20px;
+  height: 30vh;
+}
+
+.add-button {
+  width: 100%;
+  background-color: gray;
+  color: white;
+  border-radius: 50px;
+  margin-top: 50px;
+}
+.text-field {
+  margin-top: 30px;
+}
+
+.members-link {
+  text-decoration: none;
+  color: black;
+}
+.members-link:hover {
+  text-shadow: 5px 10px 3px rgb(167, 196, 197);
+}
