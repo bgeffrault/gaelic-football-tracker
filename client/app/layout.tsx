@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import ThemeRegistry from "./config/ThemeRegistry";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeRegistry>{children}</ThemeRegistry>
+      </body>
     </html>
   );
 }

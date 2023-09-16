@@ -2,7 +2,7 @@ import Cards from "./components/Cards";
 import Header from "./components/molecules/Header";
 import Link from "next/link";
 
-import team from "./team";
+import team from "./data/team";
 const data = team;
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
     <>
       <Header name="Home" backHome="backHome" />
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <Link className="members-link" href="/members">
+        <Link style={{ textDecoration: "none", color: "#000" }} href="/members">
           Découvrez les membres de l'équipe !
         </Link>
       </div>

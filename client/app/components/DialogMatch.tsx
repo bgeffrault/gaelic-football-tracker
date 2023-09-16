@@ -21,7 +21,7 @@ export default function DialogMatch() {
   };
 
   return (
-    <div>
+    <>
       <Box
         sx={{
           display: "flex",
@@ -37,73 +37,67 @@ export default function DialogMatch() {
       </Box>
 
       <Dialog open={open} onClose={handleClose}>
-        <div className="dialog-container">
-          <DialogTitle className="dialog-title">Ajouter un match</DialogTitle>
-          <div style={{ display: "flex" }}>
-            <DialogContent className="dialog-content-team">
-              <h3>Equipe 1</h3>
-              <TextField
-                className="text-field"
-                required
-                margin="dense"
-                id="name"
-                label="nom"
-                type="text"
-                fullWidth
-              />
-              <TextField
-                required
-                margin="dense"
-                id="surname"
-                label="goalCage"
-                type="number"
-                fullWidth
-              />
-              <TextField
-                required
-                margin="dense"
-                id="pseudo"
-                label="goalDrop"
-                type="number"
-                fullWidth
-              />
-            </DialogContent>
-            <DialogContent className="dialog-content-team">
-              <h3>Equipe 1</h3>
-              <TextField
-                className="text-field"
-                required
-                margin="dense"
-                id="name"
-                label="nom"
-                type="text"
-                fullWidth
-              />
-              <TextField
-                required
-                margin="dense"
-                id="surname"
-                label="goalCage"
-                type="number"
-                fullWidth
-              />
-              <TextField
-                required
-                margin="dense"
-                id="pseudo"
-                label="goalDrop"
-                type="number"
-                fullWidth
-              />
-            </DialogContent>
-          </div>
-          <DialogActions className="dialog-actions">
-            <Button className="add-button" onClick={handleClose}>
-              Ajouter
-            </Button>
+        <DialogTitle>Ajouter un match</DialogTitle>
+        <DialogContent>
+          <DialogContent sx={{ backgroundColor: "#fff", margin: "20px" }}>
+            <h3>Equipe 1</h3>
+            <TextField
+              required
+              margin="dense"
+              id="name"
+              label="nom"
+              type="text"
+              fullWidth
+            />
+            <TextField
+              required
+              margin="dense"
+              id="surname"
+              label="goalCage"
+              type="number"
+              fullWidth
+            />
+            <TextField
+              required
+              margin="dense"
+              id="pseudo"
+              label="goalDrop"
+              type="number"
+              fullWidth
+            />
+          </DialogContent>
+          <DialogContent sx={{ backgroundColor: "#fff", margin: "20px" }}>
+            <h3>Equipe 2</h3>
+            <TextField
+              required
+              margin="dense"
+              id="name"
+              label="nom"
+              type="text"
+              fullWidth
+            />
+            <TextField
+              required
+              margin="dense"
+              id="surname"
+              label="goalCage"
+              type="number"
+              fullWidth
+            />
+            <TextField
+              required
+              margin="dense"
+              id="pseudo"
+              label="goalDrop"
+              type="number"
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Ajouter</Button>
           </DialogActions>
-        </div>
+        </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

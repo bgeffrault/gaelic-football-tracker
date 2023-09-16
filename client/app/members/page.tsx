@@ -1,17 +1,41 @@
-import React from "react";
+"use client";
+import { useEffect, useState } from "react";
 import Header from "../components/molecules/Header";
 import MembersList from "../components/MembersList";
+
 import { List } from "@mui/material";
 
-import supabase from "../config/supabaseClient";
-
-import members from "../members";
-const membres = members;
+import supabase, { Tables } from "../config/supabaseClient";
 
 const Members = () => {
+  const [fetchError, setFetchError] = useState<string | null>("");
+  const [members, setMembers] = useState<Tables<"Member">[] | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      const { data, error } = await supabase.from("Member").select();
+
+      if (error) {
+        setFetchError("Could not fetch the members");
+        setMembers(null);
+        console.log(error);
+      }
+      if (data) {
+        setMembers(data);
+        setFetchError(null);
+      }
+    };
+    fetchMembers();
+  }, []);
+
   return (
     <>
       <Header name="Membres" backHome="" />
+      <div>
+        {fetchError && <p>{fetchError} </p>}
+        <div></div>
+      </div>
+
       <List
         sx={{
           margin: "50px",
@@ -20,13 +44,13 @@ const Members = () => {
           borderRadius: "10px",
         }}
       >
-        {membres.map((membersList) => (
+        {members?.map((member) => (
           <MembersList
-            key={membersList.id}
-            firstName={membersList.firstName}
-            lastName={membersList.lastName}
-            points={membersList.points}
-            pourcentage={membersList.pourcentage}
+            firstName={member.firstName}
+            lastName={member.lastName}
+            categoryId={member.categoryId}
+            clubId={member.clubId}
+            pseudo={member.pseudo}
           />
         ))}
       </List>
@@ -35,76 +59,3 @@ const Members = () => {
 };
 
 export default Members;
-// import React from "react";
-// import Header from "../components/molecules/Header";
-// import { List, ListItem, Button, Box } from "@mui/material";
-
-// const Members = () => {
-//   return (
-//     <>
-//       <Header name="Membres" backHome="" />
-
-//       <List
-//         sx={{
-//           margin: "50px",
-//           padding: 0,
-//         }}
-//       >
-//         <ListItem
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             border: "1px solid black",
-//             borderRadius: "10px 10px 0 0",
-//           }}
-//         >
-//           <h4>Jean Dupont</h4>
-//           <p>16 pts - 80%</p>
-//         </ListItem>
-//         <ListItem
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             border: "1px solid black",
-//           }}
-//         >
-//           <h4>Jean Dupont</h4>
-//           <p>16 pts - 80%</p>
-//         </ListItem>
-//         <ListItem
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             border: "1px solid black",
-//           }}
-//         >
-//           <h4>Jean Dupont</h4>
-//           <p>16 pts - 80%</p>
-//         </ListItem>
-//         <ListItem
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             border: "1px solid black",
-//           }}
-//         >
-//           <h4>Jean Dupont</h4>
-//           <p>16 pts - 80%</p>
-//         </ListItem>
-//         <ListItem
-//           sx={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             border: "1px solid black",
-//             borderRadius: "0 0 10px 10px",
-//           }}
-//         >
-//           <h4>Jean Dupont</h4>
-//           <p>16 pts - 80%</p>
-//         </ListItem>
-//       </List>
-//     </>
-//   );
-// };
-
-// export default Members;
