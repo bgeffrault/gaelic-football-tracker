@@ -33,7 +33,6 @@ const Cards = ({
         borderRadius: "10px",
         padding: "10px",
         height: "100px",
-        // backgroundColor: "rgb(167, 196, 197)",
         backgroundColor: !win ? "rgb(167, 196, 197)" : "red",
         display: "flex",
         justifyContent: "space-between",

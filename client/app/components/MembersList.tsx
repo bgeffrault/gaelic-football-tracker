@@ -1,19 +1,21 @@
 import React from "react";
 import { ListItem } from "@mui/material";
 
-export interface MembersListProps {
+export interface member {
+  categoryId: number;
+  clubId: number;
   firstName: string;
   lastName: string;
-  points: number;
-  pourcentage: number;
+  pseudo: string | null;
 }
 
 const MembersList = ({
+  categoryId,
+  clubId,
   firstName,
   lastName,
-  points,
-  pourcentage,
-}: MembersListProps) => {
+  pseudo,
+}: member) => {
   return (
     <>
       <ListItem
@@ -21,14 +23,14 @@ const MembersList = ({
           display: "flex",
           justifyContent: "space-between",
           borderTop: "2px solid black",
-          "&:first-child": { borderTop: 0 },
+          "&:first-of-type": { borderTop: 0 },
         }}
       >
         <h4>
           {firstName} {lastName}
         </h4>
         <p>
-          {points} pts - {pourcentage}%
+          {clubId} pts - {categoryId}%
         </p>
       </ListItem>
     </>

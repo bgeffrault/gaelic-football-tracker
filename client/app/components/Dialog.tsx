@@ -21,7 +21,7 @@ export default function FormDialog() {
   };
 
   return (
-    <div>
+    <>
       <Box
         sx={{
           display: "flex",
@@ -37,43 +37,36 @@ export default function FormDialog() {
       </Box>
 
       <Dialog open={open} onClose={handleClose}>
-        <div className="dialog-container">
-          <DialogTitle className="dialog-title">Ajouter un membre</DialogTitle>
-          <DialogContent className="dialog-content">
-            <TextField
-              className="text-field"
-              required
-              margin="dense"
-              id="name"
-              label="Prénom"
-              type="text"
-              fullWidth
-            />
-            <TextField
-              className="text-field"
-              required
-              margin="dense"
-              id="surname"
-              label="Nom"
-              type="text"
-              fullWidth
-            />
-            <TextField
-              className="text-field"
-              margin="dense"
-              id="pseudo"
-              label="Pseudo"
-              type="text"
-              fullWidth
-            />
-            <DialogActions className="dialog-actions">
-              <Button className="add-button" onClick={handleClose}>
-                Ajouter
-              </Button>
-            </DialogActions>
-          </DialogContent>
-        </div>
+        <DialogTitle>Ajouter un membre</DialogTitle>
+        <DialogContent>
+          <TextField
+            required
+            margin="dense"
+            id="name"
+            label="Prénom"
+            type="text"
+            fullWidth
+          />
+          <TextField
+            required
+            margin="dense"
+            id="surname"
+            label="Nom"
+            type="text"
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            id="pseudo"
+            label="Pseudo"
+            type="text"
+            fullWidth
+          />
+          <DialogActions>
+            <Button onClick={handleClose}>Ajouter</Button>
+          </DialogActions>
+        </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
