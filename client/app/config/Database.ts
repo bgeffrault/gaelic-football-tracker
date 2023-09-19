@@ -9,34 +9,6 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      _MemberToTeam: {
-        Row: {
-          A: number;
-          B: number;
-        };
-        Insert: {
-          A: number;
-          B: number;
-        };
-        Update: {
-          A?: number;
-          B?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "_MemberToTeam_A_fkey";
-            columns: ["A"];
-            referencedRelation: "Member";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "_MemberToTeam_B_fkey";
-            columns: ["B"];
-            referencedRelation: "Team";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
       Category: {
         Row: {
           created_at: string;
@@ -100,53 +72,10 @@ export interface Database {
         };
         Relationships: [];
       };
-      GameScore: {
+      Members: {
         Row: {
-          created_at: string;
-          gameId: number;
-          id: number;
-          scoreId: number;
-          teamId: number;
-        };
-        Insert: {
-          created_at?: string;
-          gameId: number;
-          id?: number;
-          scoreId: number;
-          teamId: number;
-        };
-        Update: {
-          created_at?: string;
-          gameId?: number;
-          id?: number;
-          scoreId?: number;
-          teamId?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "GameScore_gameId_fkey";
-            columns: ["gameId"];
-            referencedRelation: "Game";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "GameScore_scoreId_fkey";
-            columns: ["scoreId"];
-            referencedRelation: "Score";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "GameScore_teamId_fkey";
-            columns: ["teamId"];
-            referencedRelation: "Team";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      Member: {
-        Row: {
-          categoryId: number;
-          clubId: number;
+          categoryId: number | null;
+          clubId: number | null;
           created_at: string;
           firstName: string;
           id: number;
@@ -154,8 +83,8 @@ export interface Database {
           pseudo: string | null;
         };
         Insert: {
-          categoryId: number;
-          clubId: number;
+          categoryId?: number | null;
+          clubId?: number | null;
           created_at?: string;
           firstName: string;
           id?: number;
@@ -163,8 +92,8 @@ export interface Database {
           pseudo?: string | null;
         };
         Update: {
-          categoryId?: number;
-          clubId?: number;
+          categoryId?: number | null;
+          clubId?: number | null;
           created_at?: string;
           firstName?: string;
           id?: number;
@@ -173,96 +102,108 @@ export interface Database {
         };
         Relationships: [
           {
-            foreignKeyName: "Member_categoryId_fkey";
+            foreignKeyName: "Members_categoryId_fkey";
             columns: ["categoryId"];
             referencedRelation: "Category";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "Member_clubId_fkey";
+            foreignKeyName: "Members_clubId_fkey";
             columns: ["clubId"];
             referencedRelation: "Club";
             referencedColumns: ["id"];
           }
         ];
       };
-      Score: {
+      Shoots: {
         Row: {
-          accuracy: number | null;
+          Members: {
+            categoryId: number | null;
+            clubId: number | null;
+            created_at: string;
+            firstName: string;
+            id: number;
+            lastName: string;
+            pseudo: string | null;
+          };
           created_at: string;
+          gameId: number;
           id: number;
-        };
-        Insert: {
-          accuracy?: number | null;
-          created_at?: string;
-          id?: number;
-        };
-        Update: {
-          accuracy?: number | null;
-          created_at?: string;
-          id?: number;
-        };
-        Relationships: [];
-      };
-      Shoot: {
-        Row: {
-          created_at: string;
-          id: number;
-          memberId: number;
-          scoreId: number | null;
+          memberId: number | null;
+          teamGameId: number;
+          teamId: number;
           type: string;
           x: number;
           y: number;
         };
         Insert: {
           created_at?: string;
+          gameId: number;
           id?: number;
-          memberId: number;
-          scoreId?: number | null;
+          memberId?: number | null;
+          teamGameId: number;
+          teamId: number;
           type: string;
           x: number;
           y: number;
         };
         Update: {
           created_at?: string;
+          gameId?: number;
           id?: number;
-          memberId?: number;
-          scoreId?: number | null;
+          memberId?: number | null;
+          teamGameId?: number;
+          teamId?: number;
           type?: string;
           x?: number;
           y?: number;
         };
         Relationships: [
           {
-            foreignKeyName: "Shoot_memberId_fkey";
-            columns: ["memberId"];
-            referencedRelation: "Member";
+            foreignKeyName: "Shoots_gameId_fkey";
+            columns: ["gameId"];
+            referencedRelation: "Game";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "Shoot_scoreId_fkey";
-            columns: ["scoreId"];
-            referencedRelation: "Score";
+            foreignKeyName: "Shoots_memberId_fkey";
+            columns: ["memberId"];
+            referencedRelation: "Members";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "Shoots_teamGameId_fkey";
+            columns: ["teamGameId"];
+            referencedRelation: "TeamGame";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "Shoots_teamId_fkey";
+            columns: ["teamId"];
+            referencedRelation: "Team";
             referencedColumns: ["id"];
           }
         ];
       };
       Team: {
         Row: {
-          clubId: number;
+          clubId: number | null;
           created_at: string;
+          external: boolean;
           id: number;
           teamName: string;
         };
         Insert: {
-          clubId: number;
+          clubId?: number | null;
           created_at?: string;
+          external?: boolean;
           id?: number;
           teamName: string;
         };
         Update: {
-          clubId?: number;
+          clubId?: number | null;
           created_at?: string;
+          external?: boolean;
           id?: number;
           teamName?: string;
         };
@@ -271,6 +212,43 @@ export interface Database {
             foreignKeyName: "Team_clubId_fkey";
             columns: ["clubId"];
             referencedRelation: "Club";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      TeamGame: {
+        Row: {
+          created_at: string;
+          gameId: number;
+          id: number;
+          membersIds: number[] | null;
+          teamId: number;
+        };
+        Insert: {
+          created_at?: string;
+          gameId: number;
+          id?: number;
+          membersIds?: number[] | null;
+          teamId: number;
+        };
+        Update: {
+          created_at?: string;
+          gameId?: number;
+          id?: number;
+          membersIds?: number[] | null;
+          teamId?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "TeamGame_gameId_fkey";
+            columns: ["gameId"];
+            referencedRelation: "Game";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "TeamGame_teamId_fkey";
+            columns: ["teamId"];
+            referencedRelation: "Team";
             referencedColumns: ["id"];
           }
         ];

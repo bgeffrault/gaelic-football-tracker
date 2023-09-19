@@ -1,11 +1,33 @@
+"use client";
+import { useEffect, useState } from "react";
+import supabase, { Tables } from "./config/supabaseClient";
 import Cards from "./components/Cards";
 import Header from "./components/molecules/Header";
 import Link from "next/link";
 
-import team from "./data/team";
-const data = team;
-
 export default function Home() {
+  const [fetchError, setFetchError] = useState<string | null>("");
+  const [games, setGames] = useState<Tables<"Game">[] | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      const { data: games, error } = await supabase.from("Game").select("*");
+
+      console.log("data: ", games);
+
+      if (error) {
+        setFetchError("Could not fetch the members");
+        setGames(null);
+        console.log(error);
+      }
+      if (games) {
+        setGames(games);
+        setFetchError(null);
+      }
+    };
+    fetchMembers();
+  }, []);
+
   return (
     <>
       <Header name="Home" backHome="backHome" />
@@ -21,16 +43,10 @@ export default function Home() {
         >
           In Progress
         </h3>
-        {data
-          .filter((inProgress) => inProgress.match === "In progress")
-          .map((inProgress) => (
-            <Cards
-              key={inProgress.id}
-              firstTeam={inProgress.firstTeam}
-              secondTeam={inProgress.secondTeam}
-              progress={inProgress.progress}
-              matchIsProgress={true}
-            />
+        {games
+          ?.filter((inProgress) => inProgress.gameEnded === true)
+          .map((game) => (
+            <Cards key={game.id} game={game} />
           ))}
       </div>
       <div style={{ padding: "30px" }}>
@@ -39,15 +55,10 @@ export default function Home() {
         >
           Last Games
         </h3>
-        {data
-          .filter((lastGames) => lastGames.match === "Last Games")
-          .map((lastGames) => (
-            <Cards
-              firstTeam={lastGames.firstTeam}
-              secondTeam={lastGames.secondTeam}
-              progress={lastGames.progress}
-              matchIsProgress={false}
-            />
+        {games
+          ?.filter((inProgress) => inProgress.gameEnded === false)
+          .map((game) => (
+            <Cards key={game.id} game={game} />
           ))}
       </div>
     </>

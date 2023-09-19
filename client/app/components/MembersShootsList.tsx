@@ -1,21 +1,16 @@
 import React from "react";
 import { ListItem } from "@mui/material";
+import { Tables } from "../config/supabaseClient";
 
-export interface member {
-  categoryId: number;
-  clubId: number;
-  firstName: string;
-  lastName: string;
-  pseudo: string | null;
+export interface MembersShootListProps {
+  shoot: Tables<"Shoots">;
+  members: Tables<"Members">;
 }
 
-const MembersList = ({
-  categoryId,
-  clubId,
-  firstName,
-  lastName,
-  pseudo,
-}: member) => {
+const MembersShootsList = ({
+  shoot: { x, y, type },
+  members: { firstName, lastName },
+}: MembersShootListProps) => {
   return (
     <>
       <ListItem
@@ -29,12 +24,10 @@ const MembersList = ({
         <h4>
           {firstName} {lastName}
         </h4>
-        <p>
-          {clubId} pts - {categoryId}%
-        </p>
+        <p>{(type === "goal" ? 3 : 0) | (type === "drop" ? 1 : 0)} </p>
       </ListItem>
     </>
   );
 };
 
-export default MembersList;
+export default MembersShootsList;
