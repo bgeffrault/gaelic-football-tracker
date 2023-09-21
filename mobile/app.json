@@ -29,7 +29,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "supabaseUrl": "https://vityhzsxcycxasojifxd.supabase.co/graph",
-    "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpdHloenN4Y3ljeGFzb2ppZnhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTMyMDMxMzcsImV4cCI6MjAwODc3OTEzN30.tBPPdHu_KN7N3RovZ1G3z7fvFMHAV6qwdwUz9f832is"
+    "supabaseUrl": "https://uopbvkdwounrtreinjwe.supabase.co",
+    "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvcGJ2a2R3b3VucnRyZWluandlIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTQzNzMwMzcsImV4cCI6MjAwOTk0OTAzN30.PoD_hLKjuMfzxl24fqtk4Eyxgdaa4pwrAQ6THgE9XXs"
   }
 }
