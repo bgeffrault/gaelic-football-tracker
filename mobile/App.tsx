@@ -41,7 +41,7 @@ export default function App() {
           <Stack.Group>
             {/* <Stack.Screen name="Login" component={Login} /> */}
             <Stack.Screen name="Home" component={Home} />
-            <Stack.Screen name="CreateClub" component={CreateClub} />
+            {/* <Stack.Screen name="CreateClub" component={CreateClub} /> */}
             <Stack.Screen name="Members" component={Members} />
             <Stack.Screen name="NewGame" component={AddGame} />
             <Stack.Screen name="Game" component={GameScreen} />
