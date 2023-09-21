@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ScrollView, View } from "react-native";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import { Card } from "../components/Card";
@@ -30,8 +30,11 @@ const clubQuery = graphql(/* GraphQL */ `
 export function Home({}: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
   const { gameList } = useAppSelector((state) => state.games);
-  const { data } = useGraphQLQuery(["club"], clubQuery, { id: 1 })
-  console.log('data', data);
+  const { data: clubData } = useGraphQLQuery(["club"], clubQuery, { id: 1 })
+  const clubName = useMemo(() => clubData?.clubCollection.edges[0].node.name ?? "Home"
+  ,[])
+  console.log('data', clubData);
+
   const gamesInProgress = gameList.filter((game) => !game.gameEnded);
   const gamesEnded = gameList.filter((game) => game.gameEnded);
 
@@ -41,13 +44,17 @@ export function Home({}: AppNavigationProp<"Home">) {
       headerRight: () => <HeaderRightAddButton nav="NewGame" />,
     });
   }, [navigation]);
+  useEffect(() => {
+    navigation.setOptions({
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerTitle: clubName,
+    });
+  }, [navigation, clubName]);
 
   return (
     <>
       <View className="p-6 flex-1">
-      {data?.clubCollection.edges.map((edge) => <StyledText key={edge.node.id} cn="text-2xl font-bold">{edge.node.name}</StyledText>)}
-        
-        {gamesInProgress.length > 0 && (
+          {gamesInProgress.length > 0 && (
           <View className="mb-4">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>
