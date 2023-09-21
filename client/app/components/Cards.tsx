@@ -1,31 +1,14 @@
 import { Box } from "@mui/material";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import React from "react";
+import { Tables } from "../config/supabaseClient";
 
 export interface CardsProps {
-  firstTeam: {
-    name: string;
-    goalCage: number;
-    goalDrop: number;
-    score: number;
-  };
-  secondTeam: {
-    name: string;
-    goalCage: number;
-    goalDrop: number;
-    score: number;
-  };
-  progress: number;
-  matchIsProgress: boolean;
+  game: Tables<"Game">;
 }
 
-const Cards = ({
-  firstTeam,
-  secondTeam,
-  matchIsProgress,
-  progress,
-}: CardsProps) => {
-  const win = firstTeam.score < secondTeam.score;
+const Cards = ({ game: { duration, gameEnded } }: CardsProps) => {
+  const win = "firstTeam.score" < "secondTeam.score";
   return (
     <Box
       sx={{
@@ -46,12 +29,9 @@ const Cards = ({
         }}
       >
         <div>
-          <h4 style={{ marginBottom: "15px" }}>{firstTeam.name}</h4>
-          <h4>
-            {firstTeam.goalCage} - {firstTeam.goalDrop} ({firstTeam.score})
-          </h4>
+          <h4 style={{ marginBottom: "15px" }}>{"firstteamName"}</h4>
         </div>
-        <p>Accuracy: {progress} </p>
+        <p>Accuracy: {"accuracy"} </p>
       </Box>
       <Box
         sx={{
@@ -60,8 +40,8 @@ const Cards = ({
           alignItems: "center",
         }}
       >
-        <h5>60'</h5>
-        {matchIsProgress === true ? <PlayCircleOutlineIcon /> : "-"}
+        <h5> {duration} ' </h5>
+        {gameEnded === false ? <PlayCircleOutlineIcon /> : "-"}
       </Box>
       <Box
         sx={{
@@ -71,10 +51,7 @@ const Cards = ({
         }}
       >
         <div>
-          <h4 style={{ marginBottom: "15px" }}>{secondTeam.name}</h4>
-          <h4>
-            {secondTeam.goalCage} - {secondTeam.goalDrop} ({secondTeam.score})
-          </h4>
+          <h4 style={{ marginBottom: "15px" }}>{"secondTeamName"}</h4>
         </div>
       </Box>
     </Box>
