@@ -1,5 +1,8 @@
 # PostgreSQL example using Supabase
 
+⚠️❗️ When we upload the database schema directly with the prisma migration, the graphql link is broken and we can not regenerate it.
+Use the generated schema and paste it in the supabase cli to create the database
+
 Connect to a PostgreSQL database on [Supabase](https://supabase.com/) using Prisma, and use [Prisma Migrate](https://www.prisma.io/docs/guides/migrate)
 
 ## How to use
