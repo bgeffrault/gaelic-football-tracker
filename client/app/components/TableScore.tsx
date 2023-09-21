@@ -3,11 +3,32 @@ import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import React from "react";
 import { Tables } from "../config/supabaseClient";
 
-export interface CardsProps {
-  game: Tables<"Game">;
-}
+export type TableScoreGame = Tables<"Game"> & {
+  TeamGame: (Tables<"TeamGame"> & { Team: Tables<"Team"> })[];
+};
 
-const Cards = ({ game: { duration, gameEnded } }: CardsProps) => {
+export type CardsProps = {
+  game: TableScoreGame;
+};
+
+const TableScore = ({ game }: CardsProps) => {
+  const { TeamGame, gameEnded } = game;
+  if (TeamGame.length !== 2) {
+    console.warn("This game has the wrong of TeamGame", game.id);
+    return null;
+  }
+
+  const isFirstTeamExternal = TeamGame[0].Team.external;
+
+  const firstTeam = !isFirstTeamExternal
+    ? TeamGame[0].Team.teamName
+    : TeamGame[1].Team.teamName;
+
+  const secondTeam = isFirstTeamExternal
+    ? TeamGame[0].Team.teamName
+    : TeamGame[1].Team.teamName;
+
+  TeamGame[0].Team.teamName;
   const win = "firstTeam.score" < "secondTeam.score";
   return (
     <Box
@@ -29,7 +50,7 @@ const Cards = ({ game: { duration, gameEnded } }: CardsProps) => {
         }}
       >
         <div>
-          <h4 style={{ marginBottom: "15px" }}>{"firstteamName"}</h4>
+          <h4 style={{ marginBottom: "15px" }}>{firstTeam}</h4>
         </div>
         <p>Accuracy: {"accuracy"} </p>
       </Box>
@@ -40,7 +61,7 @@ const Cards = ({ game: { duration, gameEnded } }: CardsProps) => {
           alignItems: "center",
         }}
       >
-        <h5> {duration} ' </h5>
+        <h5> {"duration"} ' </h5>
         {gameEnded === false ? <PlayCircleOutlineIcon /> : "-"}
       </Box>
       <Box
@@ -51,11 +72,11 @@ const Cards = ({ game: { duration, gameEnded } }: CardsProps) => {
         }}
       >
         <div>
-          <h4 style={{ marginBottom: "15px" }}>{"secondTeamName"}</h4>
+          <h4 style={{ marginBottom: "15px" }}>{secondTeam}</h4>
         </div>
       </Box>
     </Box>
   );
 };
 
-export default Cards;
+export default TableScore;

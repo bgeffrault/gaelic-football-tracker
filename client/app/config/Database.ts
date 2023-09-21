@@ -127,44 +127,32 @@ export interface Database {
             pseudo: string | null;
           };
           created_at: string;
-          gameId: number;
           id: number;
           memberId: number | null;
           teamGameId: number;
-          teamId: number;
           type: string;
           x: number;
           y: number;
         };
         Insert: {
           created_at?: string;
-          gameId: number;
           id?: number;
           memberId?: number | null;
           teamGameId: number;
-          teamId: number;
           type: string;
           x: number;
           y: number;
         };
         Update: {
           created_at?: string;
-          gameId?: number;
           id?: number;
           memberId?: number | null;
           teamGameId?: number;
-          teamId?: number;
           type?: string;
           x?: number;
           y?: number;
         };
         Relationships: [
-          {
-            foreignKeyName: "Shoots_gameId_fkey";
-            columns: ["gameId"];
-            referencedRelation: "Game";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "Shoots_memberId_fkey";
             columns: ["memberId"];
@@ -175,12 +163,6 @@ export interface Database {
             foreignKeyName: "Shoots_teamGameId_fkey";
             columns: ["teamGameId"];
             referencedRelation: "TeamGame";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "Shoots_teamId_fkey";
-            columns: ["teamId"];
-            referencedRelation: "Team";
             referencedColumns: ["id"];
           }
         ];
@@ -221,21 +203,18 @@ export interface Database {
           created_at: string;
           gameId: number;
           id: number;
-          membersIds: number[] | null;
           teamId: number;
         };
         Insert: {
           created_at?: string;
           gameId: number;
           id?: number;
-          membersIds?: number[] | null;
           teamId: number;
         };
         Update: {
           created_at?: string;
           gameId?: number;
           id?: number;
-          membersIds?: number[] | null;
           teamId?: number;
         };
         Relationships: [
@@ -249,6 +228,40 @@ export interface Database {
             foreignKeyName: "TeamGame_teamId_fkey";
             columns: ["teamId"];
             referencedRelation: "Team";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      TeamMembers: {
+        Row: {
+          created_at: string;
+          id: number;
+          memberId: number;
+          teamGameId: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          memberId: number;
+          teamGameId: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          memberId?: number;
+          teamGameId?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "TeamMembers_memberId_fkey";
+            columns: ["memberId"];
+            referencedRelation: "Members";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "TeamMembers_teamGameId_fkey";
+            columns: ["teamGameId"];
+            referencedRelation: "TeamGame";
             referencedColumns: ["id"];
           }
         ];

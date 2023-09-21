@@ -1,15 +1,27 @@
 "use client";
 import * as React from "react";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
+import {
+  Box,
+  Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { Box } from "@mui/material";
 
-export default function FormDialog() {
+export default function CreateGameDialog() {
+  const date = new Date();
+  const formattedDate = date
+    .toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .split("/")
+    .reverse()
+    .join("-");
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
@@ -37,31 +49,53 @@ export default function FormDialog() {
       </Box>
 
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Ajouter un membre</DialogTitle>
+        <DialogTitle>Ajouter un match</DialogTitle>
+
         <DialogContent>
+          <h3>Nom de l'équipe adverse *</h3>
           <TextField
             required
             margin="dense"
             id="name"
-            label="Prénom"
+            label="Nantes A"
             type="text"
             fullWidth
           />
+          <h3>Durée du match *</h3>
           <TextField
             required
             margin="dense"
-            id="surname"
-            label="Nom"
-            type="text"
+            id="duree"
+            label="60"
+            type="number"
             fullWidth
           />
+          <h3>Joueurs *</h3>
+          <TextField
+            required
+            margin="dense"
+            id="outlined-select-currency"
+            label="0"
+            select
+            fullWidth
+          />
+          <h3>Compétition</h3>
           <TextField
             margin="dense"
-            id="pseudo"
-            label="Pseudo"
+            id="name"
+            label="Coupe de Bretagne"
             type="text"
             fullWidth
           />
+          <h3>Date</h3>
+          <TextField
+            margin="dense"
+            id="name"
+            type="text"
+            defaultValue={formattedDate}
+            fullWidth
+          />
+
           <DialogActions>
             <Button onClick={handleClose}>Ajouter</Button>
           </DialogActions>
