@@ -13,7 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "\n  query gamesQuery($first: Int!) {\n    gamesCollection(first: $first) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.GamesQueryDocument,
+    "\n  query clubQuery($id: BigInt!) {\n    clubCollection(filter: { id: {eq: $id} }) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.ClubQueryDocument,
 };
 
 /**
@@ -33,7 +33,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query gamesQuery($first: Int!) {\n    gamesCollection(first: $first) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query gamesQuery($first: Int!) {\n    gamesCollection(first: $first) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query clubQuery($id: BigInt!) {\n    clubCollection(filter: { id: {eq: $id} }) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query clubQuery($id: BigInt!) {\n    clubCollection(filter: { id: {eq: $id} }) {\n      edges {\n        node {\n          id\n          name\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

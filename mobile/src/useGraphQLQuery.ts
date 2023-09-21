@@ -4,17 +4,17 @@ import { graphql } from "./gql";
 import Constants from 'expo-constants';
 
 export const useGraphQLQuery = (queryKey: unknown[], query: ReturnType<typeof graphql>, vars?: Variables) => useQuery({
-    queryKey: queryKey,
-    queryFn: async () =>
-        request(
-            `${Constants.manifest.supabaseUrl}/graphql/v1`,
-            query,
-            vars,
-            {
-                "content-type": "application/json",
-                "apikey": Constants.manifest.supabaseAnonKey,
-            }
-        ),
+  queryKey: queryKey,
+  queryFn: async () =>
+    request(
+      `${Constants.manifest.supabaseUrl}/graphql/v1`,
+      query,
+      vars,
+      {
+        "content-type": "application/json",
+        "apikey": Constants.manifest.supabaseAnonKey,
+      }
+    ),
 })
 
 /**

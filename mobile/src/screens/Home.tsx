@@ -12,14 +12,15 @@ import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { Game, Score } from "../domain/types";
 import { graphql } from "../gql/gql";
+import { useGraphQLQuery } from "../useGraphQLQuery";
 
-const gamesQuery = graphql(/* GraphQL */ `
-  query gamesQuery($first: Int!) {
-    gamesCollection(first: $first) {
+const clubQuery = graphql(/* GraphQL */ `
+  query clubQuery($id: BigInt!) {
+    clubCollection(filter: { id: {eq: $id} }) {
       edges {
         node {
           id
-          gameName
+          name
         }
       }
     }
@@ -29,7 +30,8 @@ const gamesQuery = graphql(/* GraphQL */ `
 export function Home({}: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
   const { gameList } = useAppSelector((state) => state.games);
-  
+  const { data } = useGraphQLQuery(["club"], clubQuery, { id: 1 })
+  console.log('data', data);
   const gamesInProgress = gameList.filter((game) => !game.gameEnded);
   const gamesEnded = gameList.filter((game) => game.gameEnded);
 
@@ -43,6 +45,8 @@ export function Home({}: AppNavigationProp<"Home">) {
   return (
     <>
       <View className="p-6 flex-1">
+      {data?.clubCollection.edges.map((edge) => <StyledText key={edge.node.id} cn="text-2xl font-bold">{edge.node.name}</StyledText>)}
+        
         {gamesInProgress.length > 0 && (
           <View className="mb-4">
             <GamesSection games={gamesInProgress} title="In progress" />
