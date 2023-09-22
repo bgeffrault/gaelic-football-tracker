@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ScrollView, View } from "react-native";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import { Card } from "../components/Card";
@@ -12,14 +12,15 @@ import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { Game, Score } from "../domain/types";
 import { graphql } from "../gql/gql";
+import { useGraphQLQuery } from "../useGraphQLQuery";
 
-const gamesQuery = graphql(/* GraphQL */ `
-  query gamesQuery($first: Int!) {
-    gamesCollection(first: $first) {
+const clubQuery = graphql(/* GraphQL */ `
+  query clubQuery($id: BigInt!) {
+    clubCollection(filter: { id: {eq: $id} }) {
       edges {
         node {
           id
-          gameName
+          name
         }
       }
     }
@@ -29,7 +30,11 @@ const gamesQuery = graphql(/* GraphQL */ `
 export function Home({}: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
   const { gameList } = useAppSelector((state) => state.games);
-  
+  const { data: clubData } = useGraphQLQuery(["club"], clubQuery, { id: 1 })
+  const clubName = useMemo(() => clubData?.clubCollection.edges[0].node.name ?? "Home"
+  ,[])
+  console.log('data', clubData);
+
   const gamesInProgress = gameList.filter((game) => !game.gameEnded);
   const gamesEnded = gameList.filter((game) => game.gameEnded);
 
@@ -39,11 +44,17 @@ export function Home({}: AppNavigationProp<"Home">) {
       headerRight: () => <HeaderRightAddButton nav="NewGame" />,
     });
   }, [navigation]);
+  useEffect(() => {
+    navigation.setOptions({
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerTitle: clubName,
+    });
+  }, [navigation, clubName]);
 
   return (
     <>
       <View className="p-6 flex-1">
-        {gamesInProgress.length > 0 && (
+          {gamesInProgress.length > 0 && (
           <View className="mb-4">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>

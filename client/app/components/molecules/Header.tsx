@@ -5,6 +5,7 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import CreateGameDialog from "../CreateGameDialog";
 import AddMembersDialog from "../AddMembersDialog";
 
+
 export interface HeaderProps {
   name: string;
   backHome: string;
