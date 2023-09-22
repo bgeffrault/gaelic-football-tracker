@@ -280,21 +280,21 @@ export type Game = Node & {
   date: Scalars['Datetime']['output'];
   duration: Scalars['Int']['output'];
   gameEnded: Scalars['Boolean']['output'];
-  gameScoreCollection?: Maybe<GameScoreConnection>;
   id: Scalars['BigInt']['output'];
   name: Scalars['String']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  teamGameCollection?: Maybe<TeamGameConnection>;
 };
 
 
-export type GameGameScoreCollectionArgs = {
+export type GameTeamGameCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<GameScoreFilter>;
+  filter?: InputMaybe<TeamGameFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<GameScoreOrderBy>>;
+  orderBy?: InputMaybe<Array<TeamGameOrderBy>>;
 };
 
 export type GameConnection = {
@@ -352,87 +352,6 @@ export type GameOrderBy = {
   name?: InputMaybe<OrderByDirection>;
 };
 
-export type GameScore = Node & {
-  __typename?: 'GameScore';
-  created_at: Scalars['Datetime']['output'];
-  game: Game;
-  gameId: Scalars['Int']['output'];
-  id: Scalars['BigInt']['output'];
-  /** Globally Unique Record Identifier */
-  nodeId: Scalars['ID']['output'];
-  score: Score;
-  scoreId: Scalars['Int']['output'];
-  team: Team;
-  teamId: Scalars['Int']['output'];
-};
-
-export type GameScoreConnection = {
-  __typename?: 'GameScoreConnection';
-  edges: Array<GameScoreEdge>;
-  pageInfo: PageInfo;
-};
-
-export type GameScoreDeleteResponse = {
-  __typename?: 'GameScoreDeleteResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<GameScore>;
-};
-
-export type GameScoreEdge = {
-  __typename?: 'GameScoreEdge';
-  cursor: Scalars['String']['output'];
-  node: GameScore;
-};
-
-export type GameScoreFilter = {
-  created_at?: InputMaybe<DatetimeFilter>;
-  gameId?: InputMaybe<IntFilter>;
-  id?: InputMaybe<BigIntFilter>;
-  nodeId?: InputMaybe<IdFilter>;
-  scoreId?: InputMaybe<IntFilter>;
-  teamId?: InputMaybe<IntFilter>;
-};
-
-export type GameScoreInsertInput = {
-  created_at?: InputMaybe<Scalars['Datetime']['input']>;
-  gameId?: InputMaybe<Scalars['Int']['input']>;
-  scoreId?: InputMaybe<Scalars['Int']['input']>;
-  teamId?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type GameScoreInsertResponse = {
-  __typename?: 'GameScoreInsertResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<GameScore>;
-};
-
-export type GameScoreOrderBy = {
-  created_at?: InputMaybe<OrderByDirection>;
-  gameId?: InputMaybe<OrderByDirection>;
-  id?: InputMaybe<OrderByDirection>;
-  scoreId?: InputMaybe<OrderByDirection>;
-  teamId?: InputMaybe<OrderByDirection>;
-};
-
-export type GameScoreUpdateInput = {
-  created_at?: InputMaybe<Scalars['Datetime']['input']>;
-  gameId?: InputMaybe<Scalars['Int']['input']>;
-  scoreId?: InputMaybe<Scalars['Int']['input']>;
-  teamId?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type GameScoreUpdateResponse = {
-  __typename?: 'GameScoreUpdateResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<GameScore>;
-};
-
 export type GameUpdateInput = {
   created_at?: InputMaybe<Scalars['Datetime']['input']>;
   date?: InputMaybe<Scalars['Datetime']['input']>;
@@ -468,10 +387,10 @@ export type IntFilter = {
 
 export type Members = Node & {
   __typename?: 'Members';
-  category: Category;
-  categoryId: Scalars['BigInt']['output'];
-  club: Club;
-  clubId: Scalars['BigInt']['output'];
+  category?: Maybe<Category>;
+  categoryId?: Maybe<Scalars['BigInt']['output']>;
+  club?: Maybe<Club>;
+  clubId?: Maybe<Scalars['BigInt']['output']>;
   created_at: Scalars['Datetime']['output'];
   firstName: Scalars['String']['output'];
   id: Scalars['BigInt']['output'];
@@ -480,6 +399,7 @@ export type Members = Node & {
   nodeId: Scalars['ID']['output'];
   pseudo?: Maybe<Scalars['String']['output']>;
   shootsCollection?: Maybe<ShootsConnection>;
+  teamMembersCollection?: Maybe<TeamMembersConnection>;
 };
 
 
@@ -490,6 +410,16 @@ export type MembersShootsCollectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<ShootsOrderBy>>;
+};
+
+
+export type MembersTeamMembersCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<TeamMembersFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<TeamMembersOrderBy>>;
 };
 
 export type MembersConnection = {
@@ -576,48 +506,48 @@ export type Mutation = {
   deleteFromClubCollection: ClubDeleteResponse;
   /** Deletes zero or more records from the `Game` collection */
   deleteFromGameCollection: GameDeleteResponse;
-  /** Deletes zero or more records from the `GameScore` collection */
-  deleteFromGameScoreCollection: GameScoreDeleteResponse;
   /** Deletes zero or more records from the `Members` collection */
   deleteFromMembersCollection: MembersDeleteResponse;
-  /** Deletes zero or more records from the `Score` collection */
-  deleteFromScoreCollection: ScoreDeleteResponse;
   /** Deletes zero or more records from the `Shoots` collection */
   deleteFromShootsCollection: ShootsDeleteResponse;
   /** Deletes zero or more records from the `Team` collection */
   deleteFromTeamCollection: TeamDeleteResponse;
+  /** Deletes zero or more records from the `TeamGame` collection */
+  deleteFromTeamGameCollection: TeamGameDeleteResponse;
+  /** Deletes zero or more records from the `TeamMembers` collection */
+  deleteFromTeamMembersCollection: TeamMembersDeleteResponse;
   /** Adds one or more `Category` records to the collection */
   insertIntoCategoryCollection?: Maybe<CategoryInsertResponse>;
   /** Adds one or more `Club` records to the collection */
   insertIntoClubCollection?: Maybe<ClubInsertResponse>;
   /** Adds one or more `Game` records to the collection */
   insertIntoGameCollection?: Maybe<GameInsertResponse>;
-  /** Adds one or more `GameScore` records to the collection */
-  insertIntoGameScoreCollection?: Maybe<GameScoreInsertResponse>;
   /** Adds one or more `Members` records to the collection */
   insertIntoMembersCollection?: Maybe<MembersInsertResponse>;
-  /** Adds one or more `Score` records to the collection */
-  insertIntoScoreCollection?: Maybe<ScoreInsertResponse>;
   /** Adds one or more `Shoots` records to the collection */
   insertIntoShootsCollection?: Maybe<ShootsInsertResponse>;
   /** Adds one or more `Team` records to the collection */
   insertIntoTeamCollection?: Maybe<TeamInsertResponse>;
+  /** Adds one or more `TeamGame` records to the collection */
+  insertIntoTeamGameCollection?: Maybe<TeamGameInsertResponse>;
+  /** Adds one or more `TeamMembers` records to the collection */
+  insertIntoTeamMembersCollection?: Maybe<TeamMembersInsertResponse>;
   /** Updates zero or more records in the `Category` collection */
   updateCategoryCollection: CategoryUpdateResponse;
   /** Updates zero or more records in the `Club` collection */
   updateClubCollection: ClubUpdateResponse;
   /** Updates zero or more records in the `Game` collection */
   updateGameCollection: GameUpdateResponse;
-  /** Updates zero or more records in the `GameScore` collection */
-  updateGameScoreCollection: GameScoreUpdateResponse;
   /** Updates zero or more records in the `Members` collection */
   updateMembersCollection: MembersUpdateResponse;
-  /** Updates zero or more records in the `Score` collection */
-  updateScoreCollection: ScoreUpdateResponse;
   /** Updates zero or more records in the `Shoots` collection */
   updateShootsCollection: ShootsUpdateResponse;
   /** Updates zero or more records in the `Team` collection */
   updateTeamCollection: TeamUpdateResponse;
+  /** Updates zero or more records in the `TeamGame` collection */
+  updateTeamGameCollection: TeamGameUpdateResponse;
+  /** Updates zero or more records in the `TeamMembers` collection */
+  updateTeamMembersCollection: TeamMembersUpdateResponse;
 };
 
 
@@ -643,23 +573,9 @@ export type MutationDeleteFromGameCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
-export type MutationDeleteFromGameScoreCollectionArgs = {
-  atMost?: Scalars['Int']['input'];
-  filter?: InputMaybe<GameScoreFilter>;
-};
-
-
-/** The root type for creating and mutating data */
 export type MutationDeleteFromMembersCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<MembersFilter>;
-};
-
-
-/** The root type for creating and mutating data */
-export type MutationDeleteFromScoreCollectionArgs = {
-  atMost?: Scalars['Int']['input'];
-  filter?: InputMaybe<ScoreFilter>;
 };
 
 
@@ -674,6 +590,20 @@ export type MutationDeleteFromShootsCollectionArgs = {
 export type MutationDeleteFromTeamCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<TeamFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromTeamGameCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<TeamGameFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromTeamMembersCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<TeamMembersFilter>;
 };
 
 
@@ -696,20 +626,8 @@ export type MutationInsertIntoGameCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
-export type MutationInsertIntoGameScoreCollectionArgs = {
-  objects: Array<GameScoreInsertInput>;
-};
-
-
-/** The root type for creating and mutating data */
 export type MutationInsertIntoMembersCollectionArgs = {
   objects: Array<MembersInsertInput>;
-};
-
-
-/** The root type for creating and mutating data */
-export type MutationInsertIntoScoreCollectionArgs = {
-  objects: Array<ScoreInsertInput>;
 };
 
 
@@ -722,6 +640,18 @@ export type MutationInsertIntoShootsCollectionArgs = {
 /** The root type for creating and mutating data */
 export type MutationInsertIntoTeamCollectionArgs = {
   objects: Array<TeamInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoTeamGameCollectionArgs = {
+  objects: Array<TeamGameInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoTeamMembersCollectionArgs = {
+  objects: Array<TeamMembersInsertInput>;
 };
 
 
@@ -750,26 +680,10 @@ export type MutationUpdateGameCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
-export type MutationUpdateGameScoreCollectionArgs = {
-  atMost?: Scalars['Int']['input'];
-  filter?: InputMaybe<GameScoreFilter>;
-  set: GameScoreUpdateInput;
-};
-
-
-/** The root type for creating and mutating data */
 export type MutationUpdateMembersCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<MembersFilter>;
   set: MembersUpdateInput;
-};
-
-
-/** The root type for creating and mutating data */
-export type MutationUpdateScoreCollectionArgs = {
-  atMost?: Scalars['Int']['input'];
-  filter?: InputMaybe<ScoreFilter>;
-  set: ScoreUpdateInput;
 };
 
 
@@ -786,6 +700,22 @@ export type MutationUpdateTeamCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<TeamFilter>;
   set: TeamUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateTeamGameCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<TeamGameFilter>;
+  set: TeamGameUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateTeamMembersCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<TeamMembersFilter>;
+  set: TeamMembersUpdateInput;
 };
 
 export type Node = {
@@ -828,18 +758,18 @@ export type Query = {
   clubCollection?: Maybe<ClubConnection>;
   /** A pagable collection of type `Game` */
   gameCollection?: Maybe<GameConnection>;
-  /** A pagable collection of type `GameScore` */
-  gameScoreCollection?: Maybe<GameScoreConnection>;
   /** A pagable collection of type `Members` */
   membersCollection?: Maybe<MembersConnection>;
   /** Retrieve a record by its `ID` */
   node?: Maybe<Node>;
-  /** A pagable collection of type `Score` */
-  scoreCollection?: Maybe<ScoreConnection>;
   /** A pagable collection of type `Shoots` */
   shootsCollection?: Maybe<ShootsConnection>;
   /** A pagable collection of type `Team` */
   teamCollection?: Maybe<TeamConnection>;
+  /** A pagable collection of type `TeamGame` */
+  teamGameCollection?: Maybe<TeamGameConnection>;
+  /** A pagable collection of type `TeamMembers` */
+  teamMembersCollection?: Maybe<TeamMembersConnection>;
 };
 
 
@@ -877,17 +807,6 @@ export type QueryGameCollectionArgs = {
 
 
 /** The root type for querying data */
-export type QueryGameScoreCollectionArgs = {
-  after?: InputMaybe<Scalars['Cursor']['input']>;
-  before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<GameScoreFilter>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<GameScoreOrderBy>>;
-};
-
-
-/** The root type for querying data */
 export type QueryMembersCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -901,17 +820,6 @@ export type QueryMembersCollectionArgs = {
 /** The root type for querying data */
 export type QueryNodeArgs = {
   nodeId: Scalars['ID']['input'];
-};
-
-
-/** The root type for querying data */
-export type QueryScoreCollectionArgs = {
-  after?: InputMaybe<Scalars['Cursor']['input']>;
-  before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<ScoreFilter>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<ScoreOrderBy>>;
 };
 
 
@@ -936,94 +844,26 @@ export type QueryTeamCollectionArgs = {
   orderBy?: InputMaybe<Array<TeamOrderBy>>;
 };
 
-export type Score = Node & {
-  __typename?: 'Score';
-  accuracy?: Maybe<Scalars['Float']['output']>;
-  created_at: Scalars['Datetime']['output'];
-  gameScoreCollection?: Maybe<GameScoreConnection>;
-  id: Scalars['BigInt']['output'];
-  /** Globally Unique Record Identifier */
-  nodeId: Scalars['ID']['output'];
-  shootsCollection?: Maybe<ShootsConnection>;
-};
 
-
-export type ScoreGameScoreCollectionArgs = {
+/** The root type for querying data */
+export type QueryTeamGameCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<GameScoreFilter>;
+  filter?: InputMaybe<TeamGameFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<GameScoreOrderBy>>;
+  orderBy?: InputMaybe<Array<TeamGameOrderBy>>;
 };
 
 
-export type ScoreShootsCollectionArgs = {
+/** The root type for querying data */
+export type QueryTeamMembersCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<ShootsFilter>;
+  filter?: InputMaybe<TeamMembersFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<ShootsOrderBy>>;
-};
-
-export type ScoreConnection = {
-  __typename?: 'ScoreConnection';
-  edges: Array<ScoreEdge>;
-  pageInfo: PageInfo;
-};
-
-export type ScoreDeleteResponse = {
-  __typename?: 'ScoreDeleteResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<Score>;
-};
-
-export type ScoreEdge = {
-  __typename?: 'ScoreEdge';
-  cursor: Scalars['String']['output'];
-  node: Score;
-};
-
-export type ScoreFilter = {
-  accuracy?: InputMaybe<FloatFilter>;
-  created_at?: InputMaybe<DatetimeFilter>;
-  id?: InputMaybe<BigIntFilter>;
-  nodeId?: InputMaybe<IdFilter>;
-};
-
-export type ScoreInsertInput = {
-  accuracy?: InputMaybe<Scalars['Float']['input']>;
-  created_at?: InputMaybe<Scalars['Datetime']['input']>;
-};
-
-export type ScoreInsertResponse = {
-  __typename?: 'ScoreInsertResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<Score>;
-};
-
-export type ScoreOrderBy = {
-  accuracy?: InputMaybe<OrderByDirection>;
-  created_at?: InputMaybe<OrderByDirection>;
-  id?: InputMaybe<OrderByDirection>;
-};
-
-export type ScoreUpdateInput = {
-  accuracy?: InputMaybe<Scalars['Float']['input']>;
-  created_at?: InputMaybe<Scalars['Datetime']['input']>;
-};
-
-export type ScoreUpdateResponse = {
-  __typename?: 'ScoreUpdateResponse';
-  /** Count of the records impacted by the mutation */
-  affectedCount: Scalars['Int']['output'];
-  /** Array of records impacted by the mutation */
-  records: Array<Score>;
+  orderBy?: InputMaybe<Array<TeamMembersOrderBy>>;
 };
 
 export type Shoots = Node & {
@@ -1034,8 +874,8 @@ export type Shoots = Node & {
   memberId?: Maybe<Scalars['BigInt']['output']>;
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
-  score?: Maybe<Score>;
-  scoreId?: Maybe<Scalars['BigInt']['output']>;
+  teamGame: TeamGame;
+  teamGameId: Scalars['BigInt']['output'];
   type: Scalars['String']['output'];
   x: Scalars['BigInt']['output'];
   y: Scalars['BigInt']['output'];
@@ -1066,7 +906,7 @@ export type ShootsFilter = {
   id?: InputMaybe<BigIntFilter>;
   memberId?: InputMaybe<BigIntFilter>;
   nodeId?: InputMaybe<IdFilter>;
-  scoreId?: InputMaybe<BigIntFilter>;
+  teamGameId?: InputMaybe<BigIntFilter>;
   type?: InputMaybe<StringFilter>;
   x?: InputMaybe<BigIntFilter>;
   y?: InputMaybe<BigIntFilter>;
@@ -1075,7 +915,7 @@ export type ShootsFilter = {
 export type ShootsInsertInput = {
   created_at?: InputMaybe<Scalars['Datetime']['input']>;
   memberId?: InputMaybe<Scalars['BigInt']['input']>;
-  scoreId?: InputMaybe<Scalars['BigInt']['input']>;
+  teamGameId?: InputMaybe<Scalars['BigInt']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
   x?: InputMaybe<Scalars['BigInt']['input']>;
   y?: InputMaybe<Scalars['BigInt']['input']>;
@@ -1093,7 +933,7 @@ export type ShootsOrderBy = {
   created_at?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   memberId?: InputMaybe<OrderByDirection>;
-  scoreId?: InputMaybe<OrderByDirection>;
+  teamGameId?: InputMaybe<OrderByDirection>;
   type?: InputMaybe<OrderByDirection>;
   x?: InputMaybe<OrderByDirection>;
   y?: InputMaybe<OrderByDirection>;
@@ -1102,7 +942,7 @@ export type ShootsOrderBy = {
 export type ShootsUpdateInput = {
   created_at?: InputMaybe<Scalars['Datetime']['input']>;
   memberId?: InputMaybe<Scalars['BigInt']['input']>;
-  scoreId?: InputMaybe<Scalars['BigInt']['input']>;
+  teamGameId?: InputMaybe<Scalars['BigInt']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
   x?: InputMaybe<Scalars['BigInt']['input']>;
   y?: InputMaybe<Scalars['BigInt']['input']>;
@@ -1135,24 +975,25 @@ export type StringFilter = {
 
 export type Team = Node & {
   __typename?: 'Team';
-  club: Club;
-  clubId: Scalars['Int']['output'];
+  club?: Maybe<Club>;
+  clubId?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['Datetime']['output'];
-  gameScoreCollection?: Maybe<GameScoreConnection>;
+  external: Scalars['Boolean']['output'];
   id: Scalars['BigInt']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  teamGameCollection?: Maybe<TeamGameConnection>;
   teamName: Scalars['String']['output'];
 };
 
 
-export type TeamGameScoreCollectionArgs = {
+export type TeamTeamGameCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
-  filter?: InputMaybe<GameScoreFilter>;
+  filter?: InputMaybe<TeamGameFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  orderBy?: InputMaybe<Array<GameScoreOrderBy>>;
+  orderBy?: InputMaybe<Array<TeamGameOrderBy>>;
 };
 
 export type TeamConnection = {
@@ -1178,14 +1019,113 @@ export type TeamEdge = {
 export type TeamFilter = {
   clubId?: InputMaybe<IntFilter>;
   created_at?: InputMaybe<DatetimeFilter>;
+  external?: InputMaybe<BooleanFilter>;
   id?: InputMaybe<BigIntFilter>;
   nodeId?: InputMaybe<IdFilter>;
   teamName?: InputMaybe<StringFilter>;
 };
 
+export type TeamGame = Node & {
+  __typename?: 'TeamGame';
+  created_at: Scalars['Datetime']['output'];
+  game: Game;
+  gameId: Scalars['Int']['output'];
+  id: Scalars['BigInt']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  shootsCollection?: Maybe<ShootsConnection>;
+  team: Team;
+  teamId: Scalars['Int']['output'];
+  teamMembersCollection?: Maybe<TeamMembersConnection>;
+};
+
+
+export type TeamGameShootsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ShootsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ShootsOrderBy>>;
+};
+
+
+export type TeamGameTeamMembersCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<TeamMembersFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<TeamMembersOrderBy>>;
+};
+
+export type TeamGameConnection = {
+  __typename?: 'TeamGameConnection';
+  edges: Array<TeamGameEdge>;
+  pageInfo: PageInfo;
+};
+
+export type TeamGameDeleteResponse = {
+  __typename?: 'TeamGameDeleteResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamGame>;
+};
+
+export type TeamGameEdge = {
+  __typename?: 'TeamGameEdge';
+  cursor: Scalars['String']['output'];
+  node: TeamGame;
+};
+
+export type TeamGameFilter = {
+  created_at?: InputMaybe<DatetimeFilter>;
+  gameId?: InputMaybe<IntFilter>;
+  id?: InputMaybe<BigIntFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  teamId?: InputMaybe<IntFilter>;
+};
+
+export type TeamGameInsertInput = {
+  created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  gameId?: InputMaybe<Scalars['Int']['input']>;
+  teamId?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type TeamGameInsertResponse = {
+  __typename?: 'TeamGameInsertResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamGame>;
+};
+
+export type TeamGameOrderBy = {
+  created_at?: InputMaybe<OrderByDirection>;
+  gameId?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  teamId?: InputMaybe<OrderByDirection>;
+};
+
+export type TeamGameUpdateInput = {
+  created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  gameId?: InputMaybe<Scalars['Int']['input']>;
+  teamId?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type TeamGameUpdateResponse = {
+  __typename?: 'TeamGameUpdateResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamGame>;
+};
+
 export type TeamInsertInput = {
   clubId?: InputMaybe<Scalars['Int']['input']>;
   created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
   teamName?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1197,9 +1137,85 @@ export type TeamInsertResponse = {
   records: Array<Team>;
 };
 
+export type TeamMembers = Node & {
+  __typename?: 'TeamMembers';
+  created_at: Scalars['Datetime']['output'];
+  id: Scalars['BigInt']['output'];
+  member: Members;
+  memberId: Scalars['BigInt']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  teamGame: TeamGame;
+  teamGameId: Scalars['BigInt']['output'];
+};
+
+export type TeamMembersConnection = {
+  __typename?: 'TeamMembersConnection';
+  edges: Array<TeamMembersEdge>;
+  pageInfo: PageInfo;
+};
+
+export type TeamMembersDeleteResponse = {
+  __typename?: 'TeamMembersDeleteResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamMembers>;
+};
+
+export type TeamMembersEdge = {
+  __typename?: 'TeamMembersEdge';
+  cursor: Scalars['String']['output'];
+  node: TeamMembers;
+};
+
+export type TeamMembersFilter = {
+  created_at?: InputMaybe<DatetimeFilter>;
+  id?: InputMaybe<BigIntFilter>;
+  memberId?: InputMaybe<BigIntFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  teamGameId?: InputMaybe<BigIntFilter>;
+};
+
+export type TeamMembersInsertInput = {
+  created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  memberId?: InputMaybe<Scalars['BigInt']['input']>;
+  teamGameId?: InputMaybe<Scalars['BigInt']['input']>;
+};
+
+export type TeamMembersInsertResponse = {
+  __typename?: 'TeamMembersInsertResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamMembers>;
+};
+
+export type TeamMembersOrderBy = {
+  created_at?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  memberId?: InputMaybe<OrderByDirection>;
+  teamGameId?: InputMaybe<OrderByDirection>;
+};
+
+export type TeamMembersUpdateInput = {
+  created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  memberId?: InputMaybe<Scalars['BigInt']['input']>;
+  teamGameId?: InputMaybe<Scalars['BigInt']['input']>;
+};
+
+export type TeamMembersUpdateResponse = {
+  __typename?: 'TeamMembersUpdateResponse';
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<TeamMembers>;
+};
+
 export type TeamOrderBy = {
   clubId?: InputMaybe<OrderByDirection>;
   created_at?: InputMaybe<OrderByDirection>;
+  external?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   teamName?: InputMaybe<OrderByDirection>;
 };
@@ -1207,6 +1223,7 @@ export type TeamOrderBy = {
 export type TeamUpdateInput = {
   clubId?: InputMaybe<Scalars['Int']['input']>;
   created_at?: InputMaybe<Scalars['Datetime']['input']>;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
   teamName?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1238,12 +1255,38 @@ export type UuidFilter = {
   neq?: InputMaybe<Scalars['UUID']['input']>;
 };
 
+export type HomeFragmentFragment = { __typename?: 'Club', id: any, name: string } & { ' $fragmentName'?: 'HomeFragmentFragment' };
+
+export type TeamScoreFragmentFragment = { __typename?: 'TeamGame', id: any, team: { __typename?: 'Team', teamName: string }, shootsCollection?: { __typename?: 'ShootsConnection', edges: Array<{ __typename?: 'ShootsEdge', node: { __typename?: 'Shoots', id: any, type: string } }> } | null } & { ' $fragmentName'?: 'TeamScoreFragmentFragment' };
+
+export type GameFragmentFragment = { __typename?: 'Game', id: any, duration: number, gameEnded: boolean, teamGameCollection?: { __typename?: 'TeamGameConnection', edges: Array<{ __typename?: 'TeamGameEdge', node: (
+        { __typename?: 'TeamGame', shootsCollection?: { __typename?: 'ShootsConnection', edges: Array<{ __typename?: 'ShootsEdge', node: { __typename?: 'Shoots', id: any, type: string } }> } | null }
+        & { ' $fragmentRefs'?: { 'TeamScoreFragmentFragment': TeamScoreFragmentFragment } }
+      ) }> } | null } & { ' $fragmentName'?: 'GameFragmentFragment' };
+
+export type GameListFragmentFragment = { __typename?: 'GameEdge', node: (
+    { __typename?: 'Game', id: any }
+    & { ' $fragmentRefs'?: { 'GameFragmentFragment': GameFragmentFragment } }
+  ) } & { ' $fragmentName'?: 'GameListFragmentFragment' };
+
 export type ClubQueryQueryVariables = Exact<{
   id: Scalars['BigInt']['input'];
 }>;
 
 
-export type ClubQueryQuery = { __typename?: 'Query', clubCollection?: { __typename?: 'ClubConnection', edges: Array<{ __typename?: 'ClubEdge', node: { __typename?: 'Club', id: any, name: string } }> } | null };
+export type ClubQueryQuery = { __typename?: 'Query', clubCollection?: { __typename?: 'ClubConnection', edges: Array<{ __typename?: 'ClubEdge', node: (
+        { __typename?: 'Club', id: any }
+        & { ' $fragmentRefs'?: { 'HomeFragmentFragment': HomeFragmentFragment } }
+      ) }> } | null, gameEndedCollection?: { __typename?: 'GameConnection', edges: Array<(
+      { __typename?: 'GameEdge' }
+      & { ' $fragmentRefs'?: { 'GameListFragmentFragment': GameListFragmentFragment } }
+    )> } | null, gameInProgressCollection?: { __typename?: 'GameConnection', edges: Array<(
+      { __typename?: 'GameEdge' }
+      & { ' $fragmentRefs'?: { 'GameListFragmentFragment': GameListFragmentFragment } }
+    )> } | null };
 
-
-export const ClubQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"clubQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clubCollection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ClubQueryQuery, ClubQueryQueryVariables>;
+export const HomeFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"HomeFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Club"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]} as unknown as DocumentNode<HomeFragmentFragment, unknown>;
+export const TeamScoreFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TeamScoreFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TeamGame"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"team"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}}]} as unknown as DocumentNode<TeamScoreFragmentFragment, unknown>;
+export const GameFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"GameFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Game"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"gameEnded"}},{"kind":"Field","name":{"kind":"Name","value":"teamGameCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TeamScoreFragment"}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TeamScoreFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TeamGame"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"team"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GameFragmentFragment, unknown>;
+export const GameListFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"GameListFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"GameEdge"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"GameFragment"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TeamScoreFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TeamGame"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"team"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"GameFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Game"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"gameEnded"}},{"kind":"Field","name":{"kind":"Name","value":"teamGameCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TeamScoreFragment"}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GameListFragmentFragment, unknown>;
+export const ClubQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"clubQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clubCollection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"HomeFragment"}}]}}]}}]}},{"kind":"Field","alias":{"kind":"Name","value":"gameEndedCollection"},"name":{"kind":"Name","value":"gameCollection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"gameEnded"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"BooleanValue","value":true}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"GameListFragment"}}]}}]}},{"kind":"Field","alias":{"kind":"Name","value":"gameInProgressCollection"},"name":{"kind":"Name","value":"gameCollection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"gameEnded"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"BooleanValue","value":false}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"GameListFragment"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TeamScoreFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TeamGame"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"team"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"teamName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"GameFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Game"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"gameEnded"}},{"kind":"Field","name":{"kind":"Name","value":"teamGameCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TeamScoreFragment"}},{"kind":"Field","name":{"kind":"Name","value":"shootsCollection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"HomeFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Club"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"GameListFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"GameEdge"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"FragmentSpread","name":{"kind":"Name","value":"GameFragment"}}]}}]}}]} as unknown as DocumentNode<ClubQueryQuery, ClubQueryQueryVariables>;

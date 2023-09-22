@@ -32,28 +32,28 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-    <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={defaultScreenOptions}
-          initialRouteName="Home"
-        >
-          <Stack.Group>
-            {/* <Stack.Screen name="Login" component={Login} /> */}
-            <Stack.Screen name="Home" component={Home} />
-            {/* <Stack.Screen name="CreateClub" component={CreateClub} /> */}
-            <Stack.Screen name="Members" component={Members} />
-            <Stack.Screen name="NewGame" component={AddGame} />
-            <Stack.Screen name="Game" component={GameScreen} />
-          </Stack.Group>
-          <Stack.Group screenOptions={{ presentation: "modal" }}>
-            <Stack.Screen name="AddMember" component={AddMember} />
-            <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
-            <Stack.Screen name="MembersModal" component={Members} />
-          </Stack.Group>
-        </Stack.Navigator>
-      </NavigationContainer>
-    </Provider>
+      <Provider store={store}>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={defaultScreenOptions}
+            initialRouteName="Home"
+          >
+            <Stack.Group>
+              {/* <Stack.Screen name="Login" component={Login} /> */}
+              <Stack.Screen name="Home" component={Home} />
+              {/* <Stack.Screen name="CreateClub" component={CreateClub} /> */}
+              <Stack.Screen name="Members" component={Members} />
+              <Stack.Screen name="NewGame" component={AddGame} />
+              <Stack.Screen name="Game" component={GameScreen} />
+            </Stack.Group>
+            <Stack.Group screenOptions={{ presentation: "modal" }}>
+              <Stack.Screen name="AddMember" component={AddMember} />
+              <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
+              <Stack.Screen name="MembersModal" component={Members} />
+            </Stack.Group>
+          </Stack.Navigator>
+        </NavigationContainer>
+      </Provider>
     </QueryClientProvider>
   );
 }

@@ -130,25 +130,6 @@ type Club implements Node {
   id: BigInt!
   created_at: Datetime!
   name: String!
-  membersCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: MembersFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [MembersOrderBy!]
-  ): MembersConnection
   teamCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -168,6 +149,25 @@ type Club implements Node {
     """Sort order to apply to the collection"""
     orderBy: [TeamOrderBy!]
   ): TeamConnection
+  membersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: MembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [MembersOrderBy!]
+  ): MembersConnection
 }
 
 type ClubConnection {
@@ -294,7 +294,7 @@ type Game implements Node {
   duration: Int!
   name: String!
   gameEnded: Boolean!
-  gameScoreCollection(
+  teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
 
@@ -308,11 +308,11 @@ type Game implements Node {
     after: Cursor
 
     """Filters to apply to the results set when querying from the collection"""
-    filter: GameScoreFilter
+    filter: TeamGameFilter
 
     """Sort order to apply to the collection"""
-    orderBy: [GameScoreOrderBy!]
-  ): GameScoreConnection
+    orderBy: [TeamGameOrderBy!]
+  ): TeamGameConnection
 }
 
 type GameConnection {
@@ -368,84 +368,6 @@ input GameOrderBy {
   gameEnded: OrderByDirection
 }
 
-type GameScore implements Node {
-  """Globally Unique Record Identifier"""
-  nodeId: ID!
-  id: BigInt!
-  created_at: Datetime!
-  teamId: Int!
-  scoreId: Int!
-  gameId: Int!
-  team: Team!
-  score: Score!
-  game: Game!
-}
-
-type GameScoreConnection {
-  edges: [GameScoreEdge!]!
-  pageInfo: PageInfo!
-}
-
-type GameScoreDeleteResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [GameScore!]!
-}
-
-type GameScoreEdge {
-  cursor: String!
-  node: GameScore!
-}
-
-input GameScoreFilter {
-  id: BigIntFilter
-  created_at: DatetimeFilter
-  teamId: IntFilter
-  scoreId: IntFilter
-  gameId: IntFilter
-  nodeId: IDFilter
-}
-
-input GameScoreInsertInput {
-  created_at: Datetime
-  teamId: Int
-  scoreId: Int
-  gameId: Int
-}
-
-type GameScoreInsertResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [GameScore!]!
-}
-
-input GameScoreOrderBy {
-  id: OrderByDirection
-  created_at: OrderByDirection
-  teamId: OrderByDirection
-  scoreId: OrderByDirection
-  gameId: OrderByDirection
-}
-
-input GameScoreUpdateInput {
-  created_at: Datetime
-  teamId: Int
-  scoreId: Int
-  gameId: Int
-}
-
-type GameScoreUpdateResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [GameScore!]!
-}
-
 input GameUpdateInput {
   created_at: Datetime
   date: Datetime
@@ -493,11 +415,30 @@ type Members implements Node {
   created_at: Datetime!
   firstName: String!
   lastName: String!
-  categoryId: BigInt!
-  clubId: BigInt!
+  categoryId: BigInt
+  clubId: BigInt
   pseudo: String
-  category: Category!
-  club: Club!
+  category: Category
+  club: Club
+  teamMembersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamMembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamMembersOrderBy!]
+  ): TeamMembersConnection
   shootsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -627,17 +568,6 @@ type Mutation {
     atMost: Int! = 1
   ): GameDeleteResponse!
 
-  """Deletes zero or more records from the `GameScore` collection"""
-  deleteFromGameScoreCollection(
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: GameScoreFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): GameScoreDeleteResponse!
-
   """Deletes zero or more records from the `Members` collection"""
   deleteFromMembersCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -648,17 +578,6 @@ type Mutation {
     """
     atMost: Int! = 1
   ): MembersDeleteResponse!
-
-  """Deletes zero or more records from the `Score` collection"""
-  deleteFromScoreCollection(
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: ScoreFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): ScoreDeleteResponse!
 
   """Deletes zero or more records from the `Shoots` collection"""
   deleteFromShootsCollection(
@@ -682,6 +601,28 @@ type Mutation {
     atMost: Int! = 1
   ): TeamDeleteResponse!
 
+  """Deletes zero or more records from the `TeamGame` collection"""
+  deleteFromTeamGameCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: TeamGameFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): TeamGameDeleteResponse!
+
+  """Deletes zero or more records from the `TeamMembers` collection"""
+  deleteFromTeamMembersCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: TeamMembersFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): TeamMembersDeleteResponse!
+
   """Adds one or more `Category` records to the collection"""
   insertIntoCategoryCollection(objects: [CategoryInsertInput!]!): CategoryInsertResponse
 
@@ -691,20 +632,20 @@ type Mutation {
   """Adds one or more `Game` records to the collection"""
   insertIntoGameCollection(objects: [GameInsertInput!]!): GameInsertResponse
 
-  """Adds one or more `GameScore` records to the collection"""
-  insertIntoGameScoreCollection(objects: [GameScoreInsertInput!]!): GameScoreInsertResponse
-
   """Adds one or more `Members` records to the collection"""
   insertIntoMembersCollection(objects: [MembersInsertInput!]!): MembersInsertResponse
-
-  """Adds one or more `Score` records to the collection"""
-  insertIntoScoreCollection(objects: [ScoreInsertInput!]!): ScoreInsertResponse
 
   """Adds one or more `Shoots` records to the collection"""
   insertIntoShootsCollection(objects: [ShootsInsertInput!]!): ShootsInsertResponse
 
   """Adds one or more `Team` records to the collection"""
   insertIntoTeamCollection(objects: [TeamInsertInput!]!): TeamInsertResponse
+
+  """Adds one or more `TeamGame` records to the collection"""
+  insertIntoTeamGameCollection(objects: [TeamGameInsertInput!]!): TeamGameInsertResponse
+
+  """Adds one or more `TeamMembers` records to the collection"""
+  insertIntoTeamMembersCollection(objects: [TeamMembersInsertInput!]!): TeamMembersInsertResponse
 
   """Updates zero or more records in the `Category` collection"""
   updateCategoryCollection(
@@ -754,22 +695,6 @@ type Mutation {
     atMost: Int! = 1
   ): GameUpdateResponse!
 
-  """Updates zero or more records in the `GameScore` collection"""
-  updateGameScoreCollection(
-    """
-    Fields that are set will be updated for all records matching the `filter`
-    """
-    set: GameScoreUpdateInput!
-
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: GameScoreFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): GameScoreUpdateResponse!
-
   """Updates zero or more records in the `Members` collection"""
   updateMembersCollection(
     """
@@ -785,22 +710,6 @@ type Mutation {
     """
     atMost: Int! = 1
   ): MembersUpdateResponse!
-
-  """Updates zero or more records in the `Score` collection"""
-  updateScoreCollection(
-    """
-    Fields that are set will be updated for all records matching the `filter`
-    """
-    set: ScoreUpdateInput!
-
-    """Restricts the mutation's impact to records matching the criteria"""
-    filter: ScoreFilter
-
-    """
-    The maximum number of records in the collection permitted to be affected
-    """
-    atMost: Int! = 1
-  ): ScoreUpdateResponse!
 
   """Updates zero or more records in the `Shoots` collection"""
   updateShootsCollection(
@@ -833,6 +742,38 @@ type Mutation {
     """
     atMost: Int! = 1
   ): TeamUpdateResponse!
+
+  """Updates zero or more records in the `TeamGame` collection"""
+  updateTeamGameCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: TeamGameUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: TeamGameFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): TeamGameUpdateResponse!
+
+  """Updates zero or more records in the `TeamMembers` collection"""
+  updateTeamMembersCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: TeamMembersUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: TeamMembersFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): TeamMembersUpdateResponse!
 }
 
 interface Node {
@@ -938,27 +879,6 @@ type Query {
     orderBy: [GameOrderBy!]
   ): GameConnection
 
-  """A pagable collection of type `GameScore`"""
-  gameScoreCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: GameScoreFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [GameScoreOrderBy!]
-  ): GameScoreConnection
-
   """A pagable collection of type `Members`"""
   membersCollection(
     """Query the first `n` records in the collection"""
@@ -985,27 +905,6 @@ type Query {
     """The record's `ID`"""
     nodeId: ID!
   ): Node
-
-  """A pagable collection of type `Score`"""
-  scoreCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: ScoreFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [ScoreOrderBy!]
-  ): ScoreConnection
 
   """A pagable collection of type `Shoots`"""
   shootsCollection(
@@ -1048,15 +947,9 @@ type Query {
     """Sort order to apply to the collection"""
     orderBy: [TeamOrderBy!]
   ): TeamConnection
-}
 
-type Score implements Node {
-  """Globally Unique Record Identifier"""
-  nodeId: ID!
-  id: BigInt!
-  created_at: Datetime!
-  accuracy: Float
-  shootsCollection(
+  """A pagable collection of type `TeamGame`"""
+  teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
 
@@ -1070,12 +963,14 @@ type Score implements Node {
     after: Cursor
 
     """Filters to apply to the results set when querying from the collection"""
-    filter: ShootsFilter
+    filter: TeamGameFilter
 
     """Sort order to apply to the collection"""
-    orderBy: [ShootsOrderBy!]
-  ): ShootsConnection
-  gameScoreCollection(
+    orderBy: [TeamGameOrderBy!]
+  ): TeamGameConnection
+
+  """A pagable collection of type `TeamMembers`"""
+  teamMembersCollection(
     """Query the first `n` records in the collection"""
     first: Int
 
@@ -1089,68 +984,11 @@ type Score implements Node {
     after: Cursor
 
     """Filters to apply to the results set when querying from the collection"""
-    filter: GameScoreFilter
+    filter: TeamMembersFilter
 
     """Sort order to apply to the collection"""
-    orderBy: [GameScoreOrderBy!]
-  ): GameScoreConnection
-}
-
-type ScoreConnection {
-  edges: [ScoreEdge!]!
-  pageInfo: PageInfo!
-}
-
-type ScoreDeleteResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Score!]!
-}
-
-type ScoreEdge {
-  cursor: String!
-  node: Score!
-}
-
-input ScoreFilter {
-  id: BigIntFilter
-  created_at: DatetimeFilter
-  accuracy: FloatFilter
-  nodeId: IDFilter
-}
-
-input ScoreInsertInput {
-  created_at: Datetime
-  accuracy: Float
-}
-
-type ScoreInsertResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Score!]!
-}
-
-input ScoreOrderBy {
-  id: OrderByDirection
-  created_at: OrderByDirection
-  accuracy: OrderByDirection
-}
-
-input ScoreUpdateInput {
-  created_at: Datetime
-  accuracy: Float
-}
-
-type ScoreUpdateResponse {
-  """Count of the records impacted by the mutation"""
-  affectedCount: Int!
-
-  """Array of records impacted by the mutation"""
-  records: [Score!]!
+    orderBy: [TeamMembersOrderBy!]
+  ): TeamMembersConnection
 }
 
 type Shoots implements Node {
@@ -1161,10 +999,10 @@ type Shoots implements Node {
   x: BigInt!
   y: BigInt!
   memberId: BigInt
-  scoreId: BigInt
   type: String!
-  score: Score
+  teamGameId: BigInt!
   member: Members
+  teamGame: TeamGame!
 }
 
 type ShootsConnection {
@@ -1191,8 +1029,8 @@ input ShootsFilter {
   x: BigIntFilter
   y: BigIntFilter
   memberId: BigIntFilter
-  scoreId: BigIntFilter
   type: StringFilter
+  teamGameId: BigIntFilter
   nodeId: IDFilter
 }
 
@@ -1201,8 +1039,8 @@ input ShootsInsertInput {
   x: BigInt
   y: BigInt
   memberId: BigInt
-  scoreId: BigInt
   type: String
+  teamGameId: BigInt
 }
 
 type ShootsInsertResponse {
@@ -1219,8 +1057,8 @@ input ShootsOrderBy {
   x: OrderByDirection
   y: OrderByDirection
   memberId: OrderByDirection
-  scoreId: OrderByDirection
   type: OrderByDirection
+  teamGameId: OrderByDirection
 }
 
 input ShootsUpdateInput {
@@ -1228,8 +1066,8 @@ input ShootsUpdateInput {
   x: BigInt
   y: BigInt
   memberId: BigInt
-  scoreId: BigInt
   type: String
+  teamGameId: BigInt
 }
 
 type ShootsUpdateResponse {
@@ -1265,9 +1103,10 @@ type Team implements Node {
   id: BigInt!
   created_at: Datetime!
   teamName: String!
-  clubId: Int!
-  club: Club!
-  gameScoreCollection(
+  clubId: Int
+  external: Boolean!
+  club: Club
+  teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
 
@@ -1281,11 +1120,11 @@ type Team implements Node {
     after: Cursor
 
     """Filters to apply to the results set when querying from the collection"""
-    filter: GameScoreFilter
+    filter: TeamGameFilter
 
     """Sort order to apply to the collection"""
-    orderBy: [GameScoreOrderBy!]
-  ): GameScoreConnection
+    orderBy: [TeamGameOrderBy!]
+  ): TeamGameConnection
 }
 
 type TeamConnection {
@@ -1311,13 +1150,125 @@ input TeamFilter {
   created_at: DatetimeFilter
   teamName: StringFilter
   clubId: IntFilter
+  external: BooleanFilter
   nodeId: IDFilter
+}
+
+type TeamGame implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: BigInt!
+  created_at: Datetime!
+  teamId: Int!
+  gameId: Int!
+  team: Team!
+  game: Game!
+  teamMembersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamMembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamMembersOrderBy!]
+  ): TeamMembersConnection
+  shootsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ShootsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ShootsOrderBy!]
+  ): ShootsConnection
+}
+
+type TeamGameConnection {
+  edges: [TeamGameEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TeamGameDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamGame!]!
+}
+
+type TeamGameEdge {
+  cursor: String!
+  node: TeamGame!
+}
+
+input TeamGameFilter {
+  id: BigIntFilter
+  created_at: DatetimeFilter
+  teamId: IntFilter
+  gameId: IntFilter
+  nodeId: IDFilter
+}
+
+input TeamGameInsertInput {
+  created_at: Datetime
+  teamId: Int
+  gameId: Int
+}
+
+type TeamGameInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamGame!]!
+}
+
+input TeamGameOrderBy {
+  id: OrderByDirection
+  created_at: OrderByDirection
+  teamId: OrderByDirection
+  gameId: OrderByDirection
+}
+
+input TeamGameUpdateInput {
+  created_at: Datetime
+  teamId: Int
+  gameId: Int
+}
+
+type TeamGameUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamGame!]!
 }
 
 input TeamInsertInput {
   created_at: Datetime
   teamName: String
   clubId: Int
+  external: Boolean
 }
 
 type TeamInsertResponse {
@@ -1328,17 +1279,91 @@ type TeamInsertResponse {
   records: [Team!]!
 }
 
+type TeamMembers implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: BigInt!
+  created_at: Datetime!
+  memberId: BigInt!
+  teamGameId: BigInt!
+  member: Members!
+  teamGame: TeamGame!
+}
+
+type TeamMembersConnection {
+  edges: [TeamMembersEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TeamMembersDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamMembers!]!
+}
+
+type TeamMembersEdge {
+  cursor: String!
+  node: TeamMembers!
+}
+
+input TeamMembersFilter {
+  id: BigIntFilter
+  created_at: DatetimeFilter
+  memberId: BigIntFilter
+  teamGameId: BigIntFilter
+  nodeId: IDFilter
+}
+
+input TeamMembersInsertInput {
+  created_at: Datetime
+  memberId: BigInt
+  teamGameId: BigInt
+}
+
+type TeamMembersInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamMembers!]!
+}
+
+input TeamMembersOrderBy {
+  id: OrderByDirection
+  created_at: OrderByDirection
+  memberId: OrderByDirection
+  teamGameId: OrderByDirection
+}
+
+input TeamMembersUpdateInput {
+  created_at: Datetime
+  memberId: BigInt
+  teamGameId: BigInt
+}
+
+type TeamMembersUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [TeamMembers!]!
+}
+
 input TeamOrderBy {
   id: OrderByDirection
   created_at: OrderByDirection
   teamName: OrderByDirection
   clubId: OrderByDirection
+  external: OrderByDirection
 }
 
 input TeamUpdateInput {
   created_at: Datetime
   teamName: String
   clubId: Int
+  external: Boolean
 }
 
 type TeamUpdateResponse {
