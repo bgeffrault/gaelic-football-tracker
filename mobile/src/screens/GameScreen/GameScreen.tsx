@@ -5,7 +5,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { FieldZone } from "./FielZone";
 import { StyledText } from "../../components/StyledText";
 import { CustomButton } from "../../components/CustomButton";
-import { gameResultColors } from "../../utils/gameResult";
+import { gameResultColors } from "../../utils/shootsUtils";
 import { useAppSelector } from "../../stores/store";
 import { AppNavigationProp, AppRouteProp } from "../../navigators";
 
@@ -22,7 +22,7 @@ const useScore = (teamState) =>
       accuracy: Math.round(
         ((totalPoints + totalGoals) /
           (totalPoints + totalGoals + totalMissed + totalBlocked)) *
-          100
+        100
       ),
     };
   }, [teamState]);

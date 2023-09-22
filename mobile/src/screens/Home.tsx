@@ -7,12 +7,73 @@ import { CustomButton } from "../components/CustomButton";
 import { StyledText } from "../components/StyledText";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
 import { sumScore } from "../utils/sumScore";
-import { gameResult, gameResultColors } from "../utils/gameResult";
+import { gameResult, gameResultColors, shootsAccuracy, sumShoots } from "../utils/shootsUtils";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { Game, Score } from "../domain/types";
-import { graphql } from "../gql/gql";
+import { DocumentType, graphql } from "../gql/gql";
 import { useGraphQLQuery } from "../useGraphQLQuery";
+import { useFragment } from "../gql";
+
+const HomeFragment = graphql(/* GraphQL */ `
+  fragment HomeFragment on Club {
+    id
+    name
+  }
+`)
+
+const TeamScoreFragment = graphql(/* GraphQL */ `
+  fragment TeamScoreFragment on TeamGame {
+    id
+    team {
+      teamName
+    }
+
+    shootsCollection {
+      edges {
+        node {
+          id
+          type
+        }
+      }
+    }
+  }
+`)
+
+const GameFragment = graphql(/* GraphQL */ `
+  fragment GameFragment on Game {
+    id
+    duration
+    gameEnded
+
+    teamGameCollection {
+      edges {
+        node {
+          ...TeamScoreFragment
+
+          shootsCollection {
+            edges {
+              node {
+                id
+                type
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
+const GameListFragment = graphql(/* GraphQL */ `
+  fragment GameListFragment on GameEdge {
+    node {
+      id,
+      ...GameFragment
+    }
+  }
+`)
+
 
 const clubQuery = graphql(/* GraphQL */ `
   query clubQuery($id: BigInt!) {
@@ -20,33 +81,41 @@ const clubQuery = graphql(/* GraphQL */ `
       edges {
         node {
           id
-          name
+          ...HomeFragment
         }
+      }
+    }
+    gameEndedCollection: gameCollection(filter: { gameEnded: { eq: true } }) {
+      edges {
+        ...GameListFragment
+      }
+    }
+    gameInProgressCollection: gameCollection(filter: { gameEnded: { eq: false } }) {
+      edges {
+        ...GameListFragment
       }
     }
   }
 `)
 
-export function Home({}: AppNavigationProp<"Home">) {
+export function Home({ }: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
   const { gameList } = useAppSelector((state) => state.games);
-  const { data: clubData } = useGraphQLQuery(["club"], clubQuery, { id: 1 })
-  const clubName = useMemo(() => clubData?.clubCollection.edges[0].node.name ?? "Home"
-  ,[])
-  console.log('data', clubData);
+  const { data } = useGraphQLQuery(["club-gameEnded-gameInProgress"], clubQuery, { id: 1 })
+  const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
+  const gamesEnded = useFragment(GameListFragment, data?.gameEndedCollection.edges) ?? []
+  const gamesInProgress = useFragment(GameListFragment, data?.gameInProgressCollection.edges) ?? []
 
-  const gamesInProgress = gameList.filter((game) => !game.gameEnded);
-  const gamesEnded = gameList.filter((game) => game.gameEnded);
+  const clubName = useMemo(() => { if (club) return club.name; return "Home" }, [club])
+
+  // console.log('data', JSON.stringify(data, null, 2));
+  console.log('gamesInProgress', JSON.stringify(gamesInProgress, null, 2));
+
 
   useEffect(() => {
     navigation.setOptions({
       // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => <HeaderRightAddButton nav="NewGame" />,
-    });
-  }, [navigation]);
-  useEffect(() => {
-    navigation.setOptions({
-      // eslint-disable-next-line react/no-unstable-nested-components
       headerTitle: clubName,
     });
   }, [navigation, clubName]);
@@ -54,12 +123,12 @@ export function Home({}: AppNavigationProp<"Home">) {
   return (
     <>
       <View className="p-6 flex-1">
-          {gamesInProgress.length > 0 && (
+        {gamesInProgress.length > 0 && (
           <View className="mb-4">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>
         )}
-        {gamesEnded.length && (
+        {gamesEnded.length > 0 && (
           <View className="flex-1">
             <GamesSection games={gamesEnded} title="Last Games" />
           </View>
@@ -74,30 +143,49 @@ export function Home({}: AppNavigationProp<"Home">) {
   );
 }
 
-function GamesSection({ games, title }) {
+function GamesSection({ games, title }: {
+  games: readonly DocumentType<typeof GameListFragment>[];
+  title: string;
+}) {
   return (
     <View className="">
       <StyledText cn="tracking-wide bg-[#df8c5f] p-1">{title}</StyledText>
       <ScrollView className="mt-2">
-        {games.map((game, i, arr) => (
-          <GameListItem
-            key={game.id}
-            game={game}
-            first={i === 0}
-            last={i === arr.length - 1}
-          />
-        ))}
+        {games.map(({ node }, i, arr) => {
+          const game = useFragment(GameFragment, node)
+
+          return (
+            <GameListItem
+              key={game.id}
+              game={game}
+              first={i === 0}
+              last={i === arr.length - 1}
+            />
+          )
+        })}
       </ScrollView>
     </View>
   );
 }
 
 function GameListItem({ game, first, last }: {
-  game: Game;
+  game: DocumentType<typeof GameFragment>;
   first: boolean;
   last: boolean;
 }) {
-  const result = gameResult(game);
+  const { teamA, teamB, teamAAccuracy, result } = useMemo(() => {
+    console.log('game', game);
+    const teamA = game?.teamGameCollection.edges?.[0]?.node;
+    const teamB = game?.teamGameCollection.edges?.[1]?.node;
+
+    const teamAShoots = teamA?.shootsCollection.edges.map((e) => e.node);
+    const teamBShoots = teamB?.shootsCollection.edges.map((e) => e.node);
+
+    const teamAAccuracy = teamAShoots ? shootsAccuracy(teamAShoots) : 0;
+    const result = teamAShoots && teamBShoots ? gameResult(teamAShoots, teamBShoots) : undefined;
+    return { teamA, teamB, teamAAccuracy, result }
+  }, [game]);
+
   const navigation = useAppNavigation();
   const handleOnPress = () => {
     navigation.navigate("Game", { gameId: game.id });
@@ -115,7 +203,7 @@ function GameListItem({ game, first, last }: {
       isListItem
     >
       <View className="flex-row justify-between">
-        <TeamScore score={game.teamsScore.us} teamName={game.teamName} />
+        {teamA && <TeamScore teamGame={teamA as DocumentType<typeof TeamScoreFragment>} />}
         <View className="items-center">
           <StyledText>{game.duration}&apos;</StyledText>
           {game.gameEnded ? (
@@ -126,29 +214,31 @@ function GameListItem({ game, first, last }: {
             </CustomButton>
           )}
         </View>
-        <TeamScore
-          score={game.teamsScore.them}
-          teamName={game.opponentName}
-          inProgress={game.gameEnded}
-        />
+        {teamB && <TeamScore
+          teamGame={teamB as DocumentType<typeof TeamScoreFragment>}
+        />}
       </View>
       <StyledText cn="mt-1 text-xs text-gray-800">
-        Accuracy: {game.teamsScore.us.accuracy}%
+        Accuracy: {teamAAccuracy}%
       </StyledText>
     </Card>
   );
 }
 
-function TeamScore({ score, teamName, inProgress }: {
-  score: Score;
-  teamName: string;
-  inProgress?: boolean;
+function TeamScore({ teamGame }: {
+  teamGame: DocumentType<typeof TeamScoreFragment>;
 }) {
+  const { points, goals, score } = useMemo(() => {
+    const points = teamGame.shootsCollection.edges.filter((e) => e.node.type === "drop");
+    const goals = teamGame.shootsCollection.edges.filter((e) => e.node.type === "goal");
+    const score = sumShoots([...points.map(p => p.node), ...goals.map(p => p.node)]);
+    return { points, goals, score }
+  }, [])
   return (
     <View className="items-center">
-      <StyledText cn="text-lg ">{teamName}</StyledText>
+      <StyledText cn="text-lg ">{teamGame.team.teamName}</StyledText>
       <StyledText cn="text-lg">
-        {score.points.length} - {score.goals.length} ({sumScore(score)})
+        {points.length} - {goals.length} ({score})
       </StyledText>
     </View>
   );
