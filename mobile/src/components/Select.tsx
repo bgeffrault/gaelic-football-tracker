@@ -4,17 +4,19 @@ import { Entypo } from "@expo/vector-icons";
 import clsx from "clsx";
 import { StyledText } from "./StyledText";
 import { CustomDatePicker } from "./CustomDatePicker";
+import { DateTime } from 'luxon'
 
-export const Select = memo(({ onPress, label, value, cn, displayType, setDate }: { 
+export const Select = memo(({ onPress, label, value, cn, displayType, setDate }: {
   onPress: () => void;
   label: string;
   value: string | Date;
   cn?: string;
   displayType: "number" | "date";
   setDate: (date: string) => void;
- }) => {
+}) => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
   const isDatePicker = displayType === "date";
+
   return (
     <>
       <View className={cn}>
@@ -26,10 +28,10 @@ export const Select = memo(({ onPress, label, value, cn, displayType, setDate }:
             <StyledText
               cn={clsx(
                 displayType === "number" &&
-                  "rounded-lg bg-blue-800 text-white px-1 overflow-hidden"
+                "rounded-lg bg-blue-800 text-white px-1 overflow-hidden"
               )}
             >
-              {isDatePicker ? (value as Date).toFormat("dd-MM-yyyy") : value}
+              {isDatePicker ? DateTime.fromISO(value).toFormat("dd-MM-yyyy") : value}
             </StyledText>
             <View className="px-2">
               <Entypo name="chevron-small-down" size={18} color="black" />
@@ -47,3 +49,4 @@ export const Select = memo(({ onPress, label, value, cn, displayType, setDate }:
     </>
   );
 });
+

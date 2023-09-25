@@ -13,9 +13,8 @@ type NavigationRoutes = {
     },
     Home: undefined;
     NewGame: undefined;
-    Members: {
-        clubId: number;
-    };
+    Members: undefined;
+    ClubConfig: undefined;
     Login: undefined;
     CreateClub: undefined;
     AddMember: undefined;

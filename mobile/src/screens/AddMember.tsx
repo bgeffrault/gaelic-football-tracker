@@ -1,6 +1,5 @@
 import { Text, View } from "react-native";
 import { useEffect } from "react";
-import { ControlledLabelledTextInput } from "../components/StyledTextInput";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import { useForm } from "react-hook-form";
@@ -10,12 +9,13 @@ import request from "graphql-request";
 import Constants from 'expo-constants';
 import { Members } from "../gql/graphql";
 import { useClubIdContext } from "../providers/ClubIdProvider";
+import { ControlledLabelledTextInput, Rules } from "../components/ControllesComponents";
 
 type Field = {
   label: string;
   placeholder: string;
   name: string;
-  rules?: React.ComponentProps<typeof ControlledLabelledTextInput>["rules"];
+  rules?: Rules;
 }
 
 const AddMemberMutation = graphql(/* GraphQL */ `
@@ -31,7 +31,7 @@ const AddMemberMutation = graphql(/* GraphQL */ `
 export function AddMember({ navigation }) {
   const clubId = useClubIdContext();
   const queryClient = useQueryClient();
-  const { control, handleSubmit } = useForm()
+  const { control, handleSubmit } = useForm();
   const mutation = useMutation({
     mutationFn: async (data: Pick<Members, "firstName" | "lastName" | "pseudo">) =>
       request(

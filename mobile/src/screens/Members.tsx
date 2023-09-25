@@ -9,8 +9,6 @@ import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
 import { useAppSelector } from "../stores/store";
 import { useAppNavigation } from "../navigators";
-import { MemberType } from "../domain/types";
-import { useGraphQLQuery } from "../useGraphQLQuery";
 import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";

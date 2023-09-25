@@ -2,7 +2,6 @@ import { Text, View } from "react-native";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
-import { LabelledTextInput } from "../components/StyledTextInput";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import { Select } from "../components/Select";
@@ -14,46 +13,66 @@ import {
 } from "../stores/slices/gameSlice";
 import { addGame, generateGameInitialState } from "../stores/slices/gamesSlice";
 import { useAppSelector } from "../stores/store";
+import { useClubIdContext } from "../providers/ClubIdProvider";
+import { Control, FieldValues, useController, useForm } from "react-hook-form";
+import { ControlledLabelledTextInput, ControlledSelect, Rules } from "../components/ControllesComponents";
+
+type Field = {
+  label: string;
+  placeholder?: string;
+  onPress?: () => void;
+  rules?: Rules;
+  name: string;
+  type?: "select";
+  setDate?: (value: string) => void;
+  displayType?: "date" | "number";
+  keyboardType?: "number-pad" | "default";
+  inputType?: "number";
+  defaultValue?: string;
+}
+
+const usePlayersWatcher = <T extends unknown>({ control }: {
+  control: Control<FieldValues, T>
+}) => {
+  const players = useAppSelector((state) => state.game.players);
+  const { field } = useController({
+    control,
+    defaultValue: [],
+    name: "players",
+    rules: { required: "Au moins un joueur est obligatoire" }
+  })
+
+  useEffect(() => {
+    field.onChange(players.map((p) => Number(p.id)));
+  }, [players]);
+}
 
 export function AddGame({ navigation }) {
-  const game = useAppSelector((state) => state.game);
-  const { opponentName, duration, gameName, players, date } = game;
+  const clubId = useClubIdContext();
 
-  const dispatch = useDispatch();
+  const { control, handleSubmit } = useForm()
 
-  const fields: {
-    label: string;
-    placeholder?: string;
-    value: string | number | DateTime;
-    onChangeText?: (value: string) => void;
-    onPress?: () => void;
-    required: boolean;
-    type?: "select";
-    setDate?: (value: string) => void;
-    displayType?: "date" | "number";
-    keyboardType?: "number-pad" | "default";
-    inputType?: "number";
-  }[] = [
+  // const dispatch = useDispatch();
+
+  const fields: Field[] = [
     {
+      name: "opponentName",
       label: "Nom de l'équipe adverse",
       placeholder: "Nantes A",
-      value: opponentName,
-      onChangeText: (value) => dispatch(setOpponentName(value)),
-      required: true,
+      rules: { required: "Le nom de l'équipe adverse est obligatoire" },
     },
     {
+      name: "duration",
       label: "Durée du match",
       placeholder: "60",
-      value: duration,
-      onChangeText: (value) => dispatch(setDuration(value)),
-      required: true,
+      rules: { required: "La durée est obligatoire" },
       keyboardType: "number-pad",
     },
     {
+      name: "players",
       label: "Joueurs",
       placeholder: "Sélectionner les joueurs",
-      value: players.length,
-      required: true,
+      rules: { required: "Au moins un joueur est obligatoire" },
       type: "select",
       onPress: () => {
         navigation.navigate("MembersModal", { mode: "select" });
@@ -62,34 +81,22 @@ export function AddGame({ navigation }) {
       displayType: "number",
     },
     {
+      name: "gameName",
       label: "Compétition",
       placeholder: "Coupe de bretagne",
-      value: gameName,
-      onChangeText: (value) => dispatch(setGameName(value)),
-      required: false,
     },
     {
+      name: "date",
       label: "Date",
-      value: DateTime.fromJSDate(new Date(date)),
-      setDate: (value) => {
-        dispatch(
-          setGameDate(
-            DateTime.fromFormat(value, "yyyy/MM/dd").toJSDate().toISOString()
-          )
-        );
-      },
-      required: false,
+      rules: { required: "La date est obligatoire" },
       type: "select",
       displayType: "date",
+      defaultValue: DateTime.now().toJSDate().toISOString()
     },
   ];
 
-  const isValid = fields.every((elem) => (elem.required ? elem.value : true));
-
-  const handleOnPress = () => {
-    const newGame = generateGameInitialState({ id: 10, ...game });
-    dispatch(addGame(newGame));
-    navigation.navigate("Game", { gameId: 10 });
+  const handleOnPress = async (data) => {
+    // mutation.mutate(data);
   };
 
   useEffect(() => {
@@ -97,6 +104,8 @@ export function AddGame({ navigation }) {
       headerTitle: "Créer un match",
     });
   }, [navigation]);
+  usePlayersWatcher({ control });
+
 
   return (
     <View className="flex-1 justify-center items-center">
@@ -106,48 +115,50 @@ export function AddGame({ navigation }) {
             (
               {
                 label,
-                value,
                 placeholder,
-                onChangeText,
+                name,
                 onPress,
-                required,
                 type,
                 setDate,
                 displayType,
                 keyboardType,
+                rules,
+                defaultValue
               },
               i
             ) =>
               type === "select" ? (
-                <Select
+                <ControlledSelect
                   key={label}
-                  value={value}
                   onPress={onPress}
-                  label={`${label}${required ? " *" : ""}`}
-                  cn={i > 0 && "mt-4"}
+                  label={`${label}${rules?.required ? " *" : ""}`}
                   setDate={setDate}
                   displayType={displayType}
+                  control={control}
+                  rules={rules}
+                  name={name}
+                  defaultValue={defaultValue}
                 />
               ) : (
-                <LabelledTextInput
+                <ControlledLabelledTextInput
                   key={label}
-                  label={`${label}${required ? " *" : ""}`}
+                  label={`${label}${rules?.required ? " *" : ""}`}
                   inputProps={{
                     placeholder,
-                    onChangeText,
-                    value,
                     keyboardType: keyboardType || "default",
                   }}
                   cn={i > 0 && "mt-4"}
+                  control={control}
+                  rules={rules}
+                  name={label}
+                  defaultValue={defaultValue}
                 />
               )
           )}
-
           <View className="mt-8">
             <CustomButton
               variant="contained"
-              disabled={!isValid}
-              onPress={handleOnPress}
+              onPress={handleSubmit(handleOnPress)}
             >
               <Text className="text-white text-lg">C&apos;est parti</Text>
             </CustomButton>
