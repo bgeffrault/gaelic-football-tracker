@@ -33,11 +33,10 @@ export function gameResult(
 export function shootsAccuracy(shoots: Shoot[]) {
   let scored = 0;
   let total = 0;
-  console.log('shoots', shoots);
   shoots.forEach(({ type }) => {
     if (type === "goal" || type === "drop") scored++;
     total++;
   });
   if (total === 0) return null;
-  return scored / total;
+  return scored / total * 100;
 }
