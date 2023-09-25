@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { shootsAccuracy, sumShoots } from "../utils/shootsUtils";
+import { useClubIdContext } from "../providers/ClubIdProvider";
 
 const MembersHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -116,22 +117,20 @@ const membersQuery = graphql(/* GraphQL */ `
 
 
 export function Members({ navigation, route }) {
-  // const { members } = useAppSelector((state) => state.club);
+  const clubId = useClubIdContext();
   const { data, isLoading } = useQuery({
     queryKey: ["members"],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrl,
         membersQuery,
-        { clubId: 1 },
+        { clubId },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
         }
       ),
   })
-  console.log('gamesInProgress', JSON.stringify(data, null, 2));
-
 
   const mode = route.params?.mode;
   const selectMode = mode === "select";

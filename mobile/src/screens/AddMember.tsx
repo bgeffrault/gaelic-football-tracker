@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { Members } from "../gql/graphql";
+import { useClubIdContext } from "../providers/ClubIdProvider";
 
 type Field = {
   label: string;
@@ -28,6 +29,7 @@ const AddMemberMutation = graphql(/* GraphQL */ `
 `);
 
 export function AddMember({ navigation }) {
+  const clubId = useClubIdContext();
   const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm()
   const mutation = useMutation({
@@ -35,7 +37,7 @@ export function AddMember({ navigation }) {
       request(
         Constants.expoConfig.extra.supabaseUrl,
         AddMemberMutation,
-        { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId: 1, categoryId: 1 },
+        { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId, categoryId: 1 },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,

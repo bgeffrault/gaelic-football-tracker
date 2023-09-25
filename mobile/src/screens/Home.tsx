@@ -13,6 +13,7 @@ import { useFragment } from "../gql";
 import Constants from 'expo-constants';
 import { useQuery } from "@tanstack/react-query";
 import request, { Variables } from "graphql-request";
+import { useClubIdContext } from "../providers/ClubIdProvider";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -99,13 +100,15 @@ const clubQuery = graphql(/* GraphQL */ `
 
 export function Home({ }: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
+  const clubId = useClubIdContext();
+
   const { data, isLoading } = useQuery({
     queryKey: ["club-gameEnded-gameInProgress"],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrl,
         clubQuery,
-        { id: 1 },
+        { id: clubId },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
@@ -186,7 +189,6 @@ function GameListItem({ game, first, last }: {
   last: boolean;
 }) {
   const { teamA, teamB, teamAAccuracy, result } = useMemo(() => {
-    console.log('game', game);
     const teamA = game?.teamGameCollection.edges?.[0]?.node;
     const teamB = game?.teamGameCollection.edges?.[1]?.node;
 
