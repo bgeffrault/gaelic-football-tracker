@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import supabase, { Tables } from "./config/supabaseClient";
-import Cards from "./components/Cards";
+import TableScore, { TableScoreGame } from "./components/TableScore";
 import Header from "./components/molecules/Header";
 import Link from "next/link";
 
 export default function Home() {
   const [fetchError, setFetchError] = useState<string | null>("");
-  const [games, setGames] = useState<Tables<"Game">[] | null>(null);
+  const [games, setGames] = useState<TableScoreGame[] | null>(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
-      const { data: games, error } = await supabase.from("Game").select("*");
+      const { data: games, error } = await supabase
+        .from("Game")
+        .select("*, TeamGame(*, Team(*))");
 
       console.log("data: ", games);
 
@@ -21,7 +23,7 @@ export default function Home() {
         console.log(error);
       }
       if (games) {
-        setGames(games);
+        setGames(games as TableScoreGame[]);
         setFetchError(null);
       }
     };
@@ -44,9 +46,9 @@ export default function Home() {
           In Progress
         </h3>
         {games
-          ?.filter((inProgress) => inProgress.gameEnded === true)
+          ?.filter((inProgress) => inProgress.gameEnded === false)
           .map((game) => (
-            <Cards key={game.id} game={game} />
+            <TableScore key={game.id} game={game} />
           ))}
       </div>
       <div style={{ padding: "30px" }}>
@@ -56,9 +58,9 @@ export default function Home() {
           Last Games
         </h3>
         {games
-          ?.filter((inProgress) => inProgress.gameEnded === false)
+          ?.filter((inProgress) => inProgress.gameEnded === true)
           .map((game) => (
-            <Cards key={game.id} game={game} />
+            <TableScore key={game.id} game={game} />
           ))}
       </div>
     </>

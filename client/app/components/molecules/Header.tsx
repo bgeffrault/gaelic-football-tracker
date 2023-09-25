@@ -1,9 +1,10 @@
 import React from "react";
 import { Box } from "@mui/material";
-import SimpleDialogDemo from "../Dialog";
-import DialogMatch from "../DialogMatch";
 import Link from "next/link";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import CreateGameDialog from "../CreateGameDialog";
+import AddMembersDialog from "../AddMembersDialog";
+
 
 export interface HeaderProps {
   name: string;
@@ -33,7 +34,7 @@ const Header = ({ name, backHome }: HeaderProps) => {
           </Link>
         </div>
         <h1>{name}</h1>
-        <SimpleDialogDemo />
+        <AddMembersDialog />
       </Box>
     </>
   ) : (
@@ -47,7 +48,7 @@ const Header = ({ name, backHome }: HeaderProps) => {
         }}
       >
         <h1 style={{ margin: "auto" }}>{name}</h1>
-        <DialogMatch />
+        <CreateGameDialog />
       </Box>
     </>
   );
