@@ -13,7 +13,9 @@ type NavigationRoutes = {
     },
     Home: undefined;
     NewGame: undefined;
-    Members: undefined;
+    Members: {
+        clubId: number;
+    };
     Login: undefined;
     CreateClub: undefined;
     AddMember: undefined;
@@ -24,9 +26,9 @@ export type AppRouteProp<T extends keyof NavigationRoutes> = RouteProp<Navigatio
 
 export type RootNavigation = keyof NavigationRoutes;
 
-export type AppNavigationProp<T extends keyof NavigationRoutes> = NativeStackScreenProps<NavigationRoutes, T> 
+export type AppNavigationProp<T extends keyof NavigationRoutes> = NativeStackScreenProps<NavigationRoutes, T>
 
-type RootNavigationProp = NativeStackNavigationProp<NavigationRoutes> 
+type RootNavigationProp = NativeStackNavigationProp<NavigationRoutes>
 
 export const useAppNavigation = () => {
     return useNavigation<RootNavigationProp>()

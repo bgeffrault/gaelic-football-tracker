@@ -6,14 +6,13 @@ import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import { StyledText } from "../components/StyledText";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
-import { sumScore } from "../utils/sumScore";
 import { gameResult, gameResultColors, shootsAccuracy, sumShoots } from "../utils/shootsUtils";
-import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
-import { Game, Score } from "../domain/types";
 import { DocumentType, graphql } from "../gql/gql";
-import { useGraphQLQuery } from "../useGraphQLQuery";
 import { useFragment } from "../gql";
+import Constants from 'expo-constants';
+import { useQuery } from "@tanstack/react-query";
+import request, { Variables } from "graphql-request";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -100,17 +99,25 @@ const clubQuery = graphql(/* GraphQL */ `
 
 export function Home({ }: AppNavigationProp<"Home">) {
   const navigation = useAppNavigation();
-  const { gameList } = useAppSelector((state) => state.games);
-  const { data } = useGraphQLQuery(["club-gameEnded-gameInProgress"], clubQuery, { id: 1 })
+  const { data, isLoading } = useQuery({
+    queryKey: ["club-gameEnded-gameInProgress"],
+    queryFn: async () =>
+      request(
+        Constants.expoConfig.extra.supabaseUrl,
+        clubQuery,
+        { id: 1 },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+  })
+
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
   const gamesEnded = useFragment(GameListFragment, data?.gameEndedCollection.edges) ?? []
   const gamesInProgress = useFragment(GameListFragment, data?.gameInProgressCollection.edges) ?? []
 
   const clubName = useMemo(() => { if (club) return club.name; return "Home" }, [club])
-
-  // console.log('data', JSON.stringify(data, null, 2));
-  console.log('gamesInProgress', JSON.stringify(gamesInProgress, null, 2));
-
 
   useEffect(() => {
     navigation.setOptions({
@@ -119,6 +126,11 @@ export function Home({ }: AppNavigationProp<"Home">) {
       headerTitle: clubName,
     });
   }, [navigation, clubName]);
+
+  if (isLoading) {
+    // @To do: add a loading indicator
+    return null
+  }
 
   return (
     <>
@@ -135,7 +147,7 @@ export function Home({ }: AppNavigationProp<"Home">) {
         )}
       </View>
       <View className="h-24 justify-center items-center border border-x-0 border-b-0">
-        <CustomButton onPress={() => navigation.navigate("Members")}>
+        <CustomButton onPress={() => navigation.navigate("Members", { clubId: club.id })}>
           <FontAwesome name="users" size={42} color="black" />
         </CustomButton>
       </View>
@@ -190,6 +202,13 @@ function GameListItem({ game, first, last }: {
   const handleOnPress = () => {
     navigation.navigate("Game", { gameId: game.id });
   };
+
+  if (game?.teamGameCollection.edges.length != 2) {
+    console.warn("The game has the wrong number of teamGames. GameId: ",
+      game.id, "; teamGames: ",
+      game?.teamGameCollection.edges.length, ";")
+    return null;
+  }
 
   return (
     <Card

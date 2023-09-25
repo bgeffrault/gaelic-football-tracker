@@ -1,46 +1,79 @@
 import { Text, View } from "react-native";
-import { useEffect, useReducer } from "react";
-import { LabelledTextInput } from "../components/StyledTextInput";
+import { useEffect } from "react";
+import { ControlledLabelledTextInput } from "../components/StyledTextInput";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
+import { useForm } from "react-hook-form";
+import { graphql } from "../gql";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import request from "graphql-request";
+import Constants from 'expo-constants';
+import { Members } from "../gql/graphql";
+
+type Field = {
+  label: string;
+  placeholder: string;
+  name: string;
+  rules?: React.ComponentProps<typeof ControlledLabelledTextInput>["rules"];
+}
+
+const AddMemberMutation = graphql(/* GraphQL */ `
+  mutation AddMemberMutation($firstName: String!, $lastName: String!, $pseudo: String, $clubId: BigInt, $categoryId: BigInt) {
+    insertIntoMembersCollection(objects: {firstName: $firstName, lastName: $lastName, pseudo: $pseudo, clubId: $clubId, categoryId: $categoryId}) {
+      records {
+        id
+      }
+    }
+  }
+`);
 
 export function AddMember({ navigation }) {
-  const [state, updateState] = useReducer(
-    (current, partialState) => ({
-      ...current,
-      ...partialState,
-    }),
-    { firstName: "", lastName: "", pseudo: "" }
-  );
-  const fields = [
+  const queryClient = useQueryClient();
+  const { control, handleSubmit } = useForm()
+  const mutation = useMutation({
+    mutationFn: async (data: Pick<Members, "firstName" | "lastName" | "pseudo">) =>
+      request(
+        Constants.expoConfig.extra.supabaseUrl,
+        AddMemberMutation,
+        { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId: 1, categoryId: 1 },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      navigation.navigate("Members");
+    },
+  })
+
+  const fields: Field[] = [
     {
       label: "Prénom",
       placeholder: "Baptiste",
-      value: state.firstName,
-      onChangeText: (text) => updateState({ firstName: text }),
-      required: true,
+      name: "firstName",
+      rules: {
+        required: "Le prénom est obligatoire",
+      }
     },
     {
       label: "Nom",
       placeholder: "Geffrault",
-      value: state.lastName,
-      onChangeText: (text) => updateState({ lastName: text }),
-      required: true,
+      name: "lastName",
+      rules: {
+        required: "Le nom est obligatoire",
+      }
     },
     {
       label: "Pseudo",
       placeholder: "bg",
-      value: state.pseudo,
-      onChangeText: (text) => updateState({ pseudo: text }),
-      required: false,
+      name: "pseudo",
+      rules: {}
     },
   ];
 
-  const isValid = fields.every((elem) => (elem.required ? elem.value : true));
-
-  const handleOnPress = () => {
-    // Add member to CreateClub
-    navigation.navigate("Members");
+  const handleOnPress = async (data) => {
+    mutation.mutate(data);
   };
 
   useEffect(() => {
@@ -54,24 +87,23 @@ export function AddMember({ navigation }) {
       <Card>
         <View>
           {fields.map(
-            ({ label, value, placeholder, onChangeText, required }, i) => (
-              <LabelledTextInput
+            ({ label, name, placeholder, rules }, i) => (
+              <ControlledLabelledTextInput
                 key={label}
-                label={`${label}${required ? " *" : ""}`}
+                label={`${label}${rules.required ? " *" : ""}`}
                 inputProps={{
                   placeholder,
-                  onChangeText,
-                  value,
                 }}
-                cn={i > 0 && "mt-4"}
+                control={control}
+                name={name}
+                rules={rules}
               />
             )
           )}
           <View className="mt-8">
             <CustomButton
               variant="contained"
-              disabled={!isValid}
-              onPress={handleOnPress}
+              onPress={handleSubmit(handleOnPress)}
             >
               <Text className="text-white text-lg">Ajouter</Text>
             </CustomButton>

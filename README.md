@@ -11,3 +11,7 @@ Depuis la root du projet:</br>
 </br>
 Si la base  de données a été mise à jour, il faut regénérer le schema GraphQL:</br>
 `npm run fetch-schema`
+
+
+## Mobile
+Attention à l'ordre des fragments est important, ils doivent être implémentés avant la query sinon codegen génère des erreurs de types.

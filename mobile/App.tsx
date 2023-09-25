@@ -36,7 +36,7 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator
             screenOptions={defaultScreenOptions}
-            initialRouteName="Home"
+            initialRouteName="Members"
           >
             <Stack.Group>
               {/* <Stack.Screen name="Login" component={Login} /> */}

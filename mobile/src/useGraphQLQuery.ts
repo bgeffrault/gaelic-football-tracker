@@ -3,16 +3,17 @@ import request, { Variables } from "graphql-request";
 import { graphql } from "./gql";
 import Constants from 'expo-constants';
 
+// @To do: improve query: ReturnType<typeof graphql> cause it uses the first signature of graphql function
 export const useGraphQLQuery = (queryKey: unknown[], query: ReturnType<typeof graphql>, vars?: Variables) => useQuery({
   queryKey: queryKey,
   queryFn: async () =>
     request(
-      `${Constants.manifest.supabaseUrl}/graphql/v1`,
+      Constants.expoConfig.extra.supabaseUrl,
       query,
       vars,
       {
         "content-type": "application/json",
-        "apikey": Constants.manifest.supabaseAnonKey,
+        "apikey": Constants.expoConfig.extra.supabaseAnonKey,
       }
     ),
 })
