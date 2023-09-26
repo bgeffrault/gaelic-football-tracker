@@ -1,27 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import Header from "../components/molecules/Header";
-import MembersShootsList from "../components/MembersShootsList";
+import MembersShootsList, {
+  TableMembersShoots,
+} from "../components/MembersShootsList";
 import supabase, { Tables } from "../config/supabaseClient";
 import { List } from "@mui/material";
 
 const MembersShoots = () => {
   const [fetchError, setFetchError] = useState<string | null>("");
-  const [shoots, setShoots] = useState<Tables<"Shoots">[] | null>(null);
+  const [members, setMemmbers] = useState<TableMembersShoots[] | null>(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
-      const { data: shoots, error } = await supabase
-        .from("Shoots")
-        .select("*, Members(*)");
+      const { data: members, error } = await supabase
+        .from("Members")
+        .select("*, Shoots(*)");
 
       if (error) {
         setFetchError("Could not fetch the members");
-        setShoots(null);
+        setMemmbers(null);
         console.log(error);
       }
-      if (shoots) {
-        setShoots(shoots);
+      if (members) {
+        setMemmbers(members as TableMembersShoots[]);
         setFetchError(null);
       }
     };
@@ -44,12 +46,8 @@ const MembersShoots = () => {
           borderRadius: "10px",
         }}
       >
-        {shoots?.map((shoot) => (
-          <MembersShootsList
-            key={shoot.id}
-            shoot={shoot}
-            members={shoot.Members}
-          />
+        {members?.map((member) => (
+          <MembersShootsList key={member.id} members={member} />
         ))}
       </List>
     </>

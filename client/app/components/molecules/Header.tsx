@@ -3,8 +3,7 @@ import { Box } from "@mui/material";
 import Link from "next/link";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import CreateGameDialog from "../CreateGameDialog";
-import AddMembersDialog from "../AddMembersDialog";
-
+import AddNewMember from "../AddNewMember";
 
 export interface HeaderProps {
   name: string;
@@ -34,7 +33,7 @@ const Header = ({ name, backHome }: HeaderProps) => {
           </Link>
         </div>
         <h1>{name}</h1>
-        <AddMembersDialog />
+        <AddNewMember />
       </Box>
     </>
   ) : (
