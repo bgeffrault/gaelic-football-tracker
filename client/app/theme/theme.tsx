@@ -17,6 +17,9 @@ const theme = createTheme({
           border: "1px solid rgb(177, 176, 176)",
           borderRadius: "5px",
           margin: "30px",
+          "> [error-message]": {
+            color: "red",
+          },
         },
       },
     },

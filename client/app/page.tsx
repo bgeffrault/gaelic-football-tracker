@@ -46,7 +46,7 @@ export default function Home() {
           In Progress
         </h3>
         {games
-          ?.filter((inProgress) => inProgress.gameEnded === false)
+          ?.filter((inProgress) => !inProgress.gameEnded)
           .map((game) => (
             <TableScore key={game.id} game={game} />
           ))}
@@ -58,7 +58,7 @@ export default function Home() {
           Last Games
         </h3>
         {games
-          ?.filter((inProgress) => inProgress.gameEnded === true)
+          ?.filter((isEnded) => isEnded.gameEnded)
           .map((game) => (
             <TableScore key={game.id} game={game} />
           ))}
