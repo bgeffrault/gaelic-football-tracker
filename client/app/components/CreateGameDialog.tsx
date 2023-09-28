@@ -1,5 +1,5 @@
-"use client";
-import * as React from "react";
+'use client'
+import * as React from 'react'
 import {
   Box,
   Button,
@@ -8,40 +8,40 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-} from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+} from '@mui/material'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 
-export default function CreateGameDialog() {
-  const date = new Date();
+export default function CreateGameDialog(): React.JSX.Element {
+  const date = new Date()
   const formattedDate = date
-    .toLocaleDateString("en-GB", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+    .toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     })
-    .split("/")
+    .split('/')
     .reverse()
-    .join("-");
-  const [open, setOpen] = React.useState(false);
+    .join('-')
+  const [open, setOpen] = React.useState(false)
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const handleClickOpen = (): void => {
+    setOpen(true)
+  }
 
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const handleClose = (): void => {
+    setOpen(false)
+  }
 
   return (
     <>
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "center",
+          display: 'flex',
+          justifyContent: 'center',
         }}
       >
         <Button
-          sx={{ textDecoration: "none", color: "black" }}
+          sx={{ textDecoration: 'none', color: 'black' }}
           onClick={handleClickOpen}
         >
           <AddCircleOutlineIcon />
@@ -52,7 +52,7 @@ export default function CreateGameDialog() {
         <DialogTitle>Ajouter un match</DialogTitle>
 
         <DialogContent>
-          <h3>Nom de l'équipe adverse *</h3>
+          <h3>Nom de l&#39;équipe adverse *</h3>
           <TextField
             required
             margin="dense"
@@ -102,5 +102,5 @@ export default function CreateGameDialog() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

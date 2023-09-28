@@ -1,34 +1,34 @@
-"use client";
-import { useEffect, useState } from "react";
-import Header from "../components/molecules/Header";
+'use client'
+import { useEffect, useState } from 'react'
+import Header from '../components/molecules/Header'
 import MembersShootsList, {
   TableMembersShoots,
-} from "../components/MembersShootsList";
-import supabase, { Tables } from "../config/supabaseClient";
-import { List } from "@mui/material";
+} from '../components/MembersShootsList'
+import supabase from '../config/supabaseClient'
+import { List } from '@mui/material'
 
-const MembersShoots = () => {
-  const [fetchError, setFetchError] = useState<string | null>("");
-  const [members, setMemmbers] = useState<TableMembersShoots[] | null>(null);
+const MembersShoots = (): JSX.Element => {
+  const [fetchError, setFetchError] = useState<string | null>('')
+  const [members, setMemmbers] = useState<TableMembersShoots[] | null>(null)
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchMembers = async (): Promise<void> => {
       const { data: members, error } = await supabase
-        .from("Members")
-        .select("*, Shoots(*)");
+        .from('Members')
+        .select('*, Shoots(*)')
 
       if (error) {
-        setFetchError("Could not fetch the members");
-        setMemmbers(null);
-        console.log(error);
+        setFetchError('Could not fetch the members')
+        setMemmbers(null)
+        console.log(error)
       }
       if (members) {
-        setMemmbers(members as TableMembersShoots[]);
-        setFetchError(null);
+        setMemmbers(members as TableMembersShoots[])
+        setFetchError(null)
       }
-    };
-    fetchMembers();
-  }, []);
+    }
+    fetchMembers()
+  }, [])
 
   return (
     <>
@@ -40,10 +40,10 @@ const MembersShoots = () => {
 
       <List
         sx={{
-          margin: "50px",
+          margin: '50px',
           padding: 0,
-          border: "1px solid black",
-          borderRadius: "10px",
+          border: '1px solid black',
+          borderRadius: '10px',
         }}
       >
         {members?.map((member) => (
@@ -51,7 +51,7 @@ const MembersShoots = () => {
         ))}
       </List>
     </>
-  );
-};
+  )
+}
 
-export default MembersShoots;
+export default MembersShoots
