@@ -2,6 +2,7 @@
   "name": "gaelic-football-tracker",
   "private": true,
   "scripts": {
+    "dev": "cd client && npm run dev",
     "start": "cd mobile && npm start",
     "fetch-schema": "node --no-warnings scripts/fetchGraphQLSchema ",
     "codegen": "graphql-codegen --config codegen.ts",
