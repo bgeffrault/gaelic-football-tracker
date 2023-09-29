@@ -26,10 +26,6 @@ export default function AddNewMember(): React.JSX.Element {
   const [categories, setCategories] = useState<Tables<'Category'>[] | null>(null)
   const [clubs, setClubs] = useState<Tables<'Club'>[] | null>(null)
 
-  const [category, setCategory] = useState('')
-  const handleChangeCategories = (event: SelectChangeEvent): void => {
-    setCategory(event.target.value as string)
-  }
   const [club, setClub] = useState('')
   const handleChangeClubs = (event: SelectChangeEvent): void => {
     setClub(event.target.value as string)
@@ -100,7 +96,7 @@ export default function AddNewMember(): React.JSX.Element {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
-            <FormField
+            {/* <FormField
               label="Prémon *"
               placeholder="Jean"
               margin="dense"
@@ -121,7 +117,7 @@ export default function AddNewMember(): React.JSX.Element {
               name="lastName"
               errors={errors.lastName!}
               span="Le Nom est requis"
-            />
+            /> */}
             <FormSelect
               register={register}
               name="categoryId"
@@ -131,8 +127,8 @@ export default function AddNewMember(): React.JSX.Element {
               labelId="demo-simple-select-label"
               label="Category *"
               margin="dense"
-              value={category}
-              handleChange={handleChangeCategories}
+              defaultValue={1}
+            // defaultValue="" // For no value, use an empty string
             >
               {categories?.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
@@ -140,7 +136,7 @@ export default function AddNewMember(): React.JSX.Element {
                 </MenuItem>
               ))}
             </FormSelect>
-            <FormSelect
+            {/* <FormSelect
               register={register}
               name="clubId"
               errors={errors.clubId!}
@@ -149,8 +145,6 @@ export default function AddNewMember(): React.JSX.Element {
               labelId="demo-simple-select-label"
               label="Club *"
               margin="dense"
-              value={club}
-              handleChange={handleChangeClubs}
             >
               {clubs?.map((club) => (
                 <MenuItem key={club.id} value={club.id}>
@@ -168,7 +162,7 @@ export default function AddNewMember(): React.JSX.Element {
               name="pseudo"
               errors={errors.pseudo!}
               span="Le Pseudo est requis"
-            />
+            /> */}
             <DialogActions>
               <Button type="submit">Ajouter</Button>
             </DialogActions>

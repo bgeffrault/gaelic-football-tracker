@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { FormControl, InputLabel, Select, SelectChangeEvent } from '@mui/material'
+import { FormControl, InputLabel, Select } from '@mui/material'
 import React from 'react'
 import { FieldErrors, UseFormRegister } from 'react-hook-form'
 
@@ -20,9 +20,8 @@ type FormSelectProps = {
   labelId: string
   span: string
   name: 'firstName' | 'lastName' | 'pseudo' | 'categoryId' | 'clubId'
-  value: string
   children: React.JSX.Element[] | undefined
-  handleChange: (event: SelectChangeEvent) => void
+  defaultValue: string | number
 }
 
 const FormSelect = ({
@@ -32,11 +31,10 @@ const FormSelect = ({
   margin,
   id,
   labelId,
-  value,
   span,
   name,
   children,
-  handleChange,
+  defaultValue
 }: FormSelectProps): React.JSX.Element => {
   return (
     <>
@@ -45,18 +43,16 @@ const FormSelect = ({
         <Select
           labelId={labelId}
           id={id}
-          value={value}
           label={label}
+          defaultValue={defaultValue}
           {...register(name, {
             required: true,
-            value: '',
-            onChange: handleChange,
           })}
         >
           {children}
         </Select>
       </FormControl>
-      {!value ? errors && <span error-message="">{span} </span> : null}
+      {errors && <span error-message="">{span} </span>}
     </>
   )
 }
