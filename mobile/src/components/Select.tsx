@@ -1,45 +1,36 @@
 import { TouchableOpacity, View } from "react-native";
 import { useState, memo } from "react";
 import { Entypo } from "@expo/vector-icons";
-import clsx from "clsx";
 import { StyledText } from "./StyledText";
 import { CustomDatePicker } from "./CustomDatePicker";
-import { DateTime } from 'luxon'
 
-export const Select = memo(({ onPress, label, value, cn, displayType, setDate }: {
-  onPress: () => void;
+export const Select = ({ onPress, label, value, cn, dateType = false, setDate, renderValue }: {
+  onPress?: () => void;
   label: string;
-  value: string | Date;
+  value: any;
   cn?: string;
-  displayType: "number" | "date";
+  dateType?: boolean;
   setDate: (date: string) => void;
+  renderValue: (value: any) => React.ReactNode;
 }) => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
-  const isDatePicker = displayType === "date";
 
   return (
     <>
       <View className={cn}>
-        <StyledText>{label}</StyledText>
+        <StyledText cn="text-lg">{label}</StyledText>
         <TouchableOpacity
-          onPress={() => (isDatePicker ? setOpenDatePicker(true) : onPress())}
+          onPress={() => (dateType ? setOpenDatePicker(true) : onPress())}
         >
           <View className="border p-2 rounded flex-row justify-between">
-            <StyledText
-              cn={clsx(
-                displayType === "number" &&
-                "rounded-lg bg-blue-800 text-white px-1 overflow-hidden"
-              )}
-            >
-              {isDatePicker ? DateTime.fromISO(value).toFormat("dd-MM-yyyy") : value}
-            </StyledText>
+            {renderValue(value)}
             <View className="px-2">
               <Entypo name="chevron-small-down" size={18} color="black" />
             </View>
           </View>
         </TouchableOpacity>
       </View>
-      {isDatePicker && (
+      {dateType && (
         <CustomDatePicker
           visible={openDatePicker}
           onClose={() => setOpenDatePicker(false)}
@@ -48,5 +39,5 @@ export const Select = memo(({ onPress, label, value, cn, displayType, setDate }:
       )}
     </>
   );
-});
+};
 

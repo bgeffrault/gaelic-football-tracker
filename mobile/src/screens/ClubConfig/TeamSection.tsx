@@ -1,7 +1,7 @@
 import { ScrollView, View } from "react-native"
 import { SectionTitle } from "../../components/SectionTitle"
 import { StyledText } from "../../components/StyledText"
-import { ControlledLabelledTextInput } from "../../components/ControllesComponents"
+import { ControlledLabelledTextInput } from "../../components/ControlledComponents"
 import { CustomButton } from "../../components/CustomButton"
 import { Control, FieldValues, useForm } from "react-hook-form"
 import { graphql, DocumentType } from "../../gql"

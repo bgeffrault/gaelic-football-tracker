@@ -1,170 +1,301 @@
 import { Text, View } from "react-native";
-import { useEffect } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import { Select } from "../components/Select";
-import {
-  setDate as setGameDate,
-  setDuration,
-  setGameName,
-  setOpponentName,
-} from "../stores/slices/gameSlice";
 import { addGame, generateGameInitialState } from "../stores/slices/gamesSlice";
 import { useAppSelector } from "../stores/store";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { Control, FieldValues, useController, useForm } from "react-hook-form";
-import { ControlledLabelledTextInput, ControlledSelect, Rules } from "../components/ControllesComponents";
+import { ControlledLabelledTextInput, ControlledSelect, Rules } from "../components/ControlledComponents";
+import { StyledText } from "../components/StyledText";
+import { resetGame, resetPlayers } from "../stores";
+import { CategoryFilter } from "../components/CategoryFilter";
+import clsx from "clsx";
+import { graphql } from "../gql";
+import { Game } from "../gql/graphql";
+import request from "graphql-request";
+import Constants from 'expo-constants';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-type Field = {
-  label: string;
-  placeholder?: string;
-  onPress?: () => void;
-  rules?: Rules;
-  name: string;
-  type?: "select";
-  setDate?: (value: string) => void;
-  displayType?: "date" | "number";
-  keyboardType?: "number-pad" | "default";
-  inputType?: "number";
-  defaultValue?: string;
-}
-
-const usePlayersWatcher = <T extends unknown>({ control }: {
-  control: Control<FieldValues, T>
+const useGameStoreParamWatcher = <T extends unknown>({ control, name, rules, defaultValue, onChange }: {
+  control: Control<FieldValues, T>,
+  name: string,
+  rules: Rules,
+  defaultValue?: T,
+  onChange: (value: T) => any
 }) => {
-  const players = useAppSelector((state) => state.game.players);
+  const storeValue = useAppSelector((state) => state.game[name]);
   const { field } = useController({
     control,
-    defaultValue: [],
-    name: "players",
-    rules: { required: "Au moins un joueur est obligatoire" }
+    defaultValue,
+    name,
+    rules
   })
 
   useEffect(() => {
-    field.onChange(players.map((p) => Number(p.id)));
-  }, [players]);
+    field.onChange(() => {
+      return onChange(storeValue)
+    });
+  }, [storeValue]);
 }
 
-export function AddGame({ navigation }) {
-  const clubId = useClubIdContext();
+const TEAM = "team";
+const OPPONENT_TEAM = "opponentTeam";
+const PLAYERS = "players";
 
-  const { control, handleSubmit } = useForm()
+const AddTeamMembersMutation = graphql(/* GraphQL */ `
+mutation AddTeamMembersMutation($teamMembers: [TeamMembersInsertInput!]!) {
+  insertIntoTeamMembersCollection(objects: $teamMembers) {
+    records {
+      id
+    }
+  }
+}
+`);
 
-  // const dispatch = useDispatch();
-
-  const fields: Field[] = [
-    {
-      name: "opponentName",
-      label: "Nom de l'équipe adverse",
-      placeholder: "Nantes A",
-      rules: { required: "Le nom de l'équipe adverse est obligatoire" },
-    },
-    {
-      name: "duration",
-      label: "Durée du match",
-      placeholder: "60",
-      rules: { required: "La durée est obligatoire" },
-      keyboardType: "number-pad",
-    },
-    {
-      name: "players",
-      label: "Joueurs",
-      placeholder: "Sélectionner les joueurs",
-      rules: { required: "Au moins un joueur est obligatoire" },
-      type: "select",
-      onPress: () => {
-        navigation.navigate("MembersModal", { mode: "select" });
+const AddTeamGameMutation = graphql(/* GraphQL */ `
+  mutation AddTeamGameMutation($teamId: Int!, $gameId: Int!, $teamId2: Int!) {
+    insertIntoTeamGameCollection(objects: [
+      {
+        teamId: $teamId, 
+        gameId: $gameId, 
       },
-      inputType: "number",
-      displayType: "number",
+      {
+        teamId: $teamId2, 
+        gameId: $gameId, 
+      },
+    ]) {
+      records {
+        id
+        teamId
+      }
+    }
+  }
+`);
+
+const AddGameMutation = graphql(/* GraphQL */ `
+  mutation AddGameMutation($date: Datetime!, $duration: Int!, $name: String, $clubId: BigInt!) {
+    insertIntoGameCollection(objects: {
+      date: $date, 
+      duration: $duration, 
+      name: $name, 
+      gameEnded: false, 
+      clubId: $clubId,
+    }) {
+      records {
+        id
+      }
+    }
+  }
+`);
+
+type GameMutation = Pick<Game, "date" | "duration" | "name">;
+
+// @to-do: handle game between internal teams
+export function AddGame({ navigation }) {
+  const [categoryId, setCategoryId] = useState(1)
+  const clubId = useClubIdContext();
+  const queryClient = useQueryClient();
+  const { control, handleSubmit, reset, getValues } = useForm()
+  const gameIdRef = useRef<number>()
+
+  const teamMembersMutation = useMutation({
+    mutationFn: async (teamMembers: { teamGameId: number, memberId: number }[]) => {
+      console.log('teamMembersMutation params', teamMembers);
+      return request(
+        Constants.expoConfig.extra.supabaseUrl,
+        AddTeamMembersMutation,
+        { teamMembers },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      )
     },
-    {
-      name: "gameName",
-      label: "Compétition",
-      placeholder: "Coupe de bretagne",
+    onSuccess: (data) => {
+      console.log("teamMembersMutation", JSON.stringify(data, null, 2))
+      navigation.navigate("Game", { gameId: gameIdRef.current });
     },
-    {
-      name: "date",
-      label: "Date",
-      rules: { required: "La date est obligatoire" },
-      type: "select",
-      displayType: "date",
-      defaultValue: DateTime.now().toJSDate().toISOString()
+  })
+
+  const teamGameMutation = useMutation({
+    mutationFn: async ({ teamId, gameId, teamId2 }: { teamId: number, gameId: number, teamId2: number }) => {
+      console.log('{ teamId, gameId, teamId2 }', { teamId, gameId, teamId2 });
+      return request(
+        Constants.expoConfig.extra.supabaseUrl,
+        AddTeamGameMutation,
+        { teamId, gameId, teamId2 },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      )
     },
-  ];
+    onSuccess: (data) => {
+      console.log("teamGameMutation success", JSON.stringify(data, null, 2))
+      const formValues = getValues();
+      // const teamGame = data.insertIntoTeamGameCollection.records.find(teamGame => Number(teamGame.id) === Number(formValues.team().id))
+      const teamGame = data.insertIntoTeamGameCollection.records[0]
+      console.log('teamGame', teamGame);
+      const teamGameId = Number(teamGame?.id)
+      const teamMembers = formValues.players().map(playerId => ({ memberId: playerId, teamGameId }))
+      console.log('formValuesplayers()', formValues.players());
+      console.log('teamMembers', teamMembers);
+      teamMembersMutation.mutate(teamMembers)
+      // navigation.navigate("Members");
+    },
+  })
+
+
+  const gameMutation = useMutation({
+    mutationFn: async ({ date, duration, name }: GameMutation) =>
+      request(
+        Constants.expoConfig.extra.supabaseUrl,
+        AddGameMutation,
+        { date, duration, name, clubId },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+    onSuccess: (data) => {
+      const formValues = getValues();
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      const gameId = Number(data.insertIntoGameCollection.records[0].id);
+      gameIdRef.current = gameId
+      teamGameMutation.mutate({ teamId: Number(formValues.team().id), gameId, teamId2: Number(formValues.opponentTeam().id) });
+      // navigation.navigate("Members");
+    },
+  })
+
+  const dispatch = useDispatch();
 
   const handleOnPress = async (data) => {
-    // mutation.mutate(data);
+    gameMutation.mutate({ date: DateTime.fromISO(data.date), duration: Number(data.duration), name: data.gameName ?? "" } as GameMutation);
   };
+
+  const onCategoryChange = (newCategoryId) => {
+    dispatch(resetGame())
+    reset({
+      team: null,
+      opponentTeam: null,
+      players: [],
+    })
+    setCategoryId(newCategoryId)
+  }
 
   useEffect(() => {
     navigation.setOptions({
       headerTitle: "Créer un match",
     });
   }, [navigation]);
-  usePlayersWatcher({ control });
 
+  useGameStoreParamWatcher({
+    control, name: PLAYERS, rules: { required: "Au moins un joueur est obligatoire" }, defaultValue: [], onChange: (value) => value.map(v => Number(v.id))
+  })
+  useGameStoreParamWatcher({ control, name: TEAM, rules: { required: "L'équipe est obligatoire" }, defaultValue: null, onChange: (value) => value })
+  useGameStoreParamWatcher({
+    control, name: OPPONENT_TEAM, rules: { required: "L'équipe adverse est obligatoire" }, defaultValue: null, onChange: (value) => value
+  })
+
+  const renderTeam = (value) => <StyledText cn={clsx(!value && "text-gray-400")}>{value ? value.teamName : "Equipe A"}</StyledText>
+
+  const mutationsLoading = teamGameMutation.isLoading || gameMutation.isLoading || teamMembersMutation.isLoading
 
   return (
-    <View className="flex-1 justify-center items-center">
-      <Card>
-        <View>
-          {fields.map(
-            (
-              {
-                label,
-                placeholder,
-                name,
-                onPress,
-                type,
-                setDate,
-                displayType,
-                keyboardType,
-                rules,
-                defaultValue
-              },
-              i
-            ) =>
-              type === "select" ? (
-                <ControlledSelect
-                  key={label}
-                  onPress={onPress}
-                  label={`${label}${rules?.required ? " *" : ""}`}
-                  setDate={setDate}
-                  displayType={displayType}
-                  control={control}
-                  rules={rules}
-                  name={name}
-                  defaultValue={defaultValue}
-                />
-              ) : (
-                <ControlledLabelledTextInput
-                  key={label}
-                  label={`${label}${rules?.required ? " *" : ""}`}
-                  inputProps={{
-                    placeholder,
-                    keyboardType: keyboardType || "default",
-                  }}
-                  cn={i > 0 && "mt-4"}
-                  control={control}
-                  rules={rules}
-                  name={label}
-                  defaultValue={defaultValue}
-                />
-              )
-          )}
-          <View className="mt-8">
-            <CustomButton
-              variant="contained"
-              onPress={handleSubmit(handleOnPress)}
-            >
-              <Text className="text-white text-lg">C&apos;est parti</Text>
-            </CustomButton>
+    <>
+      <CategoryFilter onPress={onCategoryChange} categoryId={categoryId} />
+      <View className="flex-1 justify-center items-center">
+        <Card>
+          <View>
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("Teams", { mode: "select", categoryId, external: false });
+              }}
+              label="Equipe *"
+              control={control}
+              rules={{ required: "L'équipe est obligatoire" }}
+              name={TEAM}
+              renderValue={renderTeam}
+            />
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("Teams", { mode: "select", categoryId, external: true });
+              }}
+              label="Equipe adverse *"
+              control={control}
+              rules={{ required: "L'équipe adverse est obligatoire" }}
+              name={OPPONENT_TEAM}
+              renderValue={renderTeam}
+            />
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("MembersModal", { mode: "select", categoryId });
+              }}
+              label="Joueurs *"
+              control={control}
+              rules={{ required: "Au moins un joueur est obligatoire" }}
+              name={PLAYERS}
+              renderValue={(value: number[]) => <StyledText
+                cn={clsx("rounded-lg text-white bg-gray-400 px-1 overflow-hidden", value.length && "bg-[#AB6C49]")}
+              >
+                {value?.length?.toString() ?? '0'}
+              </StyledText>
+              }
+            />
+            <ControlledSelect
+              label="Date *"
+              dateType
+              control={control}
+              rules={{ required: "La date est obligatoire" }}
+              name="date"
+              defaultValue={DateTime.now().toJSDate().toISOString()}
+              renderValue={(value) => <StyledText
+              >
+                {DateTime.fromISO(value).toFormat("dd-MM-yyyy")}
+              </StyledText>}
+            />
+            <ControlledLabelledTextInput
+              label="Durée du match *"
+              inputProps={{
+                placeholder: "60",
+                keyboardType: "number-pad",
+              }}
+              control={control}
+              rules={{ required: "La durée est obligatoire" }}
+              name="duration"
+              defaultValue="60"
+            />
+            <ControlledLabelledTextInput
+              label="Compétition"
+              inputProps={{
+                placeholder: "Coupe de bretagne",
+                keyboardType: "default",
+              }}
+              control={control}
+              name="gameName"
+            />
+            <View className="mt-8">
+              <CustomButton
+                variant="contained"
+                onPress={handleSubmit(handleOnPress)}
+              >
+                <Text className="text-white text-lg">C&apos;est parti</Text>
+              </CustomButton>
+            </View>
           </View>
-        </View>
-      </Card>
-    </View>
+        </Card>
+      </View>
+      <View>
+        {mutationsLoading && (
+          <StyledText>
+            Game creation in progress ...
+          </StyledText>
+        )}
+      </View>
+    </>
   );
 }

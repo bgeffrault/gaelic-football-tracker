@@ -9,7 +9,7 @@ import request from "graphql-request";
 import Constants from 'expo-constants';
 import { Members } from "../gql/graphql";
 import { useClubIdContext } from "../providers/ClubIdProvider";
-import { ControlledLabelledTextInput, Rules } from "../components/ControllesComponents";
+import { ControlledLabelledTextInput, Rules } from "../components/ControlledComponents";
 
 type Field = {
   label: string;

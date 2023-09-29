@@ -8,6 +8,11 @@ import { CustomButton } from "../../components/CustomButton";
 import { gameResultColors } from "../../utils/shootsUtils";
 import { useAppSelector } from "../../stores/store";
 import { AppNavigationProp, AppRouteProp } from "../../navigators";
+import { useQuery } from "@tanstack/react-query";
+import request from "graphql-request";
+import Constants from 'expo-constants';
+import { graphql, DocumentType, useFragment } from "../../gql";
+import { GameQueryQuery, Team } from "../../gql/graphql";
 
 const useScore = (teamState) =>
   useMemo(() => {
@@ -36,42 +41,121 @@ const useTeam = (initialState) =>
     initialState
   );
 
-const useGame = (route: AppRouteProp<"Games">) => {
-  const gameId = route.params.gameId;
-  const game = useAppSelector((state) =>
-    state.games.gameList.find((g) => g.id === gameId)
-  );
-  return game;
+
+const GameScreenTeamItemFragment = graphql(/* GraphQL */ `
+  fragment GameScreenTeamItemFragment on Team {
+    id
+    teamName
+    external
+    category {
+      name
+    }
+  }
+`)
+
+const gameQuery = graphql(/* GraphQL */ `
+  query gameQuery($gameId: BigInt!) {
+    gameCollection(filter: { id: { eq: $gameId } }) {
+      edges {
+        node {
+          id
+          date
+          duration
+          gameEnded
+          name
+          teamGameCollection {
+            edges {
+              node {
+                id
+                team {
+                  ...GameScreenTeamItemFragment
+                }
+                teamMembersCollection {
+                  edges {
+                    node {
+                      id
+                      member {
+                        id
+                        firstName
+                        lastName
+                      }
+                    }
+                  }
+                }
+                shootsCollection {
+                  edges {
+                    node {
+                      id
+                      x
+                      y
+                      type
+                      memberId
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
+
+const useRouteGameId = (route: AppRouteProp<"Games">) => {
+  return route.params.gameId;
 };
 
-const useTeamName = () => useAppSelector((state) => state.club.teamName);
+const useGameQuery = (gameId) => {
+  return useQuery({
+    queryKey: ["game", gameId],
+    queryFn: async () =>
+      request(
+        Constants.expoConfig.extra.supabaseUrl,
+        gameQuery,
+        { gameId },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+  })
+}
 
-export function GameScreen({ navigation, route }: AppNavigationProp<"Games">) {
-  const game = useGame(route);
-  const teamName = useTeamName();
+const useTeams = (data: GameQueryQuery) => {
+  let team: DocumentType<typeof GameScreenTeamItemFragment> | null = null
+  let opponentTeam: DocumentType<typeof GameScreenTeamItemFragment> | null = null
+  if (!data) {
+    return { team, opponentTeam }
+  }
+  const teams = data.gameCollection.edges[0].node.teamGameCollection.edges;
+  const team1 = useFragment(GameScreenTeamItemFragment, teams[0].node.team);
+  const team2 = useFragment(GameScreenTeamItemFragment, teams[1].node.team);
+  team = team1.external ? team2 : team1;
+  opponentTeam = team1.external ? team1 : team2;
 
+  return { team, opponentTeam }
+}
+
+const Game = ({ gameId }: { gameId: number }) => {
   const [addingScore, setAddingScore] = useState<"points" | "goals" | "missed" | "blocked">();
-  const [teamAState, updateTeamAState] = useTeam(game.teamsScore.us);
-  const [teamBState, updateTeamBState] = useTeam(game.teamsScore.them);
+  const [teamAState, updateTeamAState] = useTeam({
+    points: [],
+    goals: [],
+    missed: [],
+    blocked: [],
+  });
+  const [teamBState, updateTeamBState] = useTeam({
+    points: [],
+    goals: [],
+    missed: [],
+    blocked: [],
+  });
 
   const teamAScore = useScore(teamAState);
   const teamBScore = useScore(teamBState);
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: `${teamName} vs ${game.opponentName}`,
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => (
-        <CustomButton
-          onPress={() => {
-            navigation.navigate("Home");
-          }}
-        >
-          <AntDesign name="home" size={24} color="black" />
-        </CustomButton>
-      ),
-    });
-  }, [navigation]);
 
   const handleScored = (team) => (score) => {
     if (team === "A") {
@@ -110,26 +194,62 @@ export function GameScreen({ navigation, route }: AppNavigationProp<"Games">) {
     return "draw";
   }, [teamAScore, teamBScore]);
 
+  return (<>
+    <FieldZone
+      cn="mt-2"
+      addingScore={addingScore}
+      scoreAdded={setAddingScore}
+      teamState={teamAState}
+      updateTeamState={updateTeamAState}
+      gameId={gameId}
+    />
+    <ScoreTable
+      onTeamAScored={handleScored("A")}
+      onTeamAMissed={handleMissed}
+      onTeamBScored={handleScored("B")}
+      teamAScore={teamAScore}
+      teamBScore={teamBScore}
+      teamAName="Rennes GAA"
+      teamBName="Nantes A"
+      result={result}
+    />
+  </>
+  )
+}
+export function GameScreen({ navigation, route }: AppNavigationProp<"Games">) {
+  const gameId = useRouteGameId(route);
+  const { data, isLoading } = useGameQuery(gameId);
+
+  const gameName = data?.gameCollection.edges[0].node.name;
+
+  const { team, opponentTeam } = useTeams(data);
+
+  const teamName = team?.teamName;
+  const teamCategory = team?.category?.name;
+  const opponentTeamName = opponentTeam?.teamName;
+
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: gameName || "Game",
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerLeft: () => (
+        <CustomButton
+          onPress={() => {
+            navigation.navigate("Home");
+          }}
+        >
+          <AntDesign name="home" size={24} color="black" />
+        </CustomButton>
+      ),
+    });
+  }, [navigation, gameName]);
+
+  if (isLoading) { return null; }
+
   return (
     <View className="flex-1">
-      <FieldZone
-        cn="mt-2"
-        addingScore={addingScore}
-        scoreAdded={setAddingScore}
-        teamState={teamAState}
-        updateTeamState={updateTeamAState}
-        gameId={game.id}
-      />
-      <ScoreTable
-        onTeamAScored={handleScored("A")}
-        onTeamAMissed={handleMissed}
-        onTeamBScored={handleScored("B")}
-        teamAScore={teamAScore}
-        teamBScore={teamBScore}
-        teamAName="Rennes GAA"
-        teamBName="Nantes A"
-        result={result}
-      />
+      <Game gameId={gameId} />
     </View>
   );
 }

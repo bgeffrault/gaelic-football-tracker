@@ -12,6 +12,8 @@ import { SelectPlayer } from "./src/screens/SelectPlayer";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ClubIdProvider } from './src/providers/ClubIdProvider';
 import { ClubConfig } from './src/screens/ClubConfig/ClubConfig';
+import { Categories } from './src/screens/Categories';
+import { Teams } from './src/screens/Teams';
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ export default function App() {
                 <Stack.Screen name="AddMember" component={AddMember} />
                 <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
                 <Stack.Screen name="MembersModal" component={Members} />
+                <Stack.Screen name="Categories" component={Categories} />
+                <Stack.Screen name="Teams" component={Teams} />
               </Stack.Group>
             </Stack.Navigator>
           </NavigationContainer>

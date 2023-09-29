@@ -15,6 +15,14 @@ type NavigationRoutes = {
     NewGame: undefined;
     Members: undefined;
     ClubConfig: undefined;
+    Categories: {
+        mode?: "select";
+    };
+    Teams: {
+        mode?: "select";
+        categoryId: number;
+        external: boolean;
+    };
     Login: undefined;
     CreateClub: undefined;
     AddMember: undefined;

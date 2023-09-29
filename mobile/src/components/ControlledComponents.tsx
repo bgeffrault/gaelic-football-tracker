@@ -3,6 +3,8 @@ import { CustomButton } from "./CustomButton";
 import { LabelledTextInput, StyledTextInput } from "./StyledTextInput";
 import { Select } from "./Select";
 import { DateTime } from "luxon";
+import { View } from "react-native";
+import { StyledText } from "./StyledText";
 
 export type Rules = Omit<RegisterOptions<FieldValues, string>, "disabled" | "valueAsNumber" | "valueAsDate" | "setValueAs">
 
@@ -29,12 +31,12 @@ export const ControlledLabelledTextInput = <T extends unknown>({ label, buttonPr
     )
 };
 
-export const ControlledSelect = <T extends unknown>({ control, name, defaultValue = "", rules, displayType, ...props }: {
-    control: Control<FieldValues, T>,
+export const ControlledSelect = ({ control, name, defaultValue = "", rules, ...props }: {
+    control: Control<FieldValues, any>,
     name: string,
     defaultValue?: string,
     rules?: Rules,
-} & Omit<React.ComponentProps<typeof Select>, "value">) => {
+} & Omit<React.ComponentProps<typeof Select>, "value" | 'setDate'>) => {
     const { field, formState } = useController({
         control,
         defaultValue,
@@ -44,13 +46,19 @@ export const ControlledSelect = <T extends unknown>({ control, name, defaultValu
     const error = formState.errors[name]?.message as string | undefined;
 
     return (
-        <Select
-            value={displayType === "date" ? field.value : field.value.length}
-            {...props}
-            displayType={displayType}
-            setDate={(value) => {
-                field.onChange(DateTime.fromFormat(value, "yyyy/MM/dd").toJSDate().toISOString())
-            }}
-        />
+        <>
+            <Select
+                value={field.value}
+                {...props}
+                setDate={(value) => {
+                    field.onChange(DateTime.fromFormat(value, "yyyy/MM/dd").toJSDate().toISOString())
+                }}
+            />
+            <View>
+                <StyledText cn="text-xs text-red-400">
+                    {error}
+                </StyledText>
+            </View>
+        </>
     )
 }

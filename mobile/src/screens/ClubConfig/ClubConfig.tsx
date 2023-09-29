@@ -1,17 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
 import request from "graphql-request";
 import { graphql, DocumentType, useFragment } from "../../gql";
 import Constants from 'expo-constants';
 import { useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { StyledText } from "../../components/StyledText";
-import { SectionTitle } from "../../components/SectionTitle";
+import { View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Team } from "../../gql/graphql";
-import { CustomButton } from "../../components/CustomButton";
-import { useForm } from "react-hook-form";
-import { ControlledLabelledTextInput } from "../../components/ControllesComponents";
 import { TeamSection, TeamSectionFragment } from "./TeamSection";
 
 const teamsQuery = graphql(/* GraphQL */ `
