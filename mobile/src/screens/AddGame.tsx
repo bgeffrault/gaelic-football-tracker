@@ -112,7 +112,7 @@ export function AddGame({ navigation }) {
         }
       )
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       navigation.navigate("Game", { gameId: gameIdRef.current });
     },
   })

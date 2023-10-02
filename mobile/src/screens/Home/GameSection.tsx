@@ -10,12 +10,17 @@ import { useAppNavigation } from "../../navigators";
 import { DocumentType, graphql } from "../../gql/gql";
 import { useFragment } from "../../gql";
 import { SectionTitle } from "../../components/SectionTitle";
+import { getCategoryName } from "../../utils/getCategoryName";
 
 export const TeamScoreFragment = graphql(/* GraphQL */ `
   fragment TeamScoreFragment on TeamGame {
     id
     team {
       teamName
+      category {
+        id
+        name
+      }
     }
 
     shootsCollection {
@@ -34,6 +39,7 @@ export const GameFragment = graphql(/* GraphQL */ `
     id
     duration
     gameEnded
+    name
 
     teamGameCollection {
       edges {
@@ -96,8 +102,8 @@ export function GameListItem({ game, first, last }: {
   last: boolean;
 }) {
   const { teamA, teamB, teamAAccuracy, result } = useMemo(() => {
-    const teamA = game?.teamGameCollection.edges?.[0]?.node;
-    const teamB = game?.teamGameCollection.edges?.[1]?.node;
+    const teamA = useFragment(TeamScoreFragment, game?.teamGameCollection.edges?.[0]?.node);
+    const teamB = useFragment(TeamScoreFragment, game?.teamGameCollection.edges?.[1]?.node);
 
     const teamAShoots = teamA?.shootsCollection.edges.map((e) => e.node);
     const teamBShoots = teamB?.shootsCollection.edges.map((e) => e.node);
@@ -113,11 +119,11 @@ export function GameListItem({ game, first, last }: {
   };
 
   if (game?.teamGameCollection.edges.length != 2) {
-    // console.warn("The game has the wrong number of teamGames. GameId: ",
-    //   game.id, "; teamGames: ",
-    //   game?.teamGameCollection.edges.length, ";")
     return null;
   }
+
+  const catA = teamA.team.category.name
+  const catB = teamB.team.category.name
 
   return (
     <Card
@@ -146,9 +152,15 @@ export function GameListItem({ game, first, last }: {
           teamGame={teamB as DocumentType<typeof TeamScoreFragment>}
         />}
       </View>
-      <StyledText cn="mt-1 text-xs text-gray-800">
-        Accuracy: {teamAAccuracy}%
-      </StyledText>
+      <View className="flex-row justify-between mt-1 text-xs">
+        <StyledText cn="mt-1 text-xs text-gray-800">
+          Accuracy: {teamAAccuracy}%
+        </StyledText>
+        <StyledText cn="text-gray-800">
+          {getCategoryName(catA)} {catB !== catA && `VS ${getCategoryName(teamB.team.category.name)}`}{game.name && ` - ${game.name}`}
+        </StyledText>
+
+      </View>
     </Card>
   );
 }

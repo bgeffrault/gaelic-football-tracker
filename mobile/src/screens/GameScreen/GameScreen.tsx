@@ -12,10 +12,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { graphql, DocumentType, useFragment } from "../../gql";
-import { GameQueryQuery, Shoots, Team } from "../../gql/graphql";
-import { set } from "react-hook-form";
+import { GameQueryQuery, Shoots } from "../../gql/graphql";
 import * as SplashScreen from "expo-splash-screen";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useSubscription } from "../../useSupabaseSubscription";
 
 SplashScreen.preventAutoHideAsync();
@@ -139,7 +137,7 @@ const useRouteGameId = (route: AppRouteProp<"Games">) => {
 
 const useGameQuery = (gameId) => {
   return useQuery({
-    queryKey: ["game", gameId],
+    queryKey: ["game", { gameId }],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
@@ -179,11 +177,36 @@ const AddShootMutation = graphql(/* GraphQL */ `
   }
 `);
 
-const useShootSubscription = <Data extends unknown>(teamGameId: number, opponentTeamGameId: number, callback: (payload: RealtimePostgresChangesPayload<Data>) => void) => {
-  useSubscription({
+const useShootSubscription = ({ teamGameState, opponentTeamGameState, updateTeamGameState, updateOpponentGameState, gameId }:
+  { teamGameState: TeamShoots, opponentTeamGameState: TeamShoots, updateTeamGameState: React.Dispatch<Partial<TeamShoots>>, updateOpponentGameState: React.Dispatch<Partial<TeamShoots>>, gameId: number }) => {
+  const queryClient = useQueryClient();
+
+  useSubscription<Pick<Shoots, "id" | "created_at" | "memberId" | "x" | "y" | "type" | "teamGameId">>({
     table: 'Shoots',
-    filter: `teamGameId=in.(${teamGameId},${opponentTeamGameId})`
-  }, callback)
+    filter: `teamGameId=in.(${teamGameState.teamGameId},${opponentTeamGameState.teamGameId})`
+  }, (payload) => {
+    switch (payload.eventType) {
+      case "INSERT":
+        const { teamGameId, type, x, y } = payload.new;
+        if (Number(teamGameState.teamGameId) === Number(teamGameId)) {
+          updateTeamGameState({ [`${type}Shoots`]: [...teamGameState[`${type}Shoots`], { x, y }] })
+          break
+        }
+        if (opponentTeamGameState.teamGameId === teamGameId) {
+          updateOpponentGameState({ [`${type}Shoots`]: [...opponentTeamGameState[`${type}Shoots`], { x, y }] })
+          break
+        }
+        console.warn("No team matched for this insert")
+        break;
+
+      case "UPDATE": // @To do: update the shoot
+      case "DELETE": // @To do: delete the shoot
+      default:
+        console.warn("No match for this subscription event")
+        break;
+    }
+    queryClient.invalidateQueries({ queryKey: ["game", { gameId }], exact: true });
+  })
 }
 
 const useAddShootingPlayer = ({ addingShoot,
@@ -207,7 +230,7 @@ const useAddShootingPlayer = ({ addingShoot,
       ),
     onSuccess: (rsp) => {
       // @To do: invalidate games query
-      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["game", { gameId }] });
       setAddingShoot(null)
     },
   })
@@ -242,31 +265,7 @@ const Game = ({ gameId, teamGame, opponentTeamGame }: {
   const teamAScore = useScore(teamGameState, updateTeamGameState);
   const teamBScore = useScore(opponentTeamGameState, updateOpponentGameState);
 
-  useShootSubscription<Pick<Shoots, "id" | "created_at" | "memberId" | "x" | "y" | "type" | "teamGameId">>(teamGame?.id, opponentTeamGame.id, (payload) => {
-    switch (payload.eventType) {
-      case "INSERT":
-        console.log("Insert")
-        const { teamGameId, type, x, y } = payload.new;
-        if (Number(teamGameState.teamGameId) === Number(teamGameId)) {
-          updateTeamGameState({ [`${type}Shoots`]: [...teamGameState[`${type}Shoots`], { x, y }] })
-          return
-        }
-        if (opponentTeamGameState.teamGameId === teamGameId) {
-          updateOpponentGameState({ [`${type}Shoots`]: [...opponentTeamGameState[`${type}Shoots`], { x, y }] })
-          return
-        }
-        console.log("No team matched for this insert")
-        return;
-
-      case "UPDATE": // @To do: update the shoot
-      case "DELETE": // @To do: delete the shoot
-      default:
-        console.warn("No match for this subscription event")
-        break;
-    }
-  })
-
-  const handleShoot = (type: ShootType, teamGame: TeamShoots, updateTeamGame: React.Dispatch<Partial<TeamShoots>>) => {
+  const handleShoot = (type: ShootType, teamGame: TeamShoots) => {
     setAddingShoot({ type, teamGameId: teamGame.teamGameId, location: null });
   };
 
@@ -277,6 +276,8 @@ const Game = ({ gameId, teamGame, opponentTeamGame }: {
   }, [teamAScore, teamBScore]);
 
   useAddShootingPlayer({ addingShoot, setAddingShoot, gameId })
+
+  useShootSubscription({ teamGameState, opponentTeamGameState, updateTeamGameState, updateOpponentGameState, gameId })
 
   return (<>
     <FieldZone
@@ -339,7 +340,7 @@ function ScoreTable({
   result,
   disabled,
 }: {
-  onShoot: (type: ShootType, teamGame: TeamShoots, updateTeamGame: React.Dispatch<Partial<TeamShoots>>) => void;
+  onShoot: (type: ShootType, teamGame: TeamShoots) => void;
   teamAScore: ReturnType<typeof useScore>;
   teamBScore: ReturnType<typeof useScore>;
   teamAName: string;
@@ -361,8 +362,8 @@ function ScoreTable({
         <TeamScore teamScore={teamBScore} name={teamBName} />
       </View>
       <View className="flex-row justify-between mt-2">
-        <PointsControl onShoot={(type) => onShoot(type, teamAScore.teamGameState, teamAScore.updateTeamGame)} disabled={disabled} />
-        <PointsControl onShoot={(type) => onShoot(type, teamBScore.teamGameState, teamBScore.updateTeamGame)} hideMissedButtons disabled={disabled} />
+        <PointsControl onShoot={(type) => onShoot(type, teamAScore.teamGameState)} disabled={disabled} />
+        <PointsControl onShoot={(type) => onShoot(type, teamBScore.teamGameState)} hideMissedButtons disabled={disabled} />
       </View>
     </View>
   );
