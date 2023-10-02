@@ -1,22 +1,20 @@
 import { ScrollView, View } from "react-native";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect } from "react";
 import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
 import { CustomCheckbox } from "../components/CustomCheckbox";
-import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
-import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
+import { setOpponentTeam, setTeam } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
 import { useAppNavigation } from "../navigators";
 import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
-import { shootsAccuracy, sumShoots } from "../utils/shootsUtils";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 
-const MembersHeaderButton = memo(({ selectMode }: {
+const TeamHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
 }) => {
   const navigation = useAppNavigation();
@@ -25,48 +23,29 @@ const MembersHeaderButton = memo(({ selectMode }: {
     <CustomButton onPress={() => navigation.goBack()}>
       <StyledText cn="">OK</StyledText>
     </CustomButton>
-  ) : (
-    <HeaderRightAddButton nav="AddMember" />
-  );
+  ) : null;
 });
 
-const MemberItemFragment = graphql(/* GraphQL */ `
-  fragment MemberItemFragment on Members {
+const TeamItemFragment = graphql(/* GraphQL */ `
+  fragment TeamItemFragment on Team {
     id
-    firstName
-    lastName
-    pseudo
-    shootsCollection {
-      edges {
-        node {
-          id
-          type
-        }
-      }
-    }
+    teamName
   }
 `)
 
-function MemberItem({ member, first, last, selectMode }: {
-  member: DocumentType<typeof MemberItemFragment>;
+function TeamItem({ team, first, last, selectMode, external }: {
+  team: DocumentType<typeof TeamItemFragment>;
   first: boolean;
   last: boolean;
   selectMode: boolean;
+  external: boolean;
 }) {
   const isSelected = Boolean(
     useAppSelector(
-      (state) => state.game.players.filter((p) => p.id === member.id).length
+      (state) => external ? state.game.opponentTeam?.id === team.id : state.game.team?.id === team.id
     )
   );
   const dispatch = useDispatch();
-
-  const { totalPoints, accuracy } = useMemo(() => {
-    const shoots = member.shootsCollection.edges.map((e) => e.node)
-    const totalPoints = sumShoots(shoots);
-    const accuracy = shootsAccuracy(shoots);
-    return { totalPoints, accuracy };
-  }, [member])
-
 
   return (
     <View
@@ -77,21 +56,17 @@ function MemberItem({ member, first, last, selectMode }: {
         last && "rounded-b-lg"
       )}
     >
+      <StyledText cn="font-bold text-lg">
+        {team.teamName}
+      </StyledText>
       <View>
-        <StyledText cn="font-bold text-lg">
-          {member.firstName} {member.lastName}
-        </StyledText>
-      </View>
-      <View>
-        {selectMode ? (
+        {selectMode && (
           <CustomCheckbox
             isChecked={isSelected}
             setChecked={() =>
-              dispatch(isSelected ? removePlayer(member) : addPlayer(member))
+              dispatch(external ? setOpponentTeam(team) : setTeam(team))
             }
           />
-        ) : (
-          <StyledText cn="">{totalPoints} pts - {accuracy}%</StyledText>
         )}
       </View>
     </View>
@@ -100,13 +75,12 @@ function MemberItem({ member, first, last, selectMode }: {
 
 
 
-const membersQuery = graphql(/* GraphQL */ `
-  query membersQuery($clubId: BigInt!, $categoryId: BigInt) {
-    membersCollection(filter: {clubId: {eq: $clubId}, categoryId: {eq: $categoryId}}) {
+const teamsModalQuery = graphql(/* GraphQL */ `
+  query teamsModalQuery($clubId: Int, $external: Boolean!, $categoryId: BigInt) {
+    teamCollection(filter: {external: {eq: $external}, clubId: {eq: $clubId}, categoryId: {eq: $categoryId} }) {
       edges {
         node {
-          id
-          ...MemberItemFragment
+          ...TeamItemFragment
         }
       }
     }
@@ -114,20 +88,24 @@ const membersQuery = graphql(/* GraphQL */ `
 `)
 
 
-export function Members({ navigation, route }) {
+export function Teams({ navigation, route }) {
   const clubId = useClubIdContext();
 
-  const mode = route.params?.mode;
-  const selectMode = mode === "select";
+  const selectMode = route.params?.mode === "select";
   const categoryId = route.params?.categoryId;
+  const external = route.params?.external;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["members", categoryId],
+    queryKey: ["teams", categoryId, external],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
-        membersQuery,
-        { clubId, categoryId },
+        teamsModalQuery,
+        {
+          clubId,
+          external,
+          categoryId,
+        },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
@@ -137,9 +115,9 @@ export function Members({ navigation, route }) {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: selectMode ? "Sélection des joueurs" : "Membres",
+      headerTitle: selectMode ? "Sélection de l'équipe" : "Teams",
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => <MembersHeaderButton selectMode={selectMode} />,
+      headerRight: () => <TeamHeaderButton selectMode={selectMode} />,
     });
   }, [navigation]);
 
@@ -148,15 +126,16 @@ export function Members({ navigation, route }) {
   return (
     <View className="m-6">
       <ScrollView>
-        {data.membersCollection.edges.map((edge, i, arr) => {
-          const member = useFragment(MemberItemFragment, edge.node);
+        {data.teamCollection.edges.map((edge, i, arr) => {
+          const team = useFragment(TeamItemFragment, edge.node);
           return (
-            <MemberItem
-              key={edge.node.id}
+            <TeamItem
+              key={team.id}
               first={i === 0}
               last={i === arr.length - 1}
               selectMode={selectMode}
-              member={member}
+              team={team}
+              external={external}
             />
           )
         })}

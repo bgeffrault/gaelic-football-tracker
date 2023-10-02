@@ -4,14 +4,14 @@ import clsx from "clsx";
 import { clone } from "lodash";
 import { ShootPoint } from "./ShootPoint";
 import { Field, Goal } from "../../../assets";
-import { useAppNavigation } from "../../navigators";
+import { Shoots } from "../../gql/graphql";
 
 export const FIELD_SIZE = {
   width: 350,
   height: 425,
 };
 
-const renderShootPoint = (shoots, color, addingScore) =>
+const renderShoots = (shoots: Shoot[], color: string, disabled: boolean) =>
   shoots
     .filter((shoot) => shoot.x && shoot.y)
     .map((shoot, index) => (
@@ -19,7 +19,7 @@ const renderShootPoint = (shoots, color, addingScore) =>
         key={index}
         x={shoot.x ?? 0}
         y={shoot.y ?? 0}
-        disabled={addingScore}
+        disabled={disabled}
         fieldSize={FIELD_SIZE}
         color={color}
       />
@@ -32,19 +32,34 @@ const addingShoot = (teamState, key, location) => {
   return shoots;
 };
 
+export type Shoot = Pick<Shoots, "x" | "y">;
+export type ShootType = "point" | "goal" | "missed" | "blocked"
+export type TeamShoots = {
+  pointShoots: Shoot[],
+  goalShoots: Shoot[],
+  missedShoots: Shoot[],
+  blockedShoots: Shoot[],
+  teamGameId: number,
+}
+export type AddingShoot = {
+  type: ShootType, teamGameId: number, location: {
+    x: number,
+    y: number
+  } | null
+} | null
 
-
-
+// @To do: do it for opponentTeamGame too
 export function FieldZone({
-  addingScore,
-  scoreAdded,
+  addingShoot,
+  setAddingShoot,
   cn,
-  teamState,
-  updateTeamState,
-  gameId,
+  teamGameState,
+}: {
+  addingShoot: AddingShoot;
+  setAddingShoot: React.Dispatch<React.SetStateAction<AddingShoot>>;
+  cn?: string;
+  teamGameState: TeamShoots;
 }) {
-  const navigation = useAppNavigation();
-
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onStartShouldSetPanResponderCapture: () => true,
@@ -54,19 +69,19 @@ export function FieldZone({
     onPanResponderMove: () => false,
     onPanResponderRelease: (event) => {
       event.persist();
-      if (!event.nativeEvent || !addingScore) {
+      if (!event.nativeEvent || !addingShoot) {
         return;
       }
+
       const location = {
         x: Number(event.nativeEvent?.locationX.toFixed(0)),
         y: Number(event.nativeEvent?.locationY.toFixed(0)),
       };
-      const shoots = addingShoot(teamState, addingScore, location);
-      updateTeamState({ [addingScore]: shoots });
-      scoreAdded();
-      navigation.navigate("SelectPlayer", { gameId });
+      setAddingShoot((shoot) => ({ ...shoot, location }));
     },
   });
+
+  const disabled = Boolean(addingShoot);
 
   return (
     <View className={clsx(cn)}>
@@ -80,10 +95,11 @@ export function FieldZone({
           resizeMode="contain"
           {...panResponder.panHandlers}
         />
-        {renderShootPoint(teamState.points, "#90CBD7", addingScore)}
-        {renderShootPoint(teamState.goals, "#1C282B", addingScore)}
-        {renderShootPoint(teamState.blocked, "#ddd", addingScore)}
-        {renderShootPoint(teamState.missed, "#bbb", addingScore)}
+        {renderShoots(teamGameState.pointShoots, "#90CBD7", disabled)}
+        {renderShoots(teamGameState.goalShoots, "#1C282B", disabled)}
+        {renderShoots(teamGameState.blockedShoots, "#ddd", disabled)}
+        {renderShoots(teamGameState.missedShoots, "#bbb", disabled)}
+        {addingShoot && renderShoots([{ ...addingShoot.location }], "#0FF", disabled)}
       </View>
     </View>
   );

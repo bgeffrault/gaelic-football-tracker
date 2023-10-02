@@ -25,22 +25,24 @@ export const LabelledTextInput = memo(
     cn?: string;
     error?: string;
   }) => (
-    <View className={clsx("justify-center items-start flex", cn)}>
-      <StyledText cn="text-lg">{label}</StyledText>
-      <View className="flex-row justify-center items-center">
-        <StyledTextInput {...inputProps} />
-        {buttonProps && (
-          <CustomButton {...buttonProps} cn="ml-2" variant="iconButton">
-            <StyledText cn="text-white text-lg">→</StyledText>
-          </CustomButton>
-        )}
+    <>
+      <View className={clsx("justify-center items-start flex", cn)}>
+        <StyledText cn="text-lg">{label}</StyledText>
+        <View className="flex-row justify-center items-center">
+          <StyledTextInput {...inputProps} />
+          {buttonProps && (
+            <CustomButton {...buttonProps} cn="ml-2" variant="iconButton">
+              <StyledText cn="text-white text-lg">→</StyledText>
+            </CustomButton>
+          )}
+        </View>
+        <View>
+          <StyledText cn="text-xs text-red-400">
+            {error}
+          </StyledText>
+        </View>
       </View>
-      <View>
-        <StyledText cn="text-xs text-red-400">
-          {error}
-        </StyledText>
-      </View>
-    </View>
+    </>
   )
 );
 

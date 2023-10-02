@@ -12,6 +12,9 @@ import { SelectPlayer } from "./src/screens/SelectPlayer";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ClubIdProvider } from './src/providers/ClubIdProvider';
 import { ClubConfig } from './src/screens/ClubConfig/ClubConfig';
+import { Categories } from './src/screens/Categories';
+import { Teams } from './src/screens/Teams';
+import { SupabaseClientProvider } from './src/providers/useSupabaseClient';
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -35,29 +38,33 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Provider store={store}>
-        <ClubIdProvider>
-          <NavigationContainer>
-            <Stack.Navigator
-              screenOptions={defaultScreenOptions}
-              initialRouteName="Home"
-            >
-              <Stack.Group>
-                <Stack.Screen name="Home" component={Home} />
-                <Stack.Screen name="Members" component={Members} />
-                <Stack.Screen name="NewGame" component={AddGame} />
-                <Stack.Screen name="Game" component={GameScreen} />
-                <Stack.Screen name="ClubConfig" component={ClubConfig} />
-              </Stack.Group>
-              <Stack.Group screenOptions={{ presentation: "modal" }}>
-                <Stack.Screen name="AddMember" component={AddMember} />
-                <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
-                <Stack.Screen name="MembersModal" component={Members} />
-              </Stack.Group>
-            </Stack.Navigator>
-          </NavigationContainer>
-        </ClubIdProvider>
-      </Provider>
+      <SupabaseClientProvider>
+        <Provider store={store}>
+          <ClubIdProvider>
+            <NavigationContainer>
+              <Stack.Navigator
+                screenOptions={defaultScreenOptions}
+                initialRouteName="Home"
+              >
+                <Stack.Group>
+                  <Stack.Screen name="Home" component={Home} />
+                  <Stack.Screen name="Members" component={Members} />
+                  <Stack.Screen name="NewGame" component={AddGame} />
+                  <Stack.Screen name="Game" component={GameScreen} />
+                  <Stack.Screen name="ClubConfig" component={ClubConfig} />
+                </Stack.Group>
+                <Stack.Group screenOptions={{ presentation: "modal" }}>
+                  <Stack.Screen name="AddMember" component={AddMember} />
+                  <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
+                  <Stack.Screen name="MembersModal" component={Members} />
+                  <Stack.Screen name="Categories" component={Categories} />
+                  <Stack.Screen name="Teams" component={Teams} />
+                </Stack.Group>
+              </Stack.Navigator>
+            </NavigationContainer>
+          </ClubIdProvider>
+        </Provider>
+      </SupabaseClientProvider>
     </QueryClientProvider>
   );
 }

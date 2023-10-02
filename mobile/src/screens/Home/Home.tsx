@@ -50,7 +50,7 @@ export function Home({ }: AppNavigationProp<"Home">) {
     queryKey: ["club-gameEnded-gameInProgress"],
     queryFn: async () =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         clubQuery,
         { id: clubId },
         {

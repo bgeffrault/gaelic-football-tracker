@@ -9,7 +9,7 @@ import request from "graphql-request";
 import Constants from 'expo-constants';
 import { Members } from "../gql/graphql";
 import { useClubIdContext } from "../providers/ClubIdProvider";
-import { ControlledLabelledTextInput, Rules } from "../components/ControllesComponents";
+import { ControlledLabelledTextInput, Rules } from "../components/ControlledComponents";
 
 type Field = {
   label: string;
@@ -35,7 +35,7 @@ export function AddMember({ navigation }) {
   const mutation = useMutation({
     mutationFn: async (data: Pick<Members, "firstName" | "lastName" | "pseudo">) =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         AddMemberMutation,
         { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId, categoryId: 1 },
         {

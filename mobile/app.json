@@ -30,7 +30,8 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "supabaseUrl": "https://uopbvkdwounrtreinjwe.supabase.co/graphql/v1",
+      "supabaseUrl": "https://uopbvkdwounrtreinjwe.supabase.co",
+      "supabaseUrlGraphQl": "https://uopbvkdwounrtreinjwe.supabase.co/graphql/v1",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvcGJ2a2R3b3VucnRyZWluandlIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTQzNzMwMzcsImV4cCI6MjAwOTk0OTAzN30.PoD_hLKjuMfzxl24fqtk4Eyxgdaa4pwrAQ6THgE9XXs"
     }
   }

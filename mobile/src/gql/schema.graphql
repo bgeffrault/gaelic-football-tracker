@@ -65,6 +65,25 @@ type Category implements Node {
     """Sort order to apply to the collection"""
     orderBy: [MembersOrderBy!]
   ): MembersConnection
+  teamCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamOrderBy!]
+  ): TeamConnection
 }
 
 type CategoryConnection {
@@ -130,25 +149,6 @@ type Club implements Node {
   id: BigInt!
   created_at: Datetime!
   name: String!
-  teamCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: TeamFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [TeamOrderBy!]
-  ): TeamConnection
   membersCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -168,6 +168,44 @@ type Club implements Node {
     """Sort order to apply to the collection"""
     orderBy: [MembersOrderBy!]
   ): MembersConnection
+  teamCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamOrderBy!]
+  ): TeamConnection
+  gameCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: GameFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [GameOrderBy!]
+  ): GameConnection
 }
 
 type ClubConnection {
@@ -294,6 +332,8 @@ type Game implements Node {
   duration: Int!
   name: String!
   gameEnded: Boolean!
+  clubId: BigInt!
+  club: Club!
   teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -340,6 +380,7 @@ input GameFilter {
   duration: IntFilter
   name: StringFilter
   gameEnded: BooleanFilter
+  clubId: BigIntFilter
   nodeId: IDFilter
 }
 
@@ -349,6 +390,7 @@ input GameInsertInput {
   duration: Int
   name: String
   gameEnded: Boolean
+  clubId: BigInt
 }
 
 type GameInsertResponse {
@@ -366,6 +408,7 @@ input GameOrderBy {
   duration: OrderByDirection
   name: OrderByDirection
   gameEnded: OrderByDirection
+  clubId: OrderByDirection
 }
 
 input GameUpdateInput {
@@ -374,6 +417,7 @@ input GameUpdateInput {
   duration: Int
   name: String
   gameEnded: Boolean
+  clubId: BigInt
 }
 
 type GameUpdateResponse {
@@ -1105,7 +1149,9 @@ type Team implements Node {
   teamName: String!
   clubId: Int
   external: Boolean!
+  categoryId: BigInt
   club: Club
+  category: Category
   teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1151,6 +1197,7 @@ input TeamFilter {
   teamName: StringFilter
   clubId: IntFilter
   external: BooleanFilter
+  categoryId: BigIntFilter
   nodeId: IDFilter
 }
 
@@ -1269,6 +1316,7 @@ input TeamInsertInput {
   teamName: String
   clubId: Int
   external: Boolean
+  categoryId: BigInt
 }
 
 type TeamInsertResponse {
@@ -1357,6 +1405,7 @@ input TeamOrderBy {
   teamName: OrderByDirection
   clubId: OrderByDirection
   external: OrderByDirection
+  categoryId: OrderByDirection
 }
 
 input TeamUpdateInput {
@@ -1364,6 +1413,7 @@ input TeamUpdateInput {
   teamName: String
   clubId: Int
   external: Boolean
+  categoryId: BigInt
 }
 
 type TeamUpdateResponse {

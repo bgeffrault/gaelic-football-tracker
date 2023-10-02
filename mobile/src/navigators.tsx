@@ -3,7 +3,7 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-naviga
 
 type NavigationRoutes = {
     SelectPlayer: {
-        gameId: number;
+        teamGameId: number;
     },
     Game: {
         gameId: number;
@@ -15,6 +15,14 @@ type NavigationRoutes = {
     NewGame: undefined;
     Members: undefined;
     ClubConfig: undefined;
+    Categories: {
+        mode?: "select";
+    };
+    Teams: {
+        mode?: "select";
+        categoryId: number;
+        external: boolean;
+    };
     Login: undefined;
     CreateClub: undefined;
     AddMember: undefined;

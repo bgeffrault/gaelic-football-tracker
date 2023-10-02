@@ -3,10 +3,10 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   players: [],
-  opponentName: "",
-  duration: 60,
+  opponentTeam: null,
+  team: null,
   gameName: "",
-  date: new Date().toISOString(),
+  category: null,
 };
 
 const gameSlice = createSlice({
@@ -21,29 +21,29 @@ const gameSlice = createSlice({
         (player) => player.id !== action.payload.id
       );
     },
-    reset: () => initialState,
-    setDuration: (state, action) => {
-      state.duration = action.payload;
+    resetPlayers: (state) => {
+      state.players = [];
     },
-    setOpponentName: (state, action) => {
-      state.opponentName = action.payload;
+    resetGame: () => initialState,
+    setOpponentTeam: (state, action) => {
+      state.opponentTeam = action.payload;
     },
-    setGameName: (state, action) => {
-      state.gameName = action.payload;
+    setTeam: (state, action) => {
+      state.team = action.payload;
     },
-    setDate: (state, action) => {
-      state.date = action.payload;
-    },
+    setCategory: (state, action) => {
+      state.category = action.payload;
+    }
   },
 });
 
 export const {
   addPlayer,
   removePlayer,
-  reset,
-  setDuration,
-  setOpponentName,
-  setGameName,
-  setDate,
+  resetGame,
+  setOpponentTeam,
+  setCategory,
+  setTeam,
+  resetPlayers
 } = gameSlice.actions;
 export default gameSlice.reducer;

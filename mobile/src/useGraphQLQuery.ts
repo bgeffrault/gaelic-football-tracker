@@ -8,7 +8,7 @@ export const useGraphQLQuery = (queryKey: unknown[], query: ReturnType<typeof gr
   queryKey: queryKey,
   queryFn: async () =>
     request(
-      Constants.expoConfig.extra.supabaseUrl,
+      Constants.expoConfig.extra.supabaseUrlGraphQl,
       query,
       vars,
       {
