@@ -3,7 +3,7 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-naviga
 
 type NavigationRoutes = {
     SelectPlayer: {
-        gameId: number;
+        teamGameId: number;
     },
     Game: {
         gameId: number;

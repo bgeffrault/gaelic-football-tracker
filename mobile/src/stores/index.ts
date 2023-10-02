@@ -1,3 +1,3 @@
 export * from "./slices/gameSlice";
 export * from "./slices/clubSlice";
-// export * from "./slices/gamesSlice";
+export * from "./slices/playerSlice";

@@ -91,7 +91,7 @@ export function Categories({ navigation, route }) {
     queryKey: ["categories"],
     queryFn: async () =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         categoriesQuery,
         {},
         {

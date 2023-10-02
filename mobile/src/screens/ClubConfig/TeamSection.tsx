@@ -43,7 +43,7 @@ export const TeamSection = <T extends unknown>({ teams, external, title }: {
     const mutation = useMutation({
         mutationFn: async (data: Pick<Team, "external" | "teamName">) =>
             request(
-                Constants.expoConfig.extra.supabaseUrl,
+                Constants.expoConfig.extra.supabaseUrlGraphQl,
                 AddTeamMutation,
                 { teamName: data.teamName, external: data.external, clubId },
                 {

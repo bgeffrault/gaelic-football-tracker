@@ -4,8 +4,6 @@ import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
-import { Select } from "../components/Select";
-import { addGame, generateGameInitialState } from "../stores/slices/gamesSlice";
 import { useAppSelector } from "../stores/store";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { Control, FieldValues, useController, useForm } from "react-hook-form";
@@ -104,9 +102,8 @@ export function AddGame({ navigation }) {
 
   const teamMembersMutation = useMutation({
     mutationFn: async (teamMembers: { teamGameId: number, memberId: number }[]) => {
-      console.log('teamMembersMutation params', teamMembers);
       return request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         AddTeamMembersMutation,
         { teamMembers },
         {
@@ -116,16 +113,14 @@ export function AddGame({ navigation }) {
       )
     },
     onSuccess: (data) => {
-      console.log("teamMembersMutation", JSON.stringify(data, null, 2))
       navigation.navigate("Game", { gameId: gameIdRef.current });
     },
   })
 
   const teamGameMutation = useMutation({
     mutationFn: async ({ teamId, gameId, teamId2 }: { teamId: number, gameId: number, teamId2: number }) => {
-      console.log('{ teamId, gameId, teamId2 }', { teamId, gameId, teamId2 });
       return request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         AddTeamGameMutation,
         { teamId, gameId, teamId2 },
         {
@@ -135,17 +130,11 @@ export function AddGame({ navigation }) {
       )
     },
     onSuccess: (data) => {
-      console.log("teamGameMutation success", JSON.stringify(data, null, 2))
       const formValues = getValues();
-      // const teamGame = data.insertIntoTeamGameCollection.records.find(teamGame => Number(teamGame.id) === Number(formValues.team().id))
       const teamGame = data.insertIntoTeamGameCollection.records[0]
-      console.log('teamGame', teamGame);
       const teamGameId = Number(teamGame?.id)
       const teamMembers = formValues.players().map(playerId => ({ memberId: playerId, teamGameId }))
-      console.log('formValuesplayers()', formValues.players());
-      console.log('teamMembers', teamMembers);
       teamMembersMutation.mutate(teamMembers)
-      // navigation.navigate("Members");
     },
   })
 
@@ -153,7 +142,7 @@ export function AddGame({ navigation }) {
   const gameMutation = useMutation({
     mutationFn: async ({ date, duration, name }: GameMutation) =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         AddGameMutation,
         { date, duration, name, clubId },
         {

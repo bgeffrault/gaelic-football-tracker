@@ -125,7 +125,7 @@ export function Members({ navigation, route }) {
     queryKey: ["members", categoryId],
     queryFn: async () =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         membersQuery,
         { clubId, categoryId },
         {

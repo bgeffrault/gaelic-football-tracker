@@ -35,7 +35,7 @@ export function AddMember({ navigation }) {
   const mutation = useMutation({
     mutationFn: async (data: Pick<Members, "firstName" | "lastName" | "pseudo">) =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         AddMemberMutation,
         { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId, categoryId: 1 },
         {

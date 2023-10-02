@@ -28,7 +28,7 @@ export function ClubConfig({ navigation, route }) {
         queryKey: ["teams-internal"],
         queryFn: async () =>
             request(
-                Constants.expoConfig.extra.supabaseUrl,
+                Constants.expoConfig.extra.supabaseUrlGraphQl,
                 teamsQuery,
                 { clubId, external: false },
                 {
@@ -41,7 +41,7 @@ export function ClubConfig({ navigation, route }) {
         queryKey: ["teams-external"],
         queryFn: async () =>
             request(
-                Constants.expoConfig.extra.supabaseUrl,
+                Constants.expoConfig.extra.supabaseUrlGraphQl,
                 teamsQuery,
                 { clubId, external: true },
                 {

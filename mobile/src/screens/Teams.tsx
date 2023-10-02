@@ -99,7 +99,7 @@ export function Teams({ navigation, route }) {
     queryKey: ["teams", categoryId, external],
     queryFn: async () =>
       request(
-        Constants.expoConfig.extra.supabaseUrl,
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
         teamsModalQuery,
         {
           clubId,
