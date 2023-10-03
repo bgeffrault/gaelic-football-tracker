@@ -1,39 +1,41 @@
-/* eslint-disable react/no-unknown-property */
 import { TextField } from '@mui/material'
 import React from 'react'
-import { FieldErrors, UseFormRegister } from 'react-hook-form'
+import {
+  Control,
+  FieldValues,
+  Path,
+  UseFormRegister,
+  useFormState,
+} from 'react-hook-form'
 
-type Inputs = {
-  firstName: string
-  lastName: string
-  pseudo: string
-  categoryId: number
-  clubId: number
-}
+type FormFieldProps<T extends FieldValues> = {
+  register: UseFormRegister<T>
 
-type FormFieldProps = {
-  register: UseFormRegister<Inputs>
-  errors: FieldErrors<Inputs>
   label: string
   placeholder: string
   margin?: 'dense' | 'normal' | 'none' | undefined
   id: string
   type: string
-  span: string
-  name: 'firstName' | 'lastName' | 'pseudo' | 'categoryId' | 'clubId'
+  errorMessage: string
+  name: Path<T>
+  isRequired: boolean
+  control: Control<T>
 }
 
-const FormField = ({
+const FormField = <T extends FieldValues>({
   register,
-  errors,
+
   label,
   placeholder,
   margin,
   id,
   type,
-  span,
+  errorMessage,
   name,
-}: FormFieldProps): React.JSX.Element => {
+  isRequired,
+  control,
+}: FormFieldProps<T>): React.JSX.Element => {
+  const { errors } = useFormState({ control })
   return (
     <>
       <TextField
@@ -43,9 +45,9 @@ const FormField = ({
         id={id}
         type={type}
         fullWidth
-        {...register(name, { required: true })}
+        {...register(name, { required: isRequired })}
       />
-      {errors && <span error-message="">{span} </span>}
+      {errors[name] && <span error-message="">{errorMessage} </span>}
     </>
   )
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import { Box } from '@mui/material'
 import Link from 'next/link'
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft'
-import CreateGameDialog from '../CreateGameDialog'
+import CreateGameDialog from '../AddNewGame'
 import AddNewMember from '../AddNewMember'
 
 export interface HeaderProps {
