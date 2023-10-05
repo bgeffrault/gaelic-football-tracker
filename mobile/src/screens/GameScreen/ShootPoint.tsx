@@ -1,5 +1,5 @@
 import { memo, useRef } from "react";
-import { Animated, PanResponder, View } from "react-native";
+import { Animated, PanResponder, TouchableHighlight, TouchableOpacity, View } from "react-native";
 
 const POINT_SIZE = 20;
 const OPACITIES = {
@@ -8,12 +8,13 @@ const OPACITIES = {
   disabled: 0.5,
 };
 
-export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }:{
+export const ShootPoint = memo(({ x, y, disabled, fieldSize, color, onPress }: {
   x: number;
   y: number;
   disabled: boolean;
   fieldSize: { width: number; height: number; };
   color: string;
+  onPress: () => void;
 }) => {
   const pan = useRef(
     new Animated.ValueXY({ x, y }, { useNativeDriver: false })
@@ -67,8 +68,9 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }:{
         height: POINT_SIZE,
       }}
       {...panResponder.panHandlers}
+
     >
-      <View
+      <TouchableOpacity
         style={{
           transform: [
             { translateX: -POINT_SIZE / 2 },
@@ -81,7 +83,10 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color }:{
           opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
           zIndex: 100,
         }}
-      />
+        onPress={onPress}
+      >
+        <View />
+      </TouchableOpacity>
     </Animated.View>
   );
 });

@@ -15,8 +15,13 @@ const FilterItem = ({ children, selected, onPress }: {
     onPress: () => void,
     selected: boolean
 }) => (
-    <View className="flex grow">
-        <TouchableOpacity className={clsx('w-full grow justify-center items-center p-2 ', selected ? "bg-[#E3BBA6]" : "bg-[#ae9383]")} onPress={onPress}>
+    <View className="flex grow p-3">
+        <TouchableOpacity className={clsx(
+            'w-full grow justify-center items-center p-2 ',
+            selected ? "bg-[#E3BBA6]" : "bg-[#ae9383]",
+            "rounded-lg"
+        )}
+            onPress={onPress}>
             {children}
         </TouchableOpacity>
     </View>
@@ -35,7 +40,10 @@ const categoriesFilterQuery = graphql(/* GraphQL */ `
   }
 `)
 
-export const CategoryFilter = ({ onPress, categoryId }) => {
+export const CategoryFilter = ({ onPress, categoryId }: {
+    onPress: (id: number) => void,
+    categoryId: number
+}) => {
     const { data, isLoading } = useQuery({
         queryKey: ["categories"],
         queryFn: async () =>
@@ -58,7 +66,7 @@ export const CategoryFilter = ({ onPress, categoryId }) => {
                 const selected = categoryId === Number(edge.node.id);
                 return (
                     <FilterItem key={edge.node.id} onPress={() => onPress(Number(edge.node.id))} selected={selected}>
-                        <StyledText cn={clsx(selected ? "text-black" : "text-white")}>
+                        <StyledText cn={clsx(selected ? "text-gray-800" : "text-white")}>
                             {getCategoryName(edge.node.name)}
                         </StyledText>
                     </FilterItem>

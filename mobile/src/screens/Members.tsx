@@ -1,4 +1,4 @@
-import { ScrollView, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { memo, useEffect, useMemo } from "react";
 import clsx from "clsx";
 import { useDispatch } from "react-redux";
@@ -15,6 +15,10 @@ import request from "graphql-request";
 import Constants from 'expo-constants';
 import { shootsAccuracy, sumShoots } from "../utils/shootsUtils";
 import { useClubIdContext } from "../providers/ClubIdProvider";
+import { ListItem } from "../components/ListItem";
+import { SectionTitle } from "../components/SectionTitle";
+import { FontAwesome } from "@expo/vector-icons";
+import { GoHomeButton } from "../components/GoHomeButton";
 
 const MembersHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -67,34 +71,23 @@ function MemberItem({ member, first, last, selectMode }: {
     return { totalPoints, accuracy };
   }, [member])
 
-
   return (
-    <View
-      className={clsx(
-        "border border-[#000000] flex-row justify-between items-center",
-        "py-2 px-4",
-        first && "rounded-t-lg",
-        last && "rounded-b-lg"
-      )}
+    <ListItem
+      onPress={() => dispatch(isSelected ? removePlayer(member) : addPlayer(member))}
+      disabled={!selectMode}
+      first={first}
+      last={last}
+      isSelected={isSelected}
     >
-      <View>
+      <View className="flex flex-row justify-between items-center grow" >
         <StyledText cn="font-bold text-lg">
           {member.firstName} {member.lastName}
         </StyledText>
+        <StyledText>
+          {totalPoints} pts - {accuracy}%
+        </StyledText>
       </View>
-      <View>
-        {selectMode ? (
-          <CustomCheckbox
-            isChecked={isSelected}
-            setChecked={() =>
-              dispatch(isSelected ? removePlayer(member) : addPlayer(member))
-            }
-          />
-        ) : (
-          <StyledText cn="">{totalPoints} pts - {accuracy}%</StyledText>
-        )}
-      </View>
-    </View>
+    </ListItem>
   );
 }
 
@@ -121,6 +114,11 @@ export function Members({ navigation, route }) {
   const selectMode = mode === "select";
   const categoryId = route.params?.categoryId;
 
+  const nbrSelected = useAppSelector(
+    (state) => state.game.players.length
+  )
+    ;
+
   const { data, isLoading } = useQuery({
     queryKey: ["members", categoryId],
     queryFn: async () =>
@@ -137,16 +135,27 @@ export function Members({ navigation, route }) {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: selectMode ? "Sélection des joueurs" : "Membres",
+      headerTitle: selectMode ? nbrSelected ? `${nbrSelected} player${nbrSelected > 1 ? 's' : ""}` : "Sélection des joueurs" : () => <FontAwesome name="users" size={24} color="#6B7280" />
+      ,
       // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => <MembersHeaderButton selectMode={selectMode} />,
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerLeft: () => <GoHomeButton />,
     });
-  }, [navigation]);
+  }, [navigation, nbrSelected, selectMode]);
 
   if (isLoading) return null;
 
   return (
-    <View className="m-6">
+    <View className="mt-3 bg-white rounded-xl">
+      <SectionTitle cn="flex flex-row grow justify-between items-center p-1 px-4">
+        <StyledText cn="text-gray-400">
+          Player
+        </StyledText>
+        <StyledText cn="text-gray-400">
+          Stats
+        </StyledText>
+      </SectionTitle>
       <ScrollView>
         {data.membersCollection.edges.map((edge, i, arr) => {
           const member = useFragment(MemberItemFragment, edge.node);

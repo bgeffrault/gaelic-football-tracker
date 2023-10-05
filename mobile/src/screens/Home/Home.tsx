@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { CustomButton } from "../../components/CustomButton";
@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
 import { GameListFragment, GamesSection } from "./GameSection";
+import { CategoryFilter } from "../../components/CategoryFilter";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -20,8 +21,8 @@ const HomeFragment = graphql(/* GraphQL */ `
 `);
 
 const clubQuery = graphql(/* GraphQL */ `
-  query clubQuery($id: BigInt!) {
-    clubCollection(filter: { id: {eq: $id} }) {
+  query clubQuery($clubId: BigInt!) {
+    clubCollection(filter: { id: {eq: $clubId} }) {
       edges {
         node {
           id
@@ -29,12 +30,17 @@ const clubQuery = graphql(/* GraphQL */ `
         }
       }
     }
-    gameEndedCollection: gameCollection(filter: { gameEnded: { eq: true } }) {
+  }
+`)
+
+const gamesQuery = graphql(/* GraphQL */ `
+  query gamesQuery($clubId: BigInt!, $categoryId: BigInt!) {
+    gameEndedCollection: gameCollection(filter: { gameEnded: { eq: true }, categoryId: { eq: $categoryId }, clubId: { eq: $clubId}  }, orderBy: [{date: DescNullsLast}]) {
       edges {
         ...GameListFragment
       }
     }
-    gameInProgressCollection: gameCollection(filter: { gameEnded: { eq: false } }) {
+    gameInProgressCollection: gameCollection(filter: { gameEnded: { eq: false }, categoryId: { eq: $categoryId }, clubId: { eq: $clubId} }, orderBy: [{date: DescNullsLast}]) {
       edges {
         ...GameListFragment
       }
@@ -43,16 +49,31 @@ const clubQuery = graphql(/* GraphQL */ `
 `)
 
 export function Home({ }: AppNavigationProp<"Home">) {
+  const [categoryId, setCategoryId] = useState(1)
+
   const navigation = useAppNavigation();
   const clubId = useClubIdContext();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["club-gameEnded-gameInProgress"],
+    queryKey: ["club"],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
         clubQuery,
-        { id: clubId },
+        { clubId },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+  })
+  const { data: gamesData, isLoading: isLoadingGames } = useQuery({
+    queryKey: ["games", { categoryId }],
+    queryFn: async () =>
+      request(
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
+        gamesQuery,
+        { clubId, categoryId },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
@@ -61,8 +82,9 @@ export function Home({ }: AppNavigationProp<"Home">) {
   })
 
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
-  const gamesEnded = useFragment(GameListFragment, data?.gameEndedCollection.edges) ?? []
-  const gamesInProgress = useFragment(GameListFragment, data?.gameInProgressCollection.edges) ?? []
+
+  const gamesEnded = useFragment(GameListFragment, gamesData?.gameEndedCollection.edges) ?? []
+  const gamesInProgress = useFragment(GameListFragment, gamesData?.gameInProgressCollection.edges) ?? []
 
   const clubName = useMemo(() => { if (club) return club.name; return "Home" }, [club])
 
@@ -74,34 +96,36 @@ export function Home({ }: AppNavigationProp<"Home">) {
     });
   }, [navigation, clubName]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingGames) {
     // @To do: add a loading indicator
     return null
   }
 
+
   return (
-    <>
-      <View className="p-6 flex-1">
+    <View className="flex-1">
+      <CategoryFilter onPress={(id) => setCategoryId(id)} categoryId={categoryId} />
+      <View className="py-1 grow flex-1">
         {gamesInProgress.length > 0 && (
-          <View className="mb-4">
+          <View className="grow mb-3">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>
         )}
         {gamesEnded.length > 0 && (
-          <View className="flex-1">
+          <View className="grow">
             <GamesSection games={gamesEnded} title="Last Games" />
           </View>
         )}
       </View>
-      <View className="h-24 flex-row justify-around items-center border border-x-0 border-b-0">
+      <View className="flex-row justify-around items-center pb-8 pt-2">
         <CustomButton onPress={() => navigation.navigate("Members")}>
-          <FontAwesome name="users" size={42} color="black" />
+          <FontAwesome name="users" size={24} color="#6B7280" />
         </CustomButton>
         <CustomButton onPress={() => navigation.navigate("ClubConfig")}>
-          <FontAwesome name="cog" size={42} color="black" />
+          <FontAwesome name="cog" size={24} color="#6B7280" />
         </CustomButton>
       </View>
-    </>
+    </View>
   );
 }
 

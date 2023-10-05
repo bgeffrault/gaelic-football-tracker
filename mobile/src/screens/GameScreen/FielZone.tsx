@@ -6,12 +6,19 @@ import { ShootPoint } from "./ShootPoint";
 import { Field, Goal } from "../../../assets";
 import { Shoots } from "../../gql/graphql";
 
+export const getShootColor = {
+  point: "#B4E3A6",
+  goal: "#8CB080",
+  blocked: "#CAC9C0",
+  missed: "#CAC9C0",
+}
+
 export const FIELD_SIZE = {
   width: 350,
   height: 425,
 };
 
-const renderShoots = (shoots: Shoot[], color: string, disabled: boolean) =>
+const renderShoots = (shoots: Shoot[], color: string, disabled: boolean, onPress: (shoot: Shoot) => void) =>
   shoots
     .filter((shoot) => shoot.x && shoot.y)
     .map((shoot, index) => (
@@ -22,6 +29,7 @@ const renderShoots = (shoots: Shoot[], color: string, disabled: boolean) =>
         disabled={disabled}
         fieldSize={FIELD_SIZE}
         color={color}
+        onPress={() => onPress(shoot)}
       />
     ));
 
@@ -32,7 +40,7 @@ const addingShoot = (teamState, key, location) => {
   return shoots;
 };
 
-export type Shoot = Pick<Shoots, "x" | "y">;
+export type Shoot = Pick<Shoots, "x" | "y" | "memberId" | "type">;
 export type ShootType = "point" | "goal" | "missed" | "blocked"
 export type TeamShoots = {
   pointShoots: Shoot[],
@@ -54,11 +62,13 @@ export function FieldZone({
   setAddingShoot,
   cn,
   teamGameState,
+  onPress
 }: {
-  addingShoot: AddingShoot;
+  addingShoot: AddingShoot | null;
   setAddingShoot: React.Dispatch<React.SetStateAction<AddingShoot>>;
   cn?: string;
   teamGameState: TeamShoots;
+  onPress: (shoot: Shoot) => void
 }) {
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -95,11 +105,11 @@ export function FieldZone({
           resizeMode="contain"
           {...panResponder.panHandlers}
         />
-        {renderShoots(teamGameState.pointShoots, "#90CBD7", disabled)}
-        {renderShoots(teamGameState.goalShoots, "#1C282B", disabled)}
-        {renderShoots(teamGameState.blockedShoots, "#ddd", disabled)}
-        {renderShoots(teamGameState.missedShoots, "#bbb", disabled)}
-        {addingShoot && renderShoots([{ ...addingShoot.location }], "#0FF", disabled)}
+        {renderShoots(teamGameState.pointShoots, getShootColor.point, disabled, onPress)}
+        {renderShoots(teamGameState.goalShoots, getShootColor.goal, disabled, onPress)}
+        {renderShoots(teamGameState.blockedShoots, getShootColor.blocked, disabled, onPress)}
+        {renderShoots(teamGameState.missedShoots, getShootColor.missed, disabled, onPress)}
+        {addingShoot && renderShoots([{ ...addingShoot.location }], getShootColor[addingShoot.type], disabled, onPress)}
       </View>
     </View>
   );

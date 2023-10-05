@@ -84,6 +84,25 @@ type Category implements Node {
     """Sort order to apply to the collection"""
     orderBy: [TeamOrderBy!]
   ): TeamConnection
+  gameCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: GameFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [GameOrderBy!]
+  ): GameConnection
 }
 
 type CategoryConnection {
@@ -333,7 +352,9 @@ type Game implements Node {
   name: String!
   gameEnded: Boolean!
   clubId: BigInt!
+  categoryId: BigInt!
   club: Club!
+  category: Category!
   teamGameCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -381,6 +402,7 @@ input GameFilter {
   name: StringFilter
   gameEnded: BooleanFilter
   clubId: BigIntFilter
+  categoryId: BigIntFilter
   nodeId: IDFilter
 }
 
@@ -391,6 +413,7 @@ input GameInsertInput {
   name: String
   gameEnded: Boolean
   clubId: BigInt
+  categoryId: BigInt
 }
 
 type GameInsertResponse {
@@ -409,6 +432,7 @@ input GameOrderBy {
   name: OrderByDirection
   gameEnded: OrderByDirection
   clubId: OrderByDirection
+  categoryId: OrderByDirection
 }
 
 input GameUpdateInput {
@@ -418,6 +442,7 @@ input GameUpdateInput {
   name: String
   gameEnded: Boolean
   clubId: BigInt
+  categoryId: BigInt
 }
 
 type GameUpdateResponse {
@@ -464,25 +489,6 @@ type Members implements Node {
   pseudo: String
   category: Category
   club: Club
-  teamMembersCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: TeamMembersFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [TeamMembersOrderBy!]
-  ): TeamMembersConnection
   shootsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -502,6 +508,25 @@ type Members implements Node {
     """Sort order to apply to the collection"""
     orderBy: [ShootsOrderBy!]
   ): ShootsConnection
+  teamMembersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamMembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamMembersOrderBy!]
+  ): TeamMembersConnection
 }
 
 type MembersConnection {
@@ -1207,28 +1232,9 @@ type TeamGame implements Node {
   id: BigInt!
   created_at: Datetime!
   teamId: Int!
-  gameId: Int!
+  gameId: BigInt
   team: Team!
-  game: Game!
-  teamMembersCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: TeamMembersFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [TeamMembersOrderBy!]
-  ): TeamMembersConnection
+  game: Game
   shootsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1248,6 +1254,25 @@ type TeamGame implements Node {
     """Sort order to apply to the collection"""
     orderBy: [ShootsOrderBy!]
   ): ShootsConnection
+  teamMembersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: TeamMembersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [TeamMembersOrderBy!]
+  ): TeamMembersConnection
 }
 
 type TeamGameConnection {
@@ -1272,14 +1297,14 @@ input TeamGameFilter {
   id: BigIntFilter
   created_at: DatetimeFilter
   teamId: IntFilter
-  gameId: IntFilter
+  gameId: BigIntFilter
   nodeId: IDFilter
 }
 
 input TeamGameInsertInput {
   created_at: Datetime
   teamId: Int
-  gameId: Int
+  gameId: BigInt
 }
 
 type TeamGameInsertResponse {
@@ -1300,7 +1325,7 @@ input TeamGameOrderBy {
 input TeamGameUpdateInput {
   created_at: Datetime
   teamId: Int
-  gameId: Int
+  gameId: BigInt
 }
 
 type TeamGameUpdateResponse {

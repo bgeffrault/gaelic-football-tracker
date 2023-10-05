@@ -1,7 +1,13 @@
 export const gameResultColors = {
-  win: "bg-[#90CBD7AA]",
-  lose: "bg-[#D3733DAA]",
-  draw: "bg-[#D3D3D3AA]",
+  win: "bg-[#DFF7EC]",
+  lose: "bg-[#D3733D]",
+  draw: "bg-white",
+};
+
+export const gameResultGradientColors = {
+  win: ["#DFF7EC", '#FFF'],
+  lose: ["#FCC7B8", '#FFF'],
+  draw: ["#FFF", '#FFF'],
 };
 
 type Shoot = {

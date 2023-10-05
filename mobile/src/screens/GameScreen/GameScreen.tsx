@@ -2,19 +2,22 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import { View } from "react-native";
 import clsx from "clsx";
 import { AntDesign } from "@expo/vector-icons";
-import { AddingShoot, FieldZone, ShootType, TeamShoots } from "./FielZone";
+import { AddingShoot, FieldZone, Shoot, ShootType, TeamShoots } from "./FielZone";
 import { StyledText } from "../../components/StyledText";
 import { CustomButton } from "../../components/CustomButton";
-import { gameResultColors } from "../../utils/shootsUtils";
+import { gameResultGradientColors } from "../../utils/shootsUtils";
 import { useAppSelector } from "../../stores/store";
 import { AppNavigationProp, AppRouteProp, useAppNavigation } from "../../navigators";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { graphql, DocumentType, useFragment } from "../../gql";
-import { GameQueryQuery, Shoots } from "../../gql/graphql";
+import { GameQueryQuery, GameScreenTeamItemFragmentFragment, Shoots } from "../../gql/graphql";
 import * as SplashScreen from "expo-splash-screen";
 import { useSubscription } from "../../useSupabaseSubscription";
+import { Ionicons } from '@expo/vector-icons';
+import { GoHomeButton } from "../../components/GoHomeButton";
+import { useNavigation } from "@react-navigation/native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,6 +48,8 @@ const useTeamShoots = (teamGame: DocumentType<typeof GameScreenTeamItemFragment>
     prev[`${curr.node.type}Shoots`].push({
       x: Number(curr.node.x),
       y: Number(curr.node.y),
+      type: curr.node.type,
+      memberId: Number(curr.node.memberId)
     })
     return prev;
   }, {
@@ -57,7 +62,6 @@ const useTeamShoots = (teamGame: DocumentType<typeof GameScreenTeamItemFragment>
 
   const reducer = useReducer(
     (current: TeamShoots, partialState: Partial<TeamShoots>) => {
-      console.log("UPT ---")
       return ({
         ...current,
         ...partialState,
@@ -93,7 +97,11 @@ const GameScreenTeamItemFragment = graphql(/* GraphQL */ `
         }
       }
     }
-    shootsCollection {
+    shootsCollection(after: $after) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
       edges {
         node {
           id
@@ -108,7 +116,7 @@ const GameScreenTeamItemFragment = graphql(/* GraphQL */ `
 `)
 
 const gameQuery = graphql(/* GraphQL */ `
-  query gameQuery($gameId: BigInt!) {
+  query gameQuery($gameId: BigInt!, $after: Cursor) {
     gameCollection(filter: { id: { eq: $gameId } }) {
       edges {
         node {
@@ -117,7 +125,7 @@ const gameQuery = graphql(/* GraphQL */ `
           duration
           gameEnded
           name
-          teamGameCollection {
+          teamGameCollection(orderBy: [{id: DescNullsLast}]) {
             edges {
               node {
                 ...GameScreenTeamItemFragment
@@ -135,24 +143,63 @@ const useRouteGameId = (route: AppRouteProp<"Games">) => {
   return route.params.gameId;
 };
 
-const useGameQuery = (gameId) => {
-  return useQuery({
+const useInfiniteGameQuery = (gameId) => {
+  const { data, ...args } = useInfiniteQuery({
     queryKey: ["game", { gameId }],
-    queryFn: async () =>
-      request(
+    queryFn: async ({ pageParam = null }) => {
+      const res = await request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
         gameQuery,
-        { gameId },
+        { gameId, after: pageParam },
         {
           "content-type": "application/json",
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
         }
-      ),
+      )
+      return res
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // @To do handle both teamGame shoots
+      const teamGameA = useFragment(GameScreenTeamItemFragment, lastPage.gameCollection.edges[0].node.teamGameCollection.edges[0].node)
+      const teamGameB = useFragment(GameScreenTeamItemFragment, lastPage.gameCollection.edges[0].node.teamGameCollection.edges[1].node)
+      const hasNextPageA = teamGameA.shootsCollection.pageInfo.hasNextPage;
+      if (hasNextPageA) {
+        return teamGameA.shootsCollection.pageInfo.endCursor
+      }
+      const hasNextPageB = teamGameB.shootsCollection.pageInfo.hasNextPage;
+      if (hasNextPageB) {
+        return teamGameB.shootsCollection.pageInfo.endCursor
+      }
+    }
   })
+
+  const mergedData = useMemo<GameQueryQuery>(() => {
+    return data?.pages.reduce((prev, page) => {
+      if (!prev) {
+        return page
+      }
+
+      function mergeShoots(prev, index) {
+        // gameCollection are ordered by id assuring the match 0 -> 0, 1 -> 1
+        const teamGame = useFragment(GameScreenTeamItemFragment, prev.gameCollection.edges[0].node.teamGameCollection.edges[index].node);
+        const pageTeam = useFragment(GameScreenTeamItemFragment, page.gameCollection.edges[0].node.teamGameCollection.edges[index].node);
+        teamGame.shootsCollection.edges.push(...pageTeam.shootsCollection.edges)
+        return teamGame
+      }
+      const teamGameA = mergeShoots(prev, 0)
+      const teamGameB = mergeShoots(prev, 1)
+
+      prev.gameCollection.edges[0].node.teamGameCollection.edges[0].node = teamGameA
+      prev.gameCollection.edges[0].node.teamGameCollection.edges[1].node = teamGameB
+      return prev
+    }, null)
+  }, [data]);
+
+  return { data: mergedData, ...args }
 }
 
 
-const useTeams = (data: GameQueryQuery) => {
+const useTeams = (data?: GameQueryQuery) => {
   let teamGame: DocumentType<typeof GameScreenTeamItemFragment> | null = null
   let opponentTeamGame: DocumentType<typeof GameScreenTeamItemFragment> | null = null
   if (!data) {
@@ -187,13 +234,13 @@ const useShootSubscription = ({ teamGameState, opponentTeamGameState, updateTeam
   }, (payload) => {
     switch (payload.eventType) {
       case "INSERT":
-        const { teamGameId, type, x, y } = payload.new;
+        const { teamGameId, type, x, y, memberId } = payload.new;
         if (Number(teamGameState.teamGameId) === Number(teamGameId)) {
-          updateTeamGameState({ [`${type}Shoots`]: [...teamGameState[`${type}Shoots`], { x, y }] })
+          updateTeamGameState({ [`${type}Shoots`]: [...teamGameState[`${type}Shoots`], { x, y, type, memberId }] })
           break
         }
         if (opponentTeamGameState.teamGameId === teamGameId) {
-          updateOpponentGameState({ [`${type}Shoots`]: [...opponentTeamGameState[`${type}Shoots`], { x, y }] })
+          updateOpponentGameState({ [`${type}Shoots`]: [...opponentTeamGameState[`${type}Shoots`], { x, y, type, memberId }] })
           break
         }
         console.warn("No team matched for this insert")
@@ -211,11 +258,12 @@ const useShootSubscription = ({ teamGameState, opponentTeamGameState, updateTeam
 
 const useAddShootingPlayer = ({ addingShoot,
   setAddingShoot, gameId }: {
-    addingShoot: AddingShoot;
+    addingShoot: AddingShoot | null;
     setAddingShoot: React.Dispatch<React.SetStateAction<AddingShoot>>;
     gameId: number;
   }) => {
   const queryClient = useQueryClient();
+  const { location, teamGameId } = useMemo(() => ({ location: addingShoot?.location, teamGameId: addingShoot?.teamGameId }), [addingShoot])
 
   const mutation = useMutation({
     mutationFn: async ({ x, y, teamGameId, type, memberId }: Pick<Shoots, "x" | "y" | "teamGameId" | "type" | "memberId">) =>
@@ -228,7 +276,7 @@ const useAddShootingPlayer = ({ addingShoot,
           "apikey": Constants.expoConfig.extra.supabaseAnonKey,
         }
       ),
-    onSuccess: (rsp) => {
+    onSuccess: () => {
       // @To do: invalidate games query
       queryClient.invalidateQueries({ queryKey: ["game", { gameId }] });
       setAddingShoot(null)
@@ -239,27 +287,31 @@ const useAddShootingPlayer = ({ addingShoot,
   const playerId = useAppSelector((state) => state.player.playerId);
 
   useEffect(() => {
-    if (addingShoot?.location) {
-      navigation.navigate("SelectPlayer", { teamGameId: addingShoot.teamGameId });
+    if (location) {
+      navigation.navigate("SelectPlayer", { teamGameId });
     }
-  }, [addingShoot, navigation])
+  }, [location, teamGameId, navigation])
 
-  // Use store to get the selected player & save it & reset addingShoot
   useEffect(() => {
-    if (playerId && addingShoot?.location) {
-      // To do : save the shoot & update the teamGameState
+    if ((playerId || playerId === null) && addingShoot?.location) {
       mutation.mutate({ ...addingShoot.location, teamGameId: addingShoot.teamGameId, type: addingShoot.type, memberId: playerId })
     }
 
   }, [playerId, addingShoot])
 }
 
-const Game = ({ gameId, teamGame, opponentTeamGame }: {
+const Game = ({ gameId, teamGame, opponentTeamGame, game }: {
   gameId: number,
   teamGame: DocumentType<typeof GameScreenTeamItemFragment>,
-  opponentTeamGame: DocumentType<typeof GameScreenTeamItemFragment>
+  opponentTeamGame: DocumentType<typeof GameScreenTeamItemFragment>,
+  game: {
+    gameEnded: boolean;
+    gameId: number;
+  }
 }) => {
+  const navigation = useNavigation()
   const [addingShoot, setAddingShoot] = useState<AddingShoot>(null);
+  const [selectedShoot, setSelectedShoot] = useState<Shoot>(null)
   const [teamGameState, updateTeamGameState] = useTeamShoots(teamGame);
   const [opponentTeamGameState, updateOpponentGameState] = useTeamShoots(opponentTeamGame);
   const teamAScore = useScore(teamGameState, updateTeamGameState);
@@ -269,11 +321,23 @@ const Game = ({ gameId, teamGame, opponentTeamGame }: {
     setAddingShoot({ type, teamGameId: teamGame.teamGameId, location: null });
   };
 
+  const handleShootPressed = (shoot: Shoot) => {
+    setSelectedShoot(shoot)
+  }
+
   const result = useMemo(() => {
     if (teamAScore.total > teamBScore.total) return "win";
     if (teamAScore.total < teamBScore.total) return "lose";
     return "draw";
   }, [teamAScore, teamBScore]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: gameResultGradientColors[result][0]
+      }
+    });
+  }, [navigation, result]);
 
   useAddShootingPlayer({ addingShoot, setAddingShoot, gameId })
 
@@ -285,48 +349,54 @@ const Game = ({ gameId, teamGame, opponentTeamGame }: {
       addingShoot={addingShoot}
       setAddingShoot={setAddingShoot}
       teamGameState={teamGameState}
+      onPress={handleShootPressed}
     />
+    <SelectedShootOverview shoot={selectedShoot} />
     <ScoreTable
       onShoot={handleShoot}
       teamAScore={teamAScore}
       teamBScore={teamBScore}
-      teamAName="Rennes GAA"
-      teamBName="Nantes A"
-      result={result}
+      teamAName={teamGame.team.teamName}
+      teamBName={opponentTeamGame.team.teamName}
       disabled={Boolean(addingShoot)}
+      game={game}
     />
   </>
   )
 }
+
+const SelectedShootOverview = ({ shoot }: { shoot?: Shoot }) => {
+  if (!shoot) return <View className="grow" />
+  return (
+    <View className="grow">
+      <StyledText>{shoot.memberId}</StyledText>
+      <StyledText>{shoot.type}</StyledText>
+    </View>
+  )
+}
+
 export function GameScreen({ navigation, route }: AppNavigationProp<"Games">) {
   const gameId = useRouteGameId(route);
-  const { data, isLoading } = useGameQuery(gameId);
-
-  const gameName = data?.gameCollection.edges[0].node.name;
+  const { data, isFetching } = useInfiniteGameQuery(gameId);
 
   const { teamGame, opponentTeamGame } = useTeams(data);
+
+  const game = data?.gameCollection.edges[0].node;
+  const gameName = data?.gameCollection.edges[0].node.name;
 
   useEffect(() => {
     navigation.setOptions({
       headerTitle: gameName || "Game",
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => (
-        <CustomButton
-          onPress={() => {
-            navigation.navigate("Home");
-          }}
-        >
-          <AntDesign name="home" size={24} color="black" />
-        </CustomButton>
-      ),
+      headerLeft: () => <GoHomeButton />,
     });
   }, [navigation, gameName]);
 
-  if (isLoading) { return null; }
+  if (isFetching) { return null; }
 
   return (
     <View className="flex-1">
-      <Game gameId={gameId} teamGame={teamGame} opponentTeamGame={opponentTeamGame} />
+      <Game gameId={gameId} teamGame={teamGame} opponentTeamGame={opponentTeamGame} game={{ gameEnded: game.gameEnded, gameId: game.id }} />
     </View>
   );
 }
@@ -337,29 +407,37 @@ function ScoreTable({
   teamBScore,
   teamAName,
   teamBName,
-  result,
   disabled,
+  game
 }: {
   onShoot: (type: ShootType, teamGame: TeamShoots) => void;
   teamAScore: ReturnType<typeof useScore>;
   teamBScore: ReturnType<typeof useScore>;
   teamAName: string;
   teamBName: string;
-  result: "win" | "lose" | "draw";
   disabled: boolean;
+  game: {
+    gameEnded: boolean;
+    gameId: number;
+  }
 }) {
   return (
     <View
       className={clsx(
-        gameResultColors[result],
-        "mt-2 mx-6 p-2 border rounded-md",
+        "mt-2 p-2 rounded-xl bg-white",
         disabled && "opacity-50"
       )}
     >
-      <View className="flex-row justify-between">
-        <TeamScore teamScore={teamAScore} name={teamAName} />
-        <Timer />
-        <TeamScore teamScore={teamBScore} name={teamBName} />
+      <View className="flex-row">
+        <View className="w-2/5">
+          <TeamScore teamScore={teamAScore} name={teamAName} />
+        </View>
+        <View className="w-1/5">
+          <Timer game={game} />
+        </View>
+        <View className="w-2/5">
+          <TeamScore teamScore={teamBScore} name={teamBName} />
+        </View>
       </View>
       <View className="flex-row justify-between mt-2">
         <PointsControl onShoot={(type) => onShoot(type, teamAScore.teamGameState)} disabled={disabled} />
@@ -388,12 +466,51 @@ function TeamScore({ teamScore, name }) {
   );
 }
 
-function Timer() {
+const GameEndedMutation = graphql(/* GraphQL */ `
+mutation GameEndedMutation($gameId: BigInt!, $gameEnded: Boolean!) {
+  updateGameCollection(set: {gameEnded: $gameEnded}, filter: {id: {eq: $gameId}}){
+    records {
+      id
+      gameEnded
+    }
+  }
+}
+`);
+
+function Timer({ game: { gameEnded, gameId } }: {
+  game: {
+    gameEnded: boolean;
+    gameId: number;
+  }
+}) {
+  const [gameInProgress, setGameInProgress] = useState(!gameEnded)
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async () =>
+      request(
+        Constants.expoConfig.extra.supabaseUrlGraphQl,
+        GameEndedMutation,
+        { gameEnded: gameInProgress, gameId },
+        {
+          "content-type": "application/json",
+          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+        }
+      ),
+    onSuccess: (rsp) => {
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      setGameInProgress(!gameInProgress)
+    },
+  })
+
   return (
-    <View>
+    <View className="flex items-center">
       <View className="border-b">
         <StyledText>60&apos;</StyledText>
       </View>
+      {<CustomButton onPress={() => mutation.mutate()}>
+        {!gameInProgress ? <AntDesign name="playcircleo" size={24} color="#DF8C5F" /> : <Ionicons name="stop-circle-outline" size={24} color="#DF8C5F" />}
+      </CustomButton>}
     </View>
   );
 }
@@ -425,8 +542,10 @@ function ScoreButton({ score, onPress }: {
   score: string | number;
 } & Omit<React.ComponentProps<typeof CustomButton>, "children">) {
   return (
-    <CustomButton variant="contained" cn="w-10" onPress={onPress}>
-      <StyledText cn="text-white">+{score}</StyledText>
+    <CustomButton variant="contained" cn="w-18" onPress={onPress}
+      color="#E3BBA6"
+    >
+      <StyledText cn="text-gray-600">+{score}</StyledText>
     </CustomButton>
   );
 }
@@ -436,11 +555,12 @@ function MissedButton({ label, onPress }: {
 } & Omit<React.ComponentProps<typeof CustomButton>, "children">) {
   return (
     <CustomButton
-      variant="contained"
-      cn="bg-gray-400 ml-1 w-20"
+      variant="outlined"
+      cn="ml-1 w-24"
+      // cn="bg-gray-400 ml-1 w-24"
       onPress={onPress}
     >
-      <StyledText cn="text-white">{label}</StyledText>
+      <StyledText cn="text-gray-600">{label}</StyledText>
     </CustomButton>
   );
 }

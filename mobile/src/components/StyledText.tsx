@@ -24,7 +24,7 @@ export function StyledText({ children, cn }: { children: React.ReactNode, cn?: s
   return (
     <Text
       onLayout={onLayoutRootView}
-      className={clsx("font-['Lexend-Regular']", cn)}
+      className={clsx("font-['Lexend-Regular'] text-gray-600", cn)}
     >
       {children}
     </Text>

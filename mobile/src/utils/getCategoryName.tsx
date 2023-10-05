@@ -4,6 +4,8 @@ export const getCategoryName = (categoryName) => {
             return "BOYS";
         case "femme":
             return "GIRLS";
+        case "mix":
+            return "MIX";
         default:
             return categoryName;
     }
