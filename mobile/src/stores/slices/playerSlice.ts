@@ -2,9 +2,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState: {
-  playerId: number | null;
+  playerId: number | null | undefined;
 } = {
-  playerId: null,
+  playerId: undefined,
 };
 
 const playerSlice = createSlice({
@@ -15,7 +15,7 @@ const playerSlice = createSlice({
       state.playerId = action.payload;
     },
     resetPlayerId: (state) => {
-      state.playerId = null;
+      state.playerId = undefined;
     },
   },
 });

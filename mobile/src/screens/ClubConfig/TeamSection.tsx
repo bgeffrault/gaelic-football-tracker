@@ -22,8 +22,8 @@ export const TeamSectionFragment = graphql(/* GraphQL */ `
     `)
 
 const AddTeamMutation = graphql(/* GraphQL */ `
-  mutation AddTeamMutation($teamName: String!, $external: Boolean!, $clubId: Int!) {
-    insertIntoTeamCollection(objects: {teamName: $teamName, external: $external, clubId: $clubId}) {
+  mutation AddTeamMutation($teamName: String!, $external: Boolean!, $clubId: Int!, $categoryId: BigInt!) {
+    insertIntoTeamCollection(objects: {teamName: $teamName, external: $external, clubId: $clubId, categoryId: $categoryId}) {
       records {
         id
       }
@@ -31,10 +31,11 @@ const AddTeamMutation = graphql(/* GraphQL */ `
   }
 `);
 
-export const TeamSection = <T extends unknown>({ teams, external, title }: {
+export const TeamSection = ({ teams, external, title, categoryId }: {
     teams: readonly DocumentType<typeof TeamSectionFragment>[],
     external: boolean,
     title: string,
+    categoryId: number
 }) => {
     const clubId = useClubIdContext();
     const queryClient = useQueryClient();
@@ -45,14 +46,14 @@ export const TeamSection = <T extends unknown>({ teams, external, title }: {
             request(
                 Constants.expoConfig.extra.supabaseUrlGraphQl,
                 AddTeamMutation,
-                { teamName: data.teamName, external: data.external, clubId },
+                { teamName: data.teamName, external: data.external, clubId, categoryId },
                 {
                     "content-type": "application/json",
                     "apikey": Constants.expoConfig.extra.supabaseAnonKey,
                 }
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [`teams-${external ? "external" : "internal"}`] });
+            queryClient.invalidateQueries({ queryKey: ["teams", { external, categoryId }] });
         },
     })
 
@@ -63,9 +64,7 @@ export const TeamSection = <T extends unknown>({ teams, external, title }: {
 
     return (
         <>
-            <SectionTitle cn="mb-2">
-                {title}
-            </SectionTitle>
+            <SectionTitle label={title} />
             <ScrollView className="max-h-48">
                 {teams.map((edge) => (
                     <View key={edge.node.id}>

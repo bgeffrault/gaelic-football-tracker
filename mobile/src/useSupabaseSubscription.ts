@@ -33,7 +33,6 @@ export function useSubscription<Data = any>(
 
         return () => {
             subscription.unsubscribe()
-
         }
     }, [supabaseClient])
 }

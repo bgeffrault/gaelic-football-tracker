@@ -20,15 +20,12 @@ const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
 
 const defaultScreenOptions: NativeStackNavigationOptions = {
-  headerStyle: {
-    backgroundColor: "#df8c5f",
-  },
-  headerTintColor: "#000",
+  headerTintColor: "#1F2937",
   headerTitleStyle: {
     fontWeight: "bold",
   },
   contentStyle: {
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#F3F4F6",
   },
 };
 

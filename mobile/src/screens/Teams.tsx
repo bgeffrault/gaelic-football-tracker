@@ -13,6 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { useClubIdContext } from "../providers/ClubIdProvider";
+import { ListItem } from "../components/ListItem";
+import { GoHomeButton } from "../components/GoHomeButton";
 
 const TeamHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -48,28 +50,17 @@ function TeamItem({ team, first, last, selectMode, external }: {
   const dispatch = useDispatch();
 
   return (
-    <View
-      className={clsx(
-        "border border-[#000000] flex-row justify-between items-center",
-        "py-2 px-4",
-        first && "rounded-t-lg",
-        last && "rounded-b-lg"
-      )}
+    <ListItem
+      onPress={() => dispatch(external ? setOpponentTeam(team) : setTeam(team))}
+      disabled={!selectMode}
+      first={first}
+      last={last}
+      isSelected={isSelected}
     >
       <StyledText cn="font-bold text-lg">
         {team.teamName}
       </StyledText>
-      <View>
-        {selectMode && (
-          <CustomCheckbox
-            isChecked={isSelected}
-            setChecked={() =>
-              dispatch(external ? setOpponentTeam(team) : setTeam(team))
-            }
-          />
-        )}
-      </View>
-    </View>
+    </ListItem>
   );
 }
 
@@ -96,7 +87,7 @@ export function Teams({ navigation, route }) {
   const external = route.params?.external;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["teams", categoryId, external],
+    queryKey: ["teams", { external, categoryId }],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
@@ -118,29 +109,33 @@ export function Teams({ navigation, route }) {
       headerTitle: selectMode ? "Sélection de l'équipe" : "Teams",
       // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => <TeamHeaderButton selectMode={selectMode} />,
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerLeft: () => <GoHomeButton />,
     });
   }, [navigation]);
 
   if (isLoading) return null;
 
   return (
-    <View className="m-6">
-      <ScrollView>
-        {data.teamCollection.edges.map((edge, i, arr) => {
-          const team = useFragment(TeamItemFragment, edge.node);
-          return (
-            <TeamItem
-              key={team.id}
-              first={i === 0}
-              last={i === arr.length - 1}
-              selectMode={selectMode}
-              team={team}
-              external={external}
-            />
-          )
-        })}
-      </ScrollView>
-    </View>
+    <>
+      <View className="mt-3 bg-white rounded-xl">
+        <ScrollView className="">
+          {data.teamCollection.edges.map((edge, i, arr) => {
+            const team = useFragment(TeamItemFragment, edge.node);
+            return (
+              <TeamItem
+                key={team.id}
+                first={i === 0}
+                last={i === arr.length - 1}
+                selectMode={selectMode}
+                team={team}
+                external={external}
+              />
+            )
+          })}
+        </ScrollView>
+      </View>
+    </>
   );
 }
 

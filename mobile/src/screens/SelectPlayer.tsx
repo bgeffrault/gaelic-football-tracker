@@ -44,6 +44,8 @@ const selectPlayerQuery = graphql(/* GraphQL */ `
 export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPlayer">) {
   const teamGameId = route?.params?.teamGameId;
   const dispatch = useDispatch();
+  const playerId = useAppSelector((state) => state.player.playerId);
+
   const { data, isLoading } = useQuery({
     queryKey: ["teamMember", teamGameId],
     queryFn: async () =>
@@ -63,6 +65,15 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
     });
   }, [navigation]);
 
+  // Set null to playerId if no player is registered/selected
+  useEffect(() => {
+    return () => {
+      if (playerId === undefined) {
+        console.log("set player to null", playerId)
+        dispatch(setPlayerId(null))
+      }
+    }
+  }, [playerId])
 
   if (isLoading) return null;
 
@@ -92,12 +103,10 @@ function MemberItem({ member, first, last, onPress }: {
   last: boolean;
   onPress?: () => void;
 }) {
-  const navigation = useNavigation();
-
   return (
     <View
       className={clsx(
-        "border border-[#000000] flex-row justify-between items-center",
+        "flex-row justify-between items-center",
         "py-2 px-4",
         first && "rounded-t-lg",
         last && "rounded-b-lg"

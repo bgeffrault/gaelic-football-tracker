@@ -41,7 +41,7 @@ export const ControlledSelect = ({ control, name, defaultValue = "", rules, ...p
         control,
         defaultValue,
         name,
-        rules
+        rules,
     })
     const error = formState.errors[name]?.message as string | undefined;
 
@@ -55,7 +55,7 @@ export const ControlledSelect = ({ control, name, defaultValue = "", rules, ...p
                 }}
             />
             <View>
-                <StyledText cn="text-xs text-red-400">
+                <StyledText cn="text-xs text-red-400 pb-2">
                     {error}
                 </StyledText>
             </View>

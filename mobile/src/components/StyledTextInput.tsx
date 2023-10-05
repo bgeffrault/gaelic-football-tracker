@@ -8,7 +8,7 @@ export function StyledTextInput({ cn, ...props }: { cn?: string } & React.Compon
   return (
     <TextInput
       className={clsx(
-        "border border-black rounded-lg p-2 grow min-w-[200px]",
+        "border border-gray-200 rounded-lg p-2 grow min-w-[200px]",
         cn
       )}
       {...props}
@@ -27,7 +27,7 @@ export const LabelledTextInput = memo(
   }) => (
     <>
       <View className={clsx("justify-center items-start flex", cn)}>
-        <StyledText cn="text-lg">{label}</StyledText>
+        <StyledText cn="text-gray-500 mb-1">{label}</StyledText>
         <View className="flex-row justify-center items-center">
           <StyledTextInput {...inputProps} />
           {buttonProps && (

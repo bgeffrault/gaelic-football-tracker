@@ -17,6 +17,8 @@ import { Game } from "../gql/graphql";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { SectionContainer } from "../components/SectionContainer";
+import { GoHomeButton } from "../components/GoHomeButton";
 
 const useGameStoreParamWatcher = <T extends unknown>({ control, name, rules, defaultValue, onChange }: {
   control: Control<FieldValues, T>,
@@ -55,7 +57,7 @@ mutation AddTeamMembersMutation($teamMembers: [TeamMembersInsertInput!]!) {
 `);
 
 const AddTeamGameMutation = graphql(/* GraphQL */ `
-  mutation AddTeamGameMutation($teamId: Int!, $gameId: Int!, $teamId2: Int!) {
+  mutation AddTeamGameMutation($teamId: Int!, $gameId: BigInt!, $teamId2: Int!) {
     insertIntoTeamGameCollection(objects: [
       {
         teamId: $teamId, 
@@ -73,6 +75,7 @@ const AddTeamGameMutation = graphql(/* GraphQL */ `
     }
   }
 `);
+
 
 const AddGameMutation = graphql(/* GraphQL */ `
   mutation AddGameMutation($date: Datetime!, $duration: Int!, $name: String, $clubId: BigInt!) {
@@ -97,7 +100,7 @@ export function AddGame({ navigation }) {
   const [categoryId, setCategoryId] = useState(1)
   const clubId = useClubIdContext();
   const queryClient = useQueryClient();
-  const { control, handleSubmit, reset, getValues } = useForm()
+  const { control, handleSubmit, reset, getValues, formState } = useForm()
   const gameIdRef = useRef<number>()
 
   const teamMembersMutation = useMutation({
@@ -113,6 +116,7 @@ export function AddGame({ navigation }) {
       )
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['games'] });
       navigation.navigate("Game", { gameId: gameIdRef.current });
     },
   })
@@ -138,7 +142,6 @@ export function AddGame({ navigation }) {
     },
   })
 
-
   const gameMutation = useMutation({
     mutationFn: async ({ date, duration, name }: GameMutation) =>
       request(
@@ -152,18 +155,20 @@ export function AddGame({ navigation }) {
       ),
     onSuccess: (data) => {
       const formValues = getValues();
-      queryClient.invalidateQueries({ queryKey: ['games'] });
       const gameId = Number(data.insertIntoGameCollection.records[0].id);
       gameIdRef.current = gameId
       teamGameMutation.mutate({ teamId: Number(formValues.team().id), gameId, teamId2: Number(formValues.opponentTeam().id) });
-      // navigation.navigate("Members");
     },
   })
+
+  const mutationsLoading = teamGameMutation.isLoading || gameMutation.isLoading || teamMembersMutation.isLoading
 
   const dispatch = useDispatch();
 
   const handleOnPress = async (data) => {
-    gameMutation.mutate({ date: DateTime.fromISO(data.date), duration: Number(data.duration), name: data.gameName ?? "" } as GameMutation);
+    console.log('formState', JSON.stringify(formState, null, 2));
+    console.log('data ---', JSON.stringify(data, null, 2));
+    // gameMutation.mutate({ date: DateTime.fromISO(data.date), duration: Number(data.duration), name: data.gameName ?? "" } as GameMutation);
   };
 
   const onCategoryChange = (newCategoryId) => {
@@ -178,9 +183,11 @@ export function AddGame({ navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: "Créer un match",
+      headerTitle: mutationsLoading || "New game",
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerLeft: () => <GoHomeButton />,
     });
-  }, [navigation]);
+  }, [navigation, mutationsLoading]);
 
   useGameStoreParamWatcher({
     control, name: PLAYERS, rules: { required: "Au moins un joueur est obligatoire" }, defaultValue: [], onChange: (value) => value.map(v => Number(v.id))
@@ -190,16 +197,16 @@ export function AddGame({ navigation }) {
     control, name: OPPONENT_TEAM, rules: { required: "L'équipe adverse est obligatoire" }, defaultValue: null, onChange: (value) => value
   })
 
-  const renderTeam = (value) => <StyledText cn={clsx(!value && "text-gray-400")}>{value ? value.teamName : "Equipe A"}</StyledText>
+  const renderTeam = (value) => <StyledText cn={clsx(value ? "text-gray-600" : "text-gray-300")}>{value ? value.teamName : "Equipe A"}</StyledText>
 
-  const mutationsLoading = teamGameMutation.isLoading || gameMutation.isLoading || teamMembersMutation.isLoading
+
 
   return (
     <>
       <CategoryFilter onPress={onCategoryChange} categoryId={categoryId} />
-      <View className="flex-1 justify-center items-center">
-        <Card>
-          <View>
+      <SectionContainer>
+        <View className="justify-start items-center">
+          <Card cn="w-full">
             <ControlledSelect
               onPress={() => {
                 navigation.navigate("Teams", { mode: "select", categoryId, external: false });
@@ -228,11 +235,16 @@ export function AddGame({ navigation }) {
               control={control}
               rules={{ required: "Au moins un joueur est obligatoire" }}
               name={PLAYERS}
-              renderValue={(value: number[]) => <StyledText
-                cn={clsx("rounded-lg text-white bg-gray-400 px-1 overflow-hidden", value.length && "bg-[#AB6C49]")}
-              >
-                {value?.length?.toString() ?? '0'}
-              </StyledText>
+              renderValue={(value: number[]) => <View className={clsx(
+                value.length ? "bg-[#AB6C49]" : "bg-gray-400",
+                "rounded-lg"
+              )}>
+                <StyledText
+                  cn={clsx("text-white px-1 overflow-hidden")}
+                >
+                  {value?.length?.toString() ?? '0'}
+                </StyledText>
+              </View>
               }
             />
             <ControlledSelect
@@ -267,23 +279,17 @@ export function AddGame({ navigation }) {
               control={control}
               name="gameName"
             />
-            <View className="mt-8">
-              <CustomButton
-                variant="contained"
-                onPress={handleSubmit(handleOnPress)}
-              >
-                <Text className="text-white text-lg">C&apos;est parti</Text>
-              </CustomButton>
-            </View>
-          </View>
-        </Card>
-      </View>
-      <View>
-        {mutationsLoading && (
-          <StyledText>
-            Game creation in progress ...
-          </StyledText>
-        )}
+          </Card>
+        </View>
+        <View />
+      </SectionContainer>
+      <View className="mt-8 flex-1 justify-end items-center pb-8">
+        <CustomButton
+          variant="contained"
+          onPress={handleSubmit(handleOnPress)}
+        >
+          <Text className="text-white text-lg">Let&apos;s go</Text>
+        </CustomButton>
       </View>
     </>
   );
