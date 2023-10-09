@@ -1,43 +1,39 @@
-/* eslint-disable react/no-unknown-property */
-import { FormControl, InputLabel, Select, SelectChangeEvent } from '@mui/material'
+import { FormControl, InputLabel, Select } from '@mui/material'
 import React from 'react'
-import { FieldErrors, UseFormRegister } from 'react-hook-form'
+import {
+  Control,
+  FieldValues,
+  Path,
+  UseFormRegister,
+  useFormState,
+} from 'react-hook-form'
 
-type Inputs = {
-  firstName: string
-  lastName: string
-  pseudo: string
-  categoryId: number
-  clubId: number
-}
-
-type FormSelectProps = {
-  register: UseFormRegister<Inputs>
-  errors: FieldErrors<Inputs>
+type FormSelectProps<T extends FieldValues> = {
+  register: UseFormRegister<T>
   label: string
   margin?: 'dense' | 'normal' | 'none' | undefined
   id: string
   labelId: string
-  span: string
-  name: 'firstName' | 'lastName' | 'pseudo' | 'categoryId' | 'clubId'
-  value: string
+  errorMessage: string
+  name: Path<T>
   children: React.JSX.Element[] | undefined
-  handleChange: (event: SelectChangeEvent) => void
+  defaultValue: string | number
+  control: Control<T>
 }
 
-const FormSelect = ({
+const FormSelect = <T extends FieldValues>({
   register,
-  errors,
   label,
   margin,
   id,
   labelId,
-  value,
-  span,
+  errorMessage,
   name,
   children,
-  handleChange,
-}: FormSelectProps): React.JSX.Element => {
+  defaultValue,
+  control,
+}: FormSelectProps<T>): React.JSX.Element => {
+  const { isDirty, errors } = useFormState({ control })
   return (
     <>
       <FormControl fullWidth margin={margin}>
@@ -45,18 +41,19 @@ const FormSelect = ({
         <Select
           labelId={labelId}
           id={id}
-          value={value}
           label={label}
+          defaultValue={defaultValue}
           {...register(name, {
             required: true,
-            value: '',
-            onChange: handleChange,
           })}
         >
           {children}
         </Select>
       </FormControl>
-      {!value ? errors && <span error-message="">{span} </span> : null}
+
+      {!isDirty
+        ? errors[name] && <span error-message="">{errorMessage} </span>
+        : null}
     </>
   )
 }

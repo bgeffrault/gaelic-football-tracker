@@ -6,7 +6,7 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
-import { Box, MenuItem, SelectChangeEvent } from '@mui/material'
+import { Box, MenuItem } from '@mui/material'
 import supabase, { Tables } from '../config/supabaseClient'
 import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -25,15 +25,6 @@ export default function AddNewMember(): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<Tables<'Category'>[] | null>(null)
   const [clubs, setClubs] = useState<Tables<'Club'>[] | null>(null)
-
-  const [category, setCategory] = useState('')
-  const handleChangeCategories = (event: SelectChangeEvent): void => {
-    setCategory(event.target.value as string)
-  }
-  const [club, setClub] = useState('')
-  const handleChangeClubs = (event: SelectChangeEvent): void => {
-    setClub(event.target.value as string)
-  }
 
   const handleClickOpen = (): void => {
     setOpen(true)
@@ -61,11 +52,7 @@ export default function AddNewMember(): React.JSX.Element {
     fetchCategory()
   }, [])
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<Inputs>()
+  const { register, control, handleSubmit } = useForm<Inputs>()
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     await supabase.from('Members').insert({
@@ -107,9 +94,10 @@ export default function AddNewMember(): React.JSX.Element {
               id="firstName"
               type="text"
               register={register}
+              control={control}
+              isRequired={true}
               name="firstName"
-              errors={errors.firstName!}
-              span="Le Prénom est requis"
+              errorMessage="Le Prénom est requis"
             />
             <FormField
               label="Nom *"
@@ -118,21 +106,21 @@ export default function AddNewMember(): React.JSX.Element {
               id="lastName"
               type="text"
               register={register}
+              control={control}
+              isRequired={true}
               name="lastName"
-              errors={errors.lastName!}
-              span="Le Nom est requis"
+              errorMessage="Le Nom est requis"
             />
             <FormSelect
               register={register}
+              control={control}
               name="categoryId"
-              errors={errors.categoryId!}
-              span="La Catégorie est requise"
+              errorMessage="La Catégorie est requise"
               id="demo-simple-select-label"
               labelId="demo-simple-select-label"
               label="Category *"
               margin="dense"
-              value={category}
-              handleChange={handleChangeCategories}
+              defaultValue=""
             >
               {categories?.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
@@ -142,15 +130,14 @@ export default function AddNewMember(): React.JSX.Element {
             </FormSelect>
             <FormSelect
               register={register}
+              control={control}
               name="clubId"
-              errors={errors.clubId!}
-              span="Le Club est requis"
+              errorMessage="Le Club est requis"
               id="demo-simple-select-label"
               labelId="demo-simple-select-label"
               label="Club *"
               margin="dense"
-              value={club}
-              handleChange={handleChangeClubs}
+              defaultValue=""
             >
               {clubs?.map((club) => (
                 <MenuItem key={club.id} value={club.id}>
@@ -165,9 +152,10 @@ export default function AddNewMember(): React.JSX.Element {
               id="pseudo"
               type="text"
               register={register}
+              control={control}
+              isRequired={false}
               name="pseudo"
-              errors={errors.pseudo!}
-              span="Le Pseudo est requis"
+              errorMessage=""
             />
             <DialogActions>
               <Button type="submit">Ajouter</Button>

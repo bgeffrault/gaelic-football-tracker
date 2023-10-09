@@ -14,8 +14,6 @@ export default function Home(): JSX.Element {
         .from('Game')
         .select('*, TeamGame(*, Team(*))')
 
-      console.log('data: ', games)
-
       if (error) {
         setGames(null)
         console.log(error)
