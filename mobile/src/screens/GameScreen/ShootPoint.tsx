@@ -84,6 +84,7 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color, onPress }: {
           zIndex: 100,
         }}
         onPress={onPress}
+        disabled={disabled}
       >
         <View />
       </TouchableOpacity>

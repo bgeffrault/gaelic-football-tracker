@@ -1,14 +1,12 @@
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, ScrollView, View } from "react-native";
 import { memo, useEffect, useMemo } from "react";
-import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
-import { CustomCheckbox } from "../components/CustomCheckbox";
 import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
 import { useAppSelector } from "../stores/store";
-import { useAppNavigation } from "../navigators";
+import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
@@ -19,9 +17,11 @@ import { ListItem } from "../components/ListItem";
 import { SectionTitle } from "../components/SectionTitle";
 import { FontAwesome } from "@expo/vector-icons";
 import { GoHomeButton } from "../components/GoHomeButton";
+import { CategoryFilter } from "../components/CategoryFilter";
 
-const MembersHeaderButton = memo(({ selectMode }: {
+const MembersHeaderButton = memo(({ selectMode, categoryId }: {
   selectMode: boolean;
+  categoryId: number;
 }) => {
   const navigation = useAppNavigation();
 
@@ -30,7 +30,7 @@ const MembersHeaderButton = memo(({ selectMode }: {
       <StyledText cn="">OK</StyledText>
     </CustomButton>
   ) : (
-    <HeaderRightAddButton nav="AddMember" />
+    <HeaderRightAddButton nav="AddMember" params={{ categoryId }} />
   );
 });
 
@@ -40,6 +40,7 @@ const MemberItemFragment = graphql(/* GraphQL */ `
     firstName
     lastName
     pseudo
+    license
     shootsCollection {
       edges {
         node {
@@ -62,7 +63,17 @@ function MemberItem({ member, first, last, selectMode }: {
       (state) => state.game.players.filter((p) => p.id === member.id).length
     )
   );
+  const navigation = useAppNavigation();
   const dispatch = useDispatch();
+
+  const handleOnPress = () => {
+    if (selectMode) {
+      dispatch(isSelected ? removePlayer(member) : addPlayer(member))
+      return;
+    }
+
+    navigation.navigate("Player", { playerId: member.id });
+  }
 
   const { totalPoints, accuracy } = useMemo(() => {
     const shoots = member.shootsCollection.edges.map((e) => e.node)
@@ -73,8 +84,7 @@ function MemberItem({ member, first, last, selectMode }: {
 
   return (
     <ListItem
-      onPress={() => dispatch(isSelected ? removePlayer(member) : addPlayer(member))}
-      disabled={!selectMode}
+      onPress={handleOnPress}
       first={first}
       last={last}
       isSelected={isSelected}
@@ -107,12 +117,12 @@ const membersQuery = graphql(/* GraphQL */ `
 `)
 
 
-export function Members({ navigation, route }) {
+export function Members({ navigation, route }: AppNavigationProp<"Members">) {
   const clubId = useClubIdContext();
 
   const mode = route.params?.mode;
   const selectMode = mode === "select";
-  const categoryId = route.params?.categoryId;
+  const categoryId = route.params?.categoryId ?? 1;
 
   const nbrSelected = useAppSelector(
     (state) => state.game.players.length
@@ -120,7 +130,7 @@ export function Members({ navigation, route }) {
     ;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["members", categoryId],
+    queryKey: ["members", { categoryId }],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
@@ -138,16 +148,20 @@ export function Members({ navigation, route }) {
       headerTitle: selectMode ? nbrSelected ? `${nbrSelected} player${nbrSelected > 1 ? 's' : ""}` : "Sélection des joueurs" : () => <FontAwesome name="users" size={24} color="#6B7280" />
       ,
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => <MembersHeaderButton selectMode={selectMode} />,
+      headerRight: () => <MembersHeaderButton selectMode={selectMode} categoryId={categoryId} />,
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => <GoHomeButton />,
+      headerLeft: () => selectMode ? null : <GoHomeButton />,
     });
-  }, [navigation, nbrSelected, selectMode]);
+  }, [navigation, nbrSelected, selectMode, categoryId]);
 
-  if (isLoading) return null;
 
-  return (
-    <View className="mt-3 bg-white rounded-xl">
+  const membersEdges = data?.membersCollection.edges
+
+  return (<>
+    {!selectMode && <CategoryFilter categoryId={categoryId} onPress={categoryId => {
+      navigation.setParams({ categoryId })
+    }} />}
+    {!isLoading && <SafeAreaView className="my-3 bg-white rounded-xl">
       <SectionTitle cn="flex flex-row grow justify-between items-center p-1 px-4">
         <StyledText cn="text-gray-400">
           Player
@@ -157,7 +171,7 @@ export function Members({ navigation, route }) {
         </StyledText>
       </SectionTitle>
       <ScrollView>
-        {data.membersCollection.edges.map((edge, i, arr) => {
+        {membersEdges.length ? membersEdges.map((edge, i, arr) => {
           const member = useFragment(MemberItemFragment, edge.node);
           return (
             <MemberItem
@@ -168,9 +182,14 @@ export function Members({ navigation, route }) {
               member={member}
             />
           )
-        })}
+        }) : <View className='flex items-center p-3'>
+          <StyledText>
+            No players
+          </StyledText>
+        </View>}
       </ScrollView>
-    </View>
+    </SafeAreaView>}
+  </>
   );
 }
 

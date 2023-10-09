@@ -15,6 +15,7 @@ import { ClubConfig } from './src/screens/ClubConfig/ClubConfig';
 import { Categories } from './src/screens/Categories';
 import { Teams } from './src/screens/Teams';
 import { SupabaseClientProvider } from './src/providers/useSupabaseClient';
+import { Player } from './src/screens/Player';
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -53,9 +54,10 @@ export default function App() {
                 <Stack.Group screenOptions={{ presentation: "modal" }}>
                   <Stack.Screen name="AddMember" component={AddMember} />
                   <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
-                  <Stack.Screen name="MembersModal" component={Members} />
+                  <Stack.Screen name="SelectMembers" component={Members} />
                   <Stack.Screen name="Categories" component={Categories} />
                   <Stack.Screen name="Teams" component={Teams} />
+                  <Stack.Screen name="Player" component={Player} />
                 </Stack.Group>
               </Stack.Navigator>
             </NavigationContainer>

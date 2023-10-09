@@ -6,7 +6,7 @@ export const gameResultColors = {
 
 export const gameResultGradientColors = {
   win: ["#DFF7EC", '#FFF'],
-  lose: ["#FCC7B8", '#FFF'],
+  lose: ['#FFF', "#FCC7B8"],
   draw: ["#FFF", '#FFF'],
 };
 
@@ -44,5 +44,25 @@ export function shootsAccuracy(shoots: Shoot[]) {
     total++;
   });
   if (total === 0) return null;
-  return scored / total * 100;
+  return Math.round(scored / total * 100);
+}
+
+// Utils with db views
+
+type TeamShoots = {
+  pointCount: number,
+  goalCount: number,
+  missedCount: number,
+  blockedCount: number
+}
+
+export function getTeamResult({ pointCount, goalCount, missedCount, blockedCount }: TeamShoots
+) {
+  return { result: pointCount + goalCount * 3, accuracy: Math.round((pointCount + goalCount) / (pointCount + goalCount + missedCount + blockedCount) * 100) };
+}
+
+export function getGameResult({ teamScore, opponentTeamScore }: { teamScore: TeamShoots, opponentTeamScore: TeamShoots }) {
+  const teamResult = getTeamResult(teamScore);
+  const opponentResult = getTeamResult(opponentTeamScore);
+  return teamResult.result > opponentResult.result ? "win" : teamResult.result < opponentResult.result ? "lose" : "draw";
 }

@@ -9,7 +9,7 @@ export const SectionTitle = ({ children, cn, label }: {
 }) => {
     if (label) {
         return <View className="mb-2" >
-            <StyledText cn={clsx("tracking-wide p-1 text-gray-600", cn)}>{label}</StyledText>
+            <StyledText cn={clsx("tracking-wide p-1 text-gray-400", cn)}>{label}</StyledText>
         </View>
     }
     return <View className={clsx("mb-1", cn)} >

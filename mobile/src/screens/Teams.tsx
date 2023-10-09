@@ -7,7 +7,7 @@ import { CustomButton } from "../components/CustomButton";
 import { CustomCheckbox } from "../components/CustomCheckbox";
 import { setOpponentTeam, setTeam } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
-import { useAppNavigation } from "../navigators";
+import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
@@ -42,6 +42,7 @@ function TeamItem({ team, first, last, selectMode, external }: {
   selectMode: boolean;
   external: boolean;
 }) {
+  const navigation = useAppNavigation();
   const isSelected = Boolean(
     useAppSelector(
       (state) => external ? state.game.opponentTeam?.id === team.id : state.game.team?.id === team.id
@@ -51,7 +52,10 @@ function TeamItem({ team, first, last, selectMode, external }: {
 
   return (
     <ListItem
-      onPress={() => dispatch(external ? setOpponentTeam(team) : setTeam(team))}
+      onPress={() => {
+        dispatch(external ? setOpponentTeam(team) : setTeam(team))
+        navigation.goBack()
+      }}
       disabled={!selectMode}
       first={first}
       last={last}
@@ -79,7 +83,7 @@ const teamsModalQuery = graphql(/* GraphQL */ `
 `)
 
 
-export function Teams({ navigation, route }) {
+export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
   const clubId = useClubIdContext();
 
   const selectMode = route.params?.mode === "select";
@@ -110,17 +114,19 @@ export function Teams({ navigation, route }) {
       // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => <TeamHeaderButton selectMode={selectMode} />,
       // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => <GoHomeButton />,
+      headerLeft: () => selectMode ? null : <GoHomeButton />,
     });
   }, [navigation]);
 
   if (isLoading) return null;
 
+  const teamsEdges = data.teamCollection.edges;
+
   return (
     <>
       <View className="mt-3 bg-white rounded-xl">
-        <ScrollView className="">
-          {data.teamCollection.edges.map((edge, i, arr) => {
+        <ScrollView>
+          {teamsEdges?.length ? teamsEdges.map((edge, i, arr) => {
             const team = useFragment(TeamItemFragment, edge.node);
             return (
               <TeamItem
@@ -132,7 +138,16 @@ export function Teams({ navigation, route }) {
                 external={external}
               />
             )
-          })}
+          }) : (
+            <View className="my-3 bg-white rounded-xl p-2" >
+              <View className='flex items-center p-3'>
+                <StyledText>
+                  No Teams
+                </StyledText>
+              </View>
+            </View>
+          )
+          }
         </ScrollView>
       </View>
     </>

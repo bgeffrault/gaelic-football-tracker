@@ -19,6 +19,7 @@ import Constants from 'expo-constants';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionContainer } from "../components/SectionContainer";
 import { GoHomeButton } from "../components/GoHomeButton";
+import { AppNavigationProp } from "../navigators";
 
 const useGameStoreParamWatcher = <T extends unknown>({ control, name, rules, defaultValue, onChange }: {
   control: Control<FieldValues, T>,
@@ -96,11 +97,11 @@ const AddGameMutation = graphql(/* GraphQL */ `
 type GameMutation = Pick<Game, "date" | "duration" | "name">;
 
 // @to-do: handle game between internal teams
-export function AddGame({ navigation }) {
+export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   const [categoryId, setCategoryId] = useState(1)
   const clubId = useClubIdContext();
   const queryClient = useQueryClient();
-  const { control, handleSubmit, reset, getValues, formState } = useForm()
+  const { control, handleSubmit, reset, getValues } = useForm()
   const gameIdRef = useRef<number>()
 
   const teamMembersMutation = useMutation({
@@ -117,7 +118,7 @@ export function AddGame({ navigation }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['games'] });
-      navigation.navigate("Game", { gameId: gameIdRef.current });
+      navigation.navigate("Game", { gameId: gameIdRef.current, isOpponentTeamSelected: false });
     },
   })
 
@@ -166,9 +167,7 @@ export function AddGame({ navigation }) {
   const dispatch = useDispatch();
 
   const handleOnPress = async (data) => {
-    console.log('formState', JSON.stringify(formState, null, 2));
-    console.log('data ---', JSON.stringify(data, null, 2));
-    // gameMutation.mutate({ date: DateTime.fromISO(data.date), duration: Number(data.duration), name: data.gameName ?? "" } as GameMutation);
+    gameMutation.mutate({ date: DateTime.fromISO(data.date), duration: Number(data.duration), name: data.gameName ?? "" } as GameMutation);
   };
 
   const onCategoryChange = (newCategoryId) => {
@@ -183,11 +182,11 @@ export function AddGame({ navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: mutationsLoading || "New game",
+      headerTitle: "New game",
       // eslint-disable-next-line react/no-unstable-nested-components
       headerLeft: () => <GoHomeButton />,
     });
-  }, [navigation, mutationsLoading]);
+  }, [navigation]);
 
   useGameStoreParamWatcher({
     control, name: PLAYERS, rules: { required: "Au moins un joueur est obligatoire" }, defaultValue: [], onChange: (value) => value.map(v => Number(v.id))
@@ -205,7 +204,7 @@ export function AddGame({ navigation }) {
     <>
       <CategoryFilter onPress={onCategoryChange} categoryId={categoryId} />
       <SectionContainer>
-        <View className="justify-start items-center">
+        <View className="">
           <Card cn="w-full">
             <ControlledSelect
               onPress={() => {
@@ -229,7 +228,7 @@ export function AddGame({ navigation }) {
             />
             <ControlledSelect
               onPress={() => {
-                navigation.navigate("MembersModal", { mode: "select", categoryId });
+                navigation.navigate("SelectMembers", { mode: "select", categoryId });
               }}
               label="Joueurs *"
               control={control}

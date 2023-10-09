@@ -487,6 +487,7 @@ type Members implements Node {
   categoryId: BigInt
   clubId: BigInt
   pseudo: String
+  license: String
   category: Category
   club: Club
   shootsCollection(
@@ -555,6 +556,7 @@ input MembersFilter {
   categoryId: BigIntFilter
   clubId: BigIntFilter
   pseudo: StringFilter
+  license: StringFilter
   nodeId: IDFilter
 }
 
@@ -565,6 +567,7 @@ input MembersInsertInput {
   categoryId: BigInt
   clubId: BigInt
   pseudo: String
+  license: String
 }
 
 type MembersInsertResponse {
@@ -583,6 +586,7 @@ input MembersOrderBy {
   categoryId: OrderByDirection
   clubId: OrderByDirection
   pseudo: OrderByDirection
+  license: OrderByDirection
 }
 
 input MembersUpdateInput {
@@ -592,6 +596,7 @@ input MembersUpdateInput {
   categoryId: BigInt
   clubId: BigInt
   pseudo: String
+  license: String
 }
 
 type MembersUpdateResponse {

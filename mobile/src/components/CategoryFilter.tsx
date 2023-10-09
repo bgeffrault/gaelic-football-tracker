@@ -9,6 +9,7 @@ import request from "graphql-request";
 import Constants from 'expo-constants';
 import { StyledText } from "./StyledText";
 import { getCategoryName } from "../utils/getCategoryName";
+import { categoriesDataFixture } from "../fixtures/categoryFilterFixtures";
 
 const FilterItem = ({ children, selected, onPress }: {
     children: React.ReactNode,
@@ -62,7 +63,7 @@ export const CategoryFilter = ({ onPress, categoryId }: {
 
     return (
         <View className="flex flex-row justify-around">
-            {data.categoryCollection.edges.map((edge) => {
+            {data.categoryCollection.edges.filter(edge => edge.node.name !== "mix").map((edge) => {
                 const selected = categoryId === Number(edge.node.id);
                 return (
                     <FilterItem key={edge.node.id} onPress={() => onPress(Number(edge.node.id))} selected={selected}>

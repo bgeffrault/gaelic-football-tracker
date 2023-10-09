@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
 import request from "graphql-request";
-import { graphql, DocumentType, useFragment } from "../../gql";
+import { graphql, useFragment } from "../../gql";
 import Constants from 'expo-constants';
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { SafeAreaView, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { TeamSection, TeamSectionFragment } from "./TeamSection";
 import { CategoryFilter } from "../../components/CategoryFilter";
@@ -67,10 +67,14 @@ export function ClubConfig({ navigation }) {
     return (
         <>
             <CategoryFilter onPress={(id) => setCategoryId(id)} categoryId={categoryId} />
-            <View className="m-6">
-                <TeamSection teams={clubTeams} external={false} title="Equipes du club" categoryId={categoryId} />
-                <TeamSection teams={externalTeams} external title="Equipes adverses" categoryId={categoryId} />
-            </View>
+            <ScrollView>
+                <SafeAreaView >
+                    <TeamSection teams={clubTeams} external={false} title="Equipes du club" categoryId={categoryId} />
+                </SafeAreaView>
+                <SafeAreaView>
+                    <TeamSection teams={externalTeams} external title="Equipes adverses" categoryId={categoryId} />
+                </SafeAreaView>
+            </ScrollView>
         </>
     );
 }

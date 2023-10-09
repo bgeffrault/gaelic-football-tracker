@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { CustomButton } from "../../components/CustomButton";
 import { HeaderRightAddButton } from "../../components/Header/HeaderRightAddButton";
@@ -7,11 +7,14 @@ import { AppNavigationProp, useAppNavigation } from "../../navigators";
 import { graphql } from "../../gql/gql";
 import { useFragment } from "../../gql";
 import Constants from 'expo-constants';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
 import { GameListFragment, GamesSection } from "./GameSection";
 import { CategoryFilter } from "../../components/CategoryFilter";
+import { StyledText } from "../../components/StyledText";
+import { SectionContainer } from "../../components/SectionContainer";
+import { SectionTitle } from "../../components/SectionTitle";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -33,6 +36,15 @@ const clubQuery = graphql(/* GraphQL */ `
   }
 `)
 
+const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
+  <SectionContainer cn={cn} >
+    <SectionTitle label={title} />
+    <View className="flex items-center p-3" >
+      <StyledText>No games yet</StyledText>
+    </View>
+  </SectionContainer>
+)
+
 const gamesQuery = graphql(/* GraphQL */ `
   query gamesQuery($clubId: BigInt!, $categoryId: BigInt!) {
     gameEndedCollection: gameCollection(filter: { gameEnded: { eq: true }, categoryId: { eq: $categoryId }, clubId: { eq: $clubId}  }, orderBy: [{date: DescNullsLast}]) {
@@ -50,6 +62,7 @@ const gamesQuery = graphql(/* GraphQL */ `
 
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
+  const queryClient = useQueryClient();
 
   const navigation = useAppNavigation();
   const clubId = useClubIdContext();
@@ -67,7 +80,8 @@ export function Home({ }: AppNavigationProp<"Home">) {
         }
       ),
   })
-  const { data: gamesData, isLoading: isLoadingGames } = useQuery({
+
+  const { data: gamesData, isLoading: isLoadingGames, refetch: refetchGames, isRefetching, isRefetchError } = useQuery({
     queryKey: ["games", { categoryId }],
     queryFn: async () =>
       request(
@@ -80,6 +94,12 @@ export function Home({ }: AppNavigationProp<"Home">) {
         }
       ),
   })
+
+  const onRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["games", { categoryId }] });
+    refetchGames()
+  }
+
 
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
 
@@ -101,22 +121,25 @@ export function Home({ }: AppNavigationProp<"Home">) {
     return null
   }
 
-
   return (
     <View className="flex-1">
       <CategoryFilter onPress={(id) => setCategoryId(id)} categoryId={categoryId} />
-      <View className="py-1 grow flex-1">
-        {gamesInProgress.length > 0 && (
-          <View className="grow mb-3">
+      <ScrollView className="py-1 grow flex-1"
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
+        }
+      >
+        {gamesInProgress.length > 0 ? (
+          <View className="mb-3">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>
-        )}
-        {gamesEnded.length > 0 && (
-          <View className="grow">
+        ) : <NoGames title="In progress" cn="mb-3" />}
+        {gamesEnded.length > 0 ? (
+          <View className="">
             <GamesSection games={gamesEnded} title="Last Games" />
           </View>
-        )}
-      </View>
+        ) : <NoGames title="Last Games" />}
+      </ScrollView>
       <View className="flex-row justify-around items-center pb-8 pt-2">
         <CustomButton onPress={() => navigation.navigate("Members")}>
           <FontAwesome name="users" size={24} color="#6B7280" />

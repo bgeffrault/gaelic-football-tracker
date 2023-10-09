@@ -64,31 +64,43 @@ export const TeamSection = ({ teams, external, title, categoryId }: {
 
     return (
         <>
-            <SectionTitle label={title} />
-            <ScrollView className="max-h-48">
-                {teams.map((edge) => (
-                    <View key={edge.node.id}>
-                        <StyledText cn="font-bold text-lg">
-                            {edge.node.teamName}
+            <View className="p-2 my-3 bg-white rounded-xl" >
+                <SectionTitle label={title} />
+                <ScrollView className="max-h-48 mb-4">
+                    {teams.length ? teams.map((edge) => (
+                        <View key={edge.node.id}>
+                            <StyledText cn="font-bold text-lg">
+                                {edge.node.teamName}
+                            </StyledText>
+                        </View>
+                    )) : (
+                        <StyledText cn="text-center">
+                            Aucune équipe
                         </StyledText>
-                    </View>
-                ))}
-            </ScrollView>
-            <View className="flex-row items-center justify-between border-t-2 mt-4 border-gray-200">
-                <ControlledLabelledTextInput
-                    label="Team name"
-                    inputProps={{
-                        placeholder: "Rennes A",
-                    }}
-                    control={control}
-                    name="teamName"
-                    rules={{ required: "Le nom de l'équipe est obligatoire" }}
-                />
+                    )}
+                </ScrollView>
+                <View className="flex items-center justify-between border-t-2 border-gray-200 pt-4">
+                    <ControlledLabelledTextInput
+                        label="Team name"
+                        inputProps={{
+                            placeholder: "Rennes A",
+                        }}
+                        control={control}
+                        name="teamName"
+                        rules={{ required: "Le nom de l'équipe est obligatoire" }}
+                        cn="w-full"
+                    />
+                </View>
+            </View>
+            <View className="mt-2 flex items-center">
                 <CustomButton
                     onPress={handleSubmit(handleOnPressAddTeam)}
+                    variant="contained"
+                    cn="w-32"
                 >
-                    <AntDesign name="pluscircle" size={24} color="black" />
+                    <StyledText cn="text-white text-sm">Add Team</StyledText>
                 </CustomButton>
             </View>
-        </>)
+        </>
+    )
 }
