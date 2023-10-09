@@ -1,40 +1,18 @@
-import clsx from "clsx";
-import { useMemo } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { Card } from "../../components/Card";
 import { CustomButton } from "../../components/CustomButton";
 import { StyledText } from "../../components/StyledText";
-import { gameResult, gameResultColors, gameResultGradientColors, shootsAccuracy, sumShoots } from "../../utils/shootsUtils";
+import { gameResultGradientColors, getGameResult, getTeamResult } from "../../utils/shootsUtils";
 import { useAppNavigation } from "../../navigators";
 import { DocumentType, graphql } from "../../gql/gql";
 import { useFragment } from "../../gql";
 import { SectionTitle } from "../../components/SectionTitle";
-import { getCategoryName } from "../../utils/getCategoryName";
 import { LinearGradient } from 'expo-linear-gradient';
 import { SectionContainer } from "../../components/SectionContainer";
-
-export const TeamScoreFragment = graphql(/* GraphQL */ `
-  fragment TeamScoreFragment on TeamGame {
-    id
-    team {
-      teamName
-      category {
-        id
-        name
-      }
-    }
-
-    shootsCollection {
-      edges {
-        node {
-          id
-          type
-        }
-      }
-    }
-  }
-`)
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
+import { useQuery } from "@tanstack/react-query";
+import { DateTime } from "luxon";
 
 export const GameFragment = graphql(/* GraphQL */ `
   fragment GameFragment on Game {
@@ -47,15 +25,10 @@ export const GameFragment = graphql(/* GraphQL */ `
     teamGameCollection {
       edges {
         node {
-          ...TeamScoreFragment
-
-          shootsCollection {
-            edges {
-              node {
-                id
-                type
-              }
-            }
+          id
+          team {
+            external
+            teamName
           }
         }
       }
@@ -76,23 +49,25 @@ export function GamesSection({ games, title }: {
   games: readonly DocumentType<typeof GameListFragment>[];
   title: string;
 }) {
-  return (
-    <SectionContainer cn="flex-1">
-      <SectionTitle label={title} />
-      <ScrollView className="grow">
-        {games.map(({ node }, i, arr) => {
-          const game = useFragment(GameFragment, node)
 
-          return (
-            <GameListItem
-              key={game.id}
-              game={game}
-              first={i === 0}
-              last={i === arr.length - 1}
-            />
-          )
-        })}
-      </ScrollView>
+  return (
+    <SectionContainer >
+      <SectionTitle label={title} />
+      {games.filter(({ node }) => {
+        const game = useFragment(GameFragment, node)
+        return game?.teamGameCollection.edges.length == 2
+      }).map(({ node }, i, arr) => {
+        const game = useFragment(GameFragment, node)
+
+        return (
+          <GameListItem
+            key={game.id}
+            game={game}
+            first={i === 0}
+            last={i === arr.length - 1}
+          />
+        )
+      })}
     </SectionContainer>
   );
 }
@@ -102,29 +77,25 @@ export function GameListItem({ game, first, last }: {
   first: boolean;
   last: boolean;
 }) {
-  const { teamA, teamB, teamAAccuracy, result } = useMemo(() => {
-    const teamA = useFragment(TeamScoreFragment, game?.teamGameCollection.edges?.[0]?.node);
-    const teamB = useFragment(TeamScoreFragment, game?.teamGameCollection.edges?.[1]?.node);
-
-    const teamAShoots = teamA?.shootsCollection.edges.map((e) => e.node);
-    const teamBShoots = teamB?.shootsCollection.edges.map((e) => e.node);
-
-    const teamAAccuracy = teamAShoots ? shootsAccuracy(teamAShoots) : 0;
-    const result = teamAShoots && teamBShoots ? gameResult(teamAShoots, teamBShoots) : undefined;
-    return { teamA, teamB, teamAAccuracy, result } as const;
-  }, [game]);
-
   const navigation = useAppNavigation();
   const handleOnPress = () => {
-    navigation.navigate("Game", { gameId: game.id });
+    navigation.navigate("Game", { gameId: game.id, isOpponentTeamSelected: false });
   };
 
   if (game?.teamGameCollection.edges.length != 2) {
     return null;
   }
 
-  const catA = teamA.team.category.name
-  const catB = teamB.team.category.name
+  const teamGames = game?.teamGameCollection.edges
+  const isNode1External = teamGames[0]?.node?.team?.external;
+  const teamGame = isNode1External ? teamGames[1]?.node : teamGames[0]?.node;
+  const opponentTeamGame = isNode1External ? teamGames[0]?.node : teamGames[1]?.node;
+
+  const teamScore = useTeamScore(teamGame.id);
+  const opponentTeamScore = useTeamScore(opponentTeamGame.id);
+
+  const result = getGameResult({ teamScore, opponentTeamScore });
+  const date = DateTime.fromISO(game.date).toFormat("dd-MM-yyyy");
 
   return (
     <Card
@@ -134,10 +105,14 @@ export function GameListItem({ game, first, last }: {
       isListItem
       border={result === "draw"}
     >
-      <LinearGradient start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} colors={gameResultGradientColors[result]} className="rounded-xl py-1 px-4">
+      <LinearGradient
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        colors={gameResultGradientColors[result]}
+        className="rounded-xl py-1 px-4">
         <View className="flex-row">
           <View className="w-2/5">
-            {teamA && <TeamScore cn="items-start" teamGame={teamA as DocumentType<typeof TeamScoreFragment>} />}
+            <TeamScore cn="items-start" teamScore={teamScore} teamName={teamGame.team.teamName} />
           </View>
           <View className="items-center w-1/5">
             <StyledText>{game.duration}&apos;</StyledText>
@@ -146,40 +121,57 @@ export function GameListItem({ game, first, last }: {
             </CustomButton>}
           </View>
           <View className="w-2/5">
-            {teamB && <TeamScore
-              teamGame={teamB as DocumentType<typeof TeamScoreFragment>}
-              cn="items-end"
-            />}
+            <TeamScore cn="items-end" teamScore={opponentTeamScore} teamName={opponentTeamGame.team.teamName} />
           </View>
         </View>
-        <View className="flex-row justify-between mt-1 text-xs">
-          <StyledText cn="mt-1 text-xs text-gray-800">
-            Accuracy: {teamAAccuracy}%
-          </StyledText>
-          <StyledText cn="text-gray-800">
-            {getCategoryName(catA)} {catB !== catA && `VS ${getCategoryName(teamB.team.category.name)}`}{game.name && ` - ${game.name}`}
-          </StyledText>
+        <View className="flex flex-row justify-between">
+          <StyledText cn='text-gray-400'>{game.name}</StyledText>
+          <StyledText cn='text-gray-400'>{date}</StyledText>
         </View>
       </LinearGradient>
     </Card>
   );
 }
 
-export function TeamScore({ teamGame, cn }: {
-  teamGame: DocumentType<typeof TeamScoreFragment>;
+export type TeamScore = {
+  teamGameId: number;
+  type: "point" | "goal" | "missed" | "blocked";
+  count: number;
+  gameId: number;
+}
+
+const useTeamScore = (teamGameId?: number) => {
+  const supabaseClient = useSupabaseClientContext();
+
+  const { data: teamScore } = useQuery({
+    queryKey: ["teamScore", { teamGameId }],
+    queryFn: async () => {
+      const result = await supabaseClient.from('TeamScore').select('*').filter('teamGameId', 'eq', teamGameId)
+      return result.data as TeamScore[]
+    },
+  })
+
+  return {
+    pointCount: teamScore?.filter((shoot) => shoot.type === "point")?.[0]?.count ?? 0,
+    goalCount: teamScore?.filter((shoot) => shoot.type === "goal")?.[0]?.count ?? 0,
+    missedCount: teamScore?.filter((shoot) => shoot.type === "missed")?.[0]?.count ?? 0,
+    blockedCount: teamScore?.filter((shoot) => shoot.type === "blocked")?.[0]?.count ?? 0,
+  }
+}
+
+const TeamScore = ({ teamScore, teamName, cn }: {
   cn?: string;
-}) {
-  const { points, goals, score } = useMemo(() => {
-    const points = teamGame.shootsCollection.edges.filter((e) => e.node.type === "drop");
-    const goals = teamGame.shootsCollection.edges.filter((e) => e.node.type === "goal");
-    const score = sumShoots([...points.map(p => p.node), ...goals.map(p => p.node)]);
-    return { points, goals, score }
-  }, [])
+  teamName: string;
+  teamScore: ReturnType<typeof useTeamScore>;
+}) => {
+  const { pointCount, goalCount, missedCount, blockedCount } = teamScore;
+  const score = getTeamResult({ pointCount, goalCount, missedCount, blockedCount });
+
   return (
     <View className={cn}>
-      <StyledText cn="text-lg text-gray-600">{teamGame.team.teamName}</StyledText>
+      <StyledText cn="text-lg text-gray-600">{teamName}</StyledText>
       <StyledText cn="text-lg text-gray-600">
-        {points.length} - {goals.length} ({score})
+        {goalCount} - {pointCount} ({score.result})
       </StyledText>
     </View>
   );

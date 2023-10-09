@@ -7,7 +7,7 @@ import { CustomButton } from "../components/CustomButton";
 import { CustomCheckbox } from "../components/CustomCheckbox";
 import { setCategory } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
-import { useAppNavigation } from "../navigators";
+import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
@@ -86,7 +86,7 @@ const categoriesQuery = graphql(/* GraphQL */ `
 `)
 
 
-export function Categories({ navigation, route }) {
+export function Categories({ navigation, route }: AppNavigationProp<"Categories">) {
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () =>

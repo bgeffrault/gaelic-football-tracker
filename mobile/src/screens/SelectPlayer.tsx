@@ -1,19 +1,17 @@
 import { ScrollView, View } from "react-native";
 import { useEffect } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import clsx from "clsx";
 import { StyledText } from "../components/StyledText";
 import { useDispatch } from "react-redux";
 
 import { CustomButton } from "../components/CustomButton";
 import { useAppSelector } from "../stores/store";
-import { AppNavigationProp, useAppNavigation } from "../navigators";
+import { AppNavigationProp } from "../navigators";
 import { graphql, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import Constants from 'expo-constants';
 import { SelectPlayerItemQueryFragment } from "../gql/graphql";
-import { set } from "react-hook-form";
 import { setPlayerId } from "../stores";
 
 const SelectPlayerItemQuery = graphql(/* GraphQL */ `
@@ -59,6 +57,7 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
         }
       ),
   })
+
   useEffect(() => {
     navigation.setOptions({
       headerTitle: "Shooter",
@@ -69,7 +68,6 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
   useEffect(() => {
     return () => {
       if (playerId === undefined) {
-        console.log("set player to null", playerId)
         dispatch(setPlayerId(null))
       }
     }
@@ -80,20 +78,23 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
   const players = data.teamMembersCollection.edges.map((edge) => useFragment(SelectPlayerItemQuery, edge.node.member)) ?? [];
 
   return (
-    <ScrollView className="m-6">
-      {players.map((member, i, arr) => (
-        <MemberItem
-          key={member.id}
-          first={i === 0}
-          last={i === arr.length - 1}
-          member={member}
-          onPress={() => {
-            dispatch(setPlayerId(member.id));
-            navigation.goBack();
-          }}
-        />
-      ))}
-    </ScrollView>
+    <View className="mt-3 bg-white rounded-xl">
+      <ScrollView>
+        {players.map((member, i, arr) => (
+          <MemberItem
+            key={member.id}
+            first={i === 0}
+            last={i === arr.length - 1}
+            member={member}
+            onPress={() => {
+              dispatch(setPlayerId(member.id));
+              navigation.goBack();
+            }}
+          />
+        ))}
+      </ScrollView>
+
+    </View>
   );
 }
 

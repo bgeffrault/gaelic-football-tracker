@@ -1,10 +1,10 @@
 import clsx from "clsx";
 import { TouchableOpacity } from "react-native";
 
-export const ListItem = ({ children, onPress, disabled, first, last, isSelected }: {
+export const ListItem = ({ children, onPress, disabled = false, first, last, isSelected }: {
     children: React.ReactNode;
     onPress: () => void;
-    disabled: boolean;
+    disabled?: boolean;
     first: boolean;
     last: boolean;
     isSelected: boolean;

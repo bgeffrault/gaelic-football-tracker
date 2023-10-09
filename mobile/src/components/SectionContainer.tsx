@@ -5,5 +5,8 @@ export const SectionContainer = ({ children, cn }: {
     children: React.ReactNode,
     cn?: string
 }) => {
-    return (<View className={clsx(" bg-white rounded-3xl p-3", cn)} >{children}</View>)
+    return (
+        <View className={cn}>
+            <View className={clsx(" bg-white rounded-3xl p-3")} >{children}</View>
+        </View>)
 }

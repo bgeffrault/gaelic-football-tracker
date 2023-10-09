@@ -6,7 +6,7 @@ const ClubIdContext = createContext<number>();
 const SetClubIdContext = createContext<React.Dispatch<React.SetStateAction<number>>>();
 
 export const ClubIdProvider = ({ children }) => {
-    const [clubId, setClubId] = useState<number>(1)
+    const [clubId, setClubId] = useState<number>(3)
 
     return (
         <SetClubIdContext.Provider value={setClubId}>

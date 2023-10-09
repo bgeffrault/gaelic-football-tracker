@@ -5,15 +5,24 @@ type NavigationRoutes = {
     SelectPlayer: {
         teamGameId: number;
     },
+    Player: {
+        playerId: number;
+    },
     Game: {
         gameId: number;
+        isOpponentTeamSelected: boolean;
     }
-    Games: {
-        gameId: number;
-    },
+    Games: undefined,
     Home: undefined;
     NewGame: undefined;
-    Members: undefined;
+    Members: undefined | {
+        mode?: "select";
+        categoryId: number;
+    };
+    SelectMembers: {
+        mode?: "select";
+        categoryId: number;
+    };
     ClubConfig: undefined;
     Categories: {
         mode?: "select";
@@ -25,7 +34,10 @@ type NavigationRoutes = {
     };
     Login: undefined;
     CreateClub: undefined;
-    AddMember: undefined;
+    AddMember: {
+        categoryId: number;
+    };
+    AddGame: undefined;
 }
 
 export type AppRouteProp<T extends keyof NavigationRoutes> = RouteProp<NavigationRoutes, T>;
