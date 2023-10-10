@@ -125,6 +125,7 @@ export function AddMember({ navigation, route }: AppNavigationProp<"AddMember">)
         <CustomButton
           variant="contained"
           onPress={handleSubmit(handleOnPress)}
+          color="#000"
         >
           <Text className="text-white text-lg">Add Player</Text>
         </CustomButton>

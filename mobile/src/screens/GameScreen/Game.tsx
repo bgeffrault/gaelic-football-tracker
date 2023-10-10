@@ -187,8 +187,10 @@ export const Game = ({ gameId, teamGame, opponentTeamGame, game }: {
     const navigation = useAppNavigation();
     const route = useRoute();
     const isOpponentTeamSelected = (route.params as any).isOpponentTeamSelected
+
     const [addingShoot, setAddingShoot] = useState<AddingShoot>(null);
     const [selectedShoot, setSelectedShoot] = useState<Shoot>(null);
+
     const [teamGameState, updateTeamGameState] = useTeamShoots(teamGame);
     const [opponentTeamGameState, updateOpponentGameState] = useTeamShoots(opponentTeamGame);
     const teamAScore = useScore(teamGameState, updateTeamGameState);

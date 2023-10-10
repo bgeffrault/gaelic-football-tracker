@@ -9,6 +9,8 @@ import { GameQueryQuery } from "../../gql/graphql";
 import * as SplashScreen from "expo-splash-screen";
 import { GoHomeButton } from "../../components/GoHomeButton";
 import { Game, GameScreenTeamItemFragment } from "./Game";
+import { useDispatch } from "react-redux";
+import { resetPlayerId } from "../../stores";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -113,6 +115,7 @@ const useTeams = (data?: GameQueryQuery) => {
 export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
   const gameId = useRouteGameId(route);
   const { data, isFetching } = useInfiniteGameQuery(gameId);
+  const dispatch = useDispatch();
 
   const { teamGame, opponentTeamGame } = useTeams(data);
 
@@ -126,6 +129,13 @@ export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
       headerLeft: () => <GoHomeButton />,
     });
   }, [navigation, gameName]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetPlayerId())
+    }
+  }, [])
+
 
   if (isFetching) { return null; }
 

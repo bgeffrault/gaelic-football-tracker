@@ -56,7 +56,7 @@ const usePlayerShoots = (playerId: number) => {
     const fetchPlayer = async (): Promise<void> => {
       const { data, error } = await supabaseClient.from('PlayerScore').select('*').filter('memberId', 'eq', playerId)
 
-      setPlayerShoots(data)
+      setPlayerShoots(data as PlayerShoots[])
     }
     fetchPlayer()
   }, [playerId, supabaseClient])

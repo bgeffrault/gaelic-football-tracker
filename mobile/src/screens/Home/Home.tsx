@@ -15,6 +15,8 @@ import { CategoryFilter } from "../../components/CategoryFilter";
 import { StyledText } from "../../components/StyledText";
 import { SectionContainer } from "../../components/SectionContainer";
 import { SectionTitle } from "../../components/SectionTitle";
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
+import { Database } from "../../domain/database.types";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -60,6 +62,65 @@ const gamesQuery = graphql(/* GraphQL */ `
   }
 `)
 
+
+const groupById = <T extends Database["public"]["Views"]["GameResult"]["Row"]>(data: T[]) => {
+  const groupedData = data.reduce((acc, item) => {
+    const id = item.id;
+    const isExternal = item.external;
+    const itemTeamGameId = item.teamGameId;
+    const accTeamGameId = acc[id]?.teamGame?.[0].teamGameId;
+
+    if ((!accTeamGameId && !isExternal) || (accTeamGameId && accTeamGameId === itemTeamGameId)) {
+      acc[id] = {
+        ...acc[id],
+        teamGame: acc[id]?.teamGame ? [...acc[id]?.teamGame, item] : [item],
+      }
+    } else {
+      acc[id] = {
+        ...acc[id],
+        opponentTeamGame: acc[id]?.opponentTeamGame ? [...acc[id]?.opponentTeamGame, item] : [item],
+      }
+    }
+
+    return acc;
+  }, {} as Record<number, {
+    teamGame: T[],
+    opponentTeamGame: T[],
+  }>);
+
+  return groupedData;
+}
+
+function filterObjectByMissingKey<T>(obj: Record<number, { teamGame: T; opponentTeamGame: T }>): Record<number, { teamGame: T; opponentTeamGame: T }> {
+  const filteredObject: Record<number, { teamGame: T; opponentTeamGame: T }> = {};
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && obj[key].teamGame !== undefined && obj[key].opponentTeamGame !== undefined) {
+      filteredObject[key] = obj[key];
+    }
+  }
+
+  return filteredObject;
+}
+
+const useGamesResult = (categoryId: number) => {
+  const supabaseClient = useSupabaseClientContext();
+  const clubId = useClubIdContext();
+  const { data, ...queryResults } = useQuery({
+    queryKey: ["games", { categoryId, clubId }],
+    queryFn: async () => {
+      const result = await supabaseClient.from('GameResult').select('*').filter('categoryId', 'eq', categoryId).filter("clubId", 'eq', clubId)
+      return result.data
+    },
+  })
+
+  return {
+    ...queryResults,
+    gamesInProgress: filterObjectByMissingKey(groupById(data?.filter(game => !game.gameEnded) ?? [])),
+    gamesEnded: filterObjectByMissingKey(groupById(data?.filter(game => game.gameEnded) ?? [])),
+  }
+}
+
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
   const queryClient = useQueryClient();
@@ -80,31 +141,14 @@ export function Home({ }: AppNavigationProp<"Home">) {
         }
       ),
   })
-
-  const { data: gamesData, isLoading: isLoadingGames, refetch: refetchGames, isRefetching, isRefetchError } = useQuery({
-    queryKey: ["games", { categoryId }],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        gamesQuery,
-        { clubId, categoryId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
-  })
-
-  const onRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["games", { categoryId }] });
-    refetchGames()
-  }
-
-
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
 
-  const gamesEnded = useFragment(GameListFragment, gamesData?.gameEndedCollection.edges) ?? []
-  const gamesInProgress = useFragment(GameListFragment, gamesData?.gameInProgressCollection.edges) ?? []
+  const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching, remove } = useGamesResult(categoryId)
+  const onRefresh = () => {
+    // remove()
+    // queryClient.invalidateQueries({ queryKey: ["games", { categoryId, clubId }] });
+    refetchGames()
+  }
 
   const clubName = useMemo(() => { if (club) return club.name; return "Home" }, [club])
 
@@ -129,12 +173,12 @@ export function Home({ }: AppNavigationProp<"Home">) {
           <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
         }
       >
-        {gamesInProgress.length > 0 ? (
+        {Object.keys(gamesInProgress).length > 0 ? (
           <View className="mb-3">
             <GamesSection games={gamesInProgress} title="In progress" />
           </View>
         ) : <NoGames title="In progress" cn="mb-3" />}
-        {gamesEnded.length > 0 ? (
+        {Object.keys(gamesEnded).length > 0 ? (
           <View className="">
             <GamesSection games={gamesEnded} title="Last Games" />
           </View>

@@ -21,6 +21,8 @@ export const getShootColor = {
   }
 }
 
+
+
 export const FIELD_SIZE = {
   width: 350,
   height: 425,

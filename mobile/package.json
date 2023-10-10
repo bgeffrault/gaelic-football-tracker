@@ -32,6 +32,7 @@
     "react-native": "0.70.8",
     "react-native-datepicker": "^1.7.2",
     "react-native-global-props": "^1.1.5",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-linear-gradient": "^2.6.2",
     "react-native-material-menu": "^2.0.0",
     "react-native-modern-datepicker": "^1.0.0-beta.91",
@@ -54,6 +55,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-native": "^4.0.0",
     "prettier": "^2.8.2",
+    "supabase": "^1.100.1",
     "typescript": "^5.2.2"
   },
   "private": true
