@@ -53,7 +53,7 @@ function ScoreButton({ score, onPress }: {
         <CustomButton variant="contained" cn="w-18" onPress={onPress}
             color="#E3BBA6"
         >
-            <StyledText cn="text-gray-600">+{score}</StyledText>
+            <StyledText cn="">+{score}</StyledText>
         </CustomButton>
     );
 }

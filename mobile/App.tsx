@@ -16,6 +16,11 @@ import { Categories } from './src/screens/Categories';
 import { Teams } from './src/screens/Teams';
 import { SupabaseClientProvider } from './src/providers/useSupabaseClient';
 import { Player } from './src/screens/Player';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  "No native splash screen registered for given view controller. Call 'SplashScreen.show' for given view controller first.",
+])
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
