@@ -1,126 +1,135 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useReducer } from "react";
 import { SafeAreaView } from "react-native";
-import { AppNavigationProp, AppRouteProp } from "../../navigators";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
-import { graphql, DocumentType, useFragment } from "../../gql";
-import { GameQueryQuery } from "../../gql/graphql";
+import { AppNavigationProp, AppRouteProp, useAppNavigation } from "../../navigators";
+import { useQuery } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
 import { GoHomeButton } from "../../components/GoHomeButton";
-import { Game, GameScreenTeamItemFragment } from "./Game";
+import { Game, TeamGame } from "./Game";
 import { useDispatch } from "react-redux";
 import { resetPlayerId } from "../../stores";
+import { CustomButton } from "../../components/CustomButton";
+import { Ionicons } from '@expo/vector-icons';
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
+import { TeamShoots } from "./FielZone";
+import { StyledText } from "../../components/StyledText";
+import { TeamShootAction } from "./ScoreTable";
 
 SplashScreen.preventAutoHideAsync();
 
+const EditGame = ({ gameId }) => {
+  const navigation = useAppNavigation();
+  return (<CustomButton
+    onPress={() => {
+      navigation.navigate("EditGame", { gameId });
+    }}
+  >
+    <Ionicons name="document-text" size={24} color="#DF8C5F" />
+  </CustomButton>)
+}
 
-const gameQuery = graphql(/* GraphQL */ `
-  query gameQuery($gameId: BigInt!, $after: Cursor) {
-    gameCollection(filter: { id: { eq: $gameId } }) {
-      edges {
-        node {
-          id
-          date
-          duration
-          gameEnded
-          name
-          teamGameCollection(orderBy: [{id: DescNullsLast}]) {
-            edges {
-              node {
-                ...GameScreenTeamItemFragment
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`)
 
 const useRouteGameId = (route: AppRouteProp<"Game">) => {
   return route.params.gameId;
 };
 
-const useInfiniteGameQuery = (gameId) => {
-  const { data, ...args } = useInfiniteQuery({
-    queryKey: ["game", { gameId }],
-    queryFn: async ({ pageParam = null }) => {
-      const res = await request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        gameQuery,
-        { gameId, after: pageParam },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      )
-      return res
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      // @To do handle both teamGame shoots
-      const teamGameA = useFragment(GameScreenTeamItemFragment, lastPage.gameCollection.edges[0].node.teamGameCollection.edges[0].node)
-      const teamGameB = useFragment(GameScreenTeamItemFragment, lastPage.gameCollection.edges[0].node.teamGameCollection.edges[1].node)
-      const hasNextPageA = teamGameA.shootsCollection.pageInfo.hasNextPage;
-      if (hasNextPageA) {
-        return teamGameA.shootsCollection.pageInfo.endCursor
-      }
-      const hasNextPageB = teamGameB.shootsCollection.pageInfo.hasNextPage;
-      if (hasNextPageB) {
-        return teamGameB.shootsCollection.pageInfo.endCursor
-      }
-    }
-  })
 
-  const mergedData = useMemo<GameQueryQuery>(() => {
-    return data?.pages.reduce((prev, page) => {
-      if (!prev) {
-        return page
-      }
-
-      function mergeShoots(prev, index) {
-        // gameCollection are ordered by id assuring the match 0 -> 0, 1 -> 1
-        const teamGame = useFragment(GameScreenTeamItemFragment, prev.gameCollection.edges[0].node.teamGameCollection.edges[index].node);
-        const pageTeam = useFragment(GameScreenTeamItemFragment, page.gameCollection.edges[0].node.teamGameCollection.edges[index].node);
-        teamGame.shootsCollection.edges.push(...pageTeam.shootsCollection.edges)
-        return teamGame
-      }
-      const teamGameA = mergeShoots(prev, 0)
-      const teamGameB = mergeShoots(prev, 1)
-
-      prev.gameCollection.edges[0].node.teamGameCollection.edges[0].node = teamGameA
-      prev.gameCollection.edges[0].node.teamGameCollection.edges[1].node = teamGameB
-      return prev
-    }, null)
-  }, [data]);
-
-  return { data: mergedData, ...args }
+type Game = {
+  categoryId: number;
+  clubId: number;
+  created_at: string;
+  date: string;
+  duration: number;
+  gameEnded: boolean;
+  id: number;
+  name: string;
+  TeamGame: TeamGame[];
 }
 
-const useTeams = (data?: GameQueryQuery) => {
-  let teamGame: DocumentType<typeof GameScreenTeamItemFragment> | null = null
-  let opponentTeamGame: DocumentType<typeof GameScreenTeamItemFragment> | null = null
-  if (!data) {
-    return { teamGame, opponentTeamGame }
+const useGameShoots = (gameId: number) => {
+  const supabaseClient = useSupabaseClientContext();
+  const { data: game, ...queryResults } = useQuery({
+    queryKey: ["game shoots", { gameId }],
+    queryFn: async () => {
+      const result = await supabaseClient.from('Game').select('*, TeamGame(*, Team(teamName, external), Shoots(*))')
+        .filter('id', 'eq', gameId)
+        .limit(1)
+        .single()
+
+      return result.data
+    },
+  })
+
+  return { game, ...queryResults }
+}
+
+const useTeams = (game?: Game) => {
+  if (!game) {
+    return { teamGame: null, opponentTeamGame: null }
   }
-  const teams = data.gameCollection.edges[0].node.teamGameCollection.edges;
-  const teamGame1 = useFragment(GameScreenTeamItemFragment, teams[0].node);
-  const teamGame2 = useFragment(GameScreenTeamItemFragment, teams[1].node);
-  teamGame = teamGame1.team.external ? teamGame2 : teamGame1;
-  opponentTeamGame = teamGame1.team.external ? teamGame1 : teamGame2;
+  const teamGames = game.TeamGame;
+  const teamGame1 = teamGames[0];
+  const teamGame2 = teamGames[1];
+  const teamGame = teamGame1.Team.external ? teamGame2 : teamGame1;
+  const opponentTeamGame = teamGame1.Team.external ? teamGame1 : teamGame2;
 
   return { teamGame, opponentTeamGame }
 }
 
-export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
-  const gameId = useRouteGameId(route);
-  const { data, isFetching } = useInfiniteGameQuery(gameId);
+
+
+const useTeamShoots = (teamGame: TeamGame): [state: TeamShoots, update: React.Dispatch<TeamShootAction>] => {
+  const initialState = teamGame.Shoots.reduce((prev, curr) => {
+    prev[`${curr.type}Shoots`].push({
+      x: Number(curr.x),
+      y: Number(curr.y),
+      type: curr.type,
+      memberId: Number(curr.memberId),
+      id: curr.id,
+    });
+    return prev;
+  }, {
+    pointShoots: [],
+    goalShoots: [],
+    missedShoots: [],
+    blockedShoots: [],
+    teamGameId: teamGame.id
+  });
+
+  const reducer = useReducer(
+    (current: TeamShoots, action: TeamShootAction) => {
+      switch (action.type) {
+        case "ADD_POINT":
+          return { ...current, pointShoots: [...current.pointShoots, action.payload] };
+        case "ADD_GOAL":
+          return { ...current, goalShoots: [...current.goalShoots, action.payload] };
+        case "ADD_MISSED":
+          return { ...current, missedShoots: [...current.missedShoots, action.payload] };
+        case "ADD_BLOCKED":
+          return { ...current, blockedShoots: [...current.blockedShoots, action.payload] };
+
+        default:
+          return current;
+      }
+    },
+    initialState
+  );
+
+  return reducer;
+};
+
+const GameContainer = ({ teamGame, opponentTeamGame, gameName, gameId, gameEnded, duration }: {
+  teamGame: TeamGame;
+  opponentTeamGame: TeamGame;
+  gameName: string;
+  gameId: number;
+  duration: number;
+  gameEnded: boolean;
+}) => {
   const dispatch = useDispatch();
+  const navigation = useAppNavigation();
+  const [teamGameState, updateTeamGameState] = useTeamShoots(teamGame);
+  const [opponentTeamGameState, updateOpponentGameState] = useTeamShoots(opponentTeamGame);
 
-  const { teamGame, opponentTeamGame } = useTeams(data);
-
-  const game = data?.gameCollection.edges[0].node;
-  const gameName = data?.gameCollection.edges[0].node.name;
 
   useEffect(() => {
     navigation.setOptions({
@@ -137,11 +146,41 @@ export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
   }, [])
 
 
-  if (isFetching) { return null; }
+  return <SafeAreaView className="flex-1">
+    <Game
+      gameId={gameId} teamGame={teamGame} opponentTeamGame={opponentTeamGame} game={{ gameEnded, gameId, duration }} teamGameState={teamGameState} updateTeamGameState={updateTeamGameState} opponentTeamGameState={opponentTeamGameState} updateOpponentGameState={updateOpponentGameState} />
+  </SafeAreaView>
+}
+
+export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
+  const gameId = useRouteGameId(route);
+  // const { data, isFetching } = useInfiniteGameQuery(gameId);
+  const { game, isFetching } = useGameShoots(gameId)
+
+  const { teamGame, opponentTeamGame } = useTeams(game);
+
+
+  useEffect(() => {
+    navigation.setOptions({
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerRight: () => <EditGame gameId={gameId} />,
+    });
+  }, [navigation]);
+
+  if (isFetching) {
+    return null;
+  }
+  if (!game) {
+    return <StyledText>
+      No game
+    </StyledText>
+  }
+
+  const gameName = game?.name;
 
   return (
-    <SafeAreaView className="flex-1">
-      <Game gameId={gameId} teamGame={teamGame} opponentTeamGame={opponentTeamGame} game={{ gameEnded: game.gameEnded, gameId: game.id, duration: game.duration }} />
-    </SafeAreaView>
+    <GameContainer teamGame={teamGame} opponentTeamGame={opponentTeamGame} gameName={gameName} gameId={gameId}
+      duration={game.duration} gameEnded={game.gameEnded}
+    />
   );
 }

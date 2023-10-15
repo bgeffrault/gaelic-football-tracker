@@ -50,7 +50,7 @@ const addingShoot = (teamState, key, location) => {
   return shoots;
 };
 
-export type Shoot = Pick<Shoots, "x" | "y" | "memberId" | "type">;
+export type Shoot = Pick<Shoots, "x" | "y" | "memberId" | "type" | "id">;
 export type ShootType = "point" | "goal" | "missed" | "blocked"
 export type TeamShoots = {
   pointShoots: Shoot[],
@@ -121,7 +121,7 @@ export function FieldZone({
         {!addingShoot && renderShoots(teamGameState.goalShoots, getShootColor[type].goal, disabled, onPress)}
         {!addingShoot && renderShoots(teamGameState.blockedShoots, getShootColor[type].blocked, disabled, onPress)}
         {!addingShoot && renderShoots(teamGameState.missedShoots, getShootColor[type].missed, disabled, onPress)}
-        {addingShoot && renderShoots([{ ...addingShoot.location, type: addingShoot.type }], getShootColor[type][addingShoot.type], disabled, onPress)}
+        {addingShoot && renderShoots([{ ...addingShoot.location, type: addingShoot.type, id: 0 }], getShootColor[type][addingShoot.type], disabled, onPress)}
       </View>
     </View>
   );

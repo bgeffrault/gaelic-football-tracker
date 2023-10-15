@@ -126,8 +126,10 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
 
   const nbrSelected = useAppSelector(
     (state) => state.game.players.length
-  )
-    ;
+  );
+  const playerIds = useAppSelector(
+    (state) => state.game.players
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["members", { categoryId }],

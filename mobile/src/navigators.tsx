@@ -38,6 +38,7 @@ type NavigationRoutes = {
         categoryId: number;
     };
     AddGame: undefined;
+    EditGame: { gameId: number };
 }
 
 export type AppRouteProp<T extends keyof NavigationRoutes> = RouteProp<NavigationRoutes, T>;

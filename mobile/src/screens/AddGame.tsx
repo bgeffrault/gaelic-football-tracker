@@ -97,6 +97,15 @@ const AddGameMutation = graphql(/* GraphQL */ `
 
 type GameMutation = Pick<Game, "date" | "duration" | "name">;
 
+type Input = {
+  date: string;
+  duration?: string;
+  gameName?: string;
+  [TEAM]: { teamName: string };
+  [OPPONENT_TEAM]: { teamName: string };
+  [PLAYERS]: number[];
+}
+
 // @to-do: handle game between internal teams
 export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   const [categoryId, setCategoryId] = useState(1)
