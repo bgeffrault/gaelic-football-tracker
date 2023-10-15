@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { CustomButton } from "../../components/CustomButton";
@@ -17,6 +17,8 @@ import { SectionContainer } from "../../components/SectionContainer";
 import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { Database } from "../../domain/database.types";
+import { useSubscription } from "../../useSupabaseSubscription";
+import { useIsFocused } from "@react-navigation/native";
 
 const HomeFragment = graphql(/* GraphQL */ `
   fragment HomeFragment on Club {
@@ -46,22 +48,6 @@ const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
     </View>
   </SectionContainer>
 )
-
-const gamesQuery = graphql(/* GraphQL */ `
-  query gamesQuery($clubId: BigInt!, $categoryId: BigInt!) {
-    gameEndedCollection: gameCollection(filter: { gameEnded: { eq: true }, categoryId: { eq: $categoryId }, clubId: { eq: $clubId}  }, orderBy: [{date: DescNullsLast}]) {
-      edges {
-        ...GameListFragment
-      }
-    }
-    gameInProgressCollection: gameCollection(filter: { gameEnded: { eq: false }, categoryId: { eq: $categoryId }, clubId: { eq: $clubId} }, orderBy: [{date: DescNullsLast}]) {
-      edges {
-        ...GameListFragment
-      }
-    }
-  }
-`)
-
 
 const groupById = <T extends Database["public"]["Views"]["GameResult"]["Row"]>(data: T[]) => {
   const groupedData = data.reduce((acc, item) => {
@@ -121,15 +107,28 @@ const useGamesResult = (categoryId: number) => {
   }
 }
 
+const useRefetchOnScreenFocused = (refetch: ReturnType<typeof useQuery>["refetch"]) => {
+  const isFocused = useIsFocused();
+  const firstRenderRef = useRef(true)
+  useEffect(() => {
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false
+      return
+    }
+    if (isFocused) {
+      refetch()
+    }
+  }, [isFocused])
+}
+
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
-  const queryClient = useQueryClient();
 
   const navigation = useAppNavigation();
   const clubId = useClubIdContext();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["club"],
+    queryKey: ["club", { clubId }],
     queryFn: async () =>
       request(
         Constants.expoConfig.extra.supabaseUrlGraphQl,
@@ -144,9 +143,8 @@ export function Home({ }: AppNavigationProp<"Home">) {
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
 
   const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching, remove } = useGamesResult(categoryId)
+
   const onRefresh = () => {
-    // remove()
-    // queryClient.invalidateQueries({ queryKey: ["games", { categoryId, clubId }] });
     refetchGames()
   }
 
@@ -159,6 +157,8 @@ export function Home({ }: AppNavigationProp<"Home">) {
       headerTitle: clubName,
     });
   }, [navigation, clubName]);
+
+  useRefetchOnScreenFocused(refetchGames)
 
   if (isLoading || isLoadingGames) {
     // @To do: add a loading indicator

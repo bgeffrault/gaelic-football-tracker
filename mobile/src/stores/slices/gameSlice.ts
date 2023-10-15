@@ -24,6 +24,9 @@ const gameSlice = createSlice({
     resetPlayers: (state) => {
       state.players = [];
     },
+    setPlayers: (state, action) => {
+      state.players = action.payload;
+    },
     resetGame: () => initialState,
     setOpponentTeam: (state, action) => {
       state.opponentTeam = action.payload;
@@ -44,6 +47,7 @@ export const {
   setOpponentTeam,
   setCategory,
   setTeam,
-  resetPlayers
+  resetPlayers,
+  setPlayers
 } = gameSlice.actions;
 export default gameSlice.reducer;

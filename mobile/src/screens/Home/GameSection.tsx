@@ -96,7 +96,7 @@ export function GameListItem({ game, first, last, gameId }: {
   const result = getGameResult({ teamScore, opponentTeamScore });
   // const date = DateTime.fromISO(game.date).toFormat("dd-MM-yyyy");
   const gameName = teamGame[0].name
-
+  const date = DateTime.fromISO(teamGame[0].date).toFormat("dd-MM-yyyy");
   return (
     <Card
       cn="mb-1"
@@ -126,7 +126,7 @@ export function GameListItem({ game, first, last, gameId }: {
         </View>
         <View className="flex flex-row justify-between">
           <StyledText cn='text-gray-400'>{gameName}</StyledText>
-          <StyledText cn='text-gray-400'>{teamGame[0].date}</StyledText>
+          <StyledText cn='text-gray-400'>{date}</StyledText>
         </View>
       </LinearGradient>
     </Card>

@@ -1,4 +1,4 @@
-import { ShootType, TeamShoots } from "./FielZone";
+import { Shoot, ShootType, TeamShoots } from "./FielZone";
 import clsx from "clsx";
 import { SwitchComponent, TouchableHighlight, TouchableOpacity, View } from "react-native";
 import { CustomButton } from "../../components/CustomButton";
@@ -11,7 +11,10 @@ import request from "graphql-request";
 import { graphql } from "../../gql";
 import Constants from 'expo-constants';
 
-export const useScore = (teamGameState: TeamShoots, updateTeamGame: React.Dispatch<Partial<TeamShoots>>) =>
+export type TeamShootAction = { type: "ADD_POINT" | "ADD_GOAL" | "ADD_MISSED" | "ADD_BLOCKED", payload: Shoot }
+
+
+export const useScore = (teamGameState: TeamShoots, updateTeamGame: React.Dispatch<TeamShootAction>) =>
     useMemo(() => {
         const { pointShoots, goalShoots, missedShoots, blockedShoots } = teamGameState;
         const totalPoints = pointShoots.length;
@@ -41,7 +44,7 @@ function MissedButton({ label, onPress }: {
             cn="ml-1 w-24"
             onPress={onPress}
         >
-            <StyledText cn="text-gray-600">{label}</StyledText>
+            <StyledText cn="text-gray-500">{label}</StyledText>
         </CustomButton>
     );
 }
@@ -51,9 +54,8 @@ function ScoreButton({ score, onPress }: {
 } & Omit<React.ComponentProps<typeof CustomButton>, "children">) {
     return (
         <CustomButton variant="contained" cn="w-18" onPress={onPress}
-            color="#E3BBA6"
         >
-            <StyledText cn="">+{score}</StyledText>
+            <StyledText cn="text-gray-500">+{score}</StyledText>
         </CustomButton>
     );
 }

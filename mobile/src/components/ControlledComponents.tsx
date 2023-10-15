@@ -1,4 +1,4 @@
-import { Control, FieldValues, RegisterOptions, useController } from "react-hook-form";
+import { Control, FieldValues, PathValue, RegisterOptions, useController } from "react-hook-form";
 import { CustomButton } from "./CustomButton";
 import { LabelledTextInput, StyledTextInput } from "./StyledTextInput";
 import { Select } from "./Select";
@@ -8,17 +8,17 @@ import { StyledText } from "./StyledText";
 
 export type Rules = Omit<RegisterOptions<FieldValues, string>, "disabled" | "valueAsNumber" | "valueAsDate" | "setValueAs">
 
-export const ControlledLabelledTextInput = <T extends unknown>({ label, buttonProps, control, inputProps, name, rules, defaultValue, cn }: {
+export const ControlledLabelledTextInput = <T extends FieldValues>({ label, buttonProps, control, inputProps, name, rules, defaultValue, cn }: {
     label: string;
     buttonProps?: Omit<React.ComponentProps<typeof CustomButton>, "children">;
     inputProps: Omit<React.ComponentProps<typeof StyledTextInput>, "onChangeText" | "value">;
     cn?: string;
-    control: Control<FieldValues, T>,
+    control: Control<T, any>,
     name: string,
     rules?: Rules,
-    defaultValue?: string
+    defaultValue?: PathValue<T, any>
 }) => {
-    const { field, formState } = useController({
+    const { field, formState } = useController<T, any>({
         control,
         defaultValue,
         name,
@@ -31,13 +31,14 @@ export const ControlledLabelledTextInput = <T extends unknown>({ label, buttonPr
     )
 };
 
-export const ControlledSelect = ({ control, name, defaultValue = "", rules, ...props }: {
-    control: Control<FieldValues, any>,
+export const ControlledSelect = <T extends FieldValues>({ control, name, defaultValue = null, rules, disabled, ...props }: {
+    control: Control<T, any>,
     name: string,
-    defaultValue?: string,
+    defaultValue?: PathValue<T, any>,
     rules?: Rules,
+    disabled?: boolean,
 } & Omit<React.ComponentProps<typeof Select>, "value" | 'setDate'>) => {
-    const { field, formState } = useController({
+    const { field, formState } = useController<T, any>({
         control,
         defaultValue,
         name,
@@ -53,6 +54,7 @@ export const ControlledSelect = ({ control, name, defaultValue = "", rules, ...p
                 setDate={(value) => {
                     field.onChange(DateTime.fromFormat(value, "yyyy/MM/dd").toJSDate().toISOString())
                 }}
+                disabled={disabled}
             />
             <View>
                 <StyledText cn="text-xs text-red-400 pb-2">
