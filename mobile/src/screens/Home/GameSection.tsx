@@ -5,67 +5,77 @@ import { CustomButton } from "../../components/CustomButton";
 import { StyledText } from "../../components/StyledText";
 import { gameResultGradientColors, getGameResult, getTeamResult } from "../../utils/shootsUtils";
 import { useAppNavigation } from "../../navigators";
-import { DocumentType, graphql } from "../../gql/gql";
-import { useFragment } from "../../gql";
 import { SectionTitle } from "../../components/SectionTitle";
 import { LinearGradient } from 'expo-linear-gradient';
 import { SectionContainer } from "../../components/SectionContainer";
-import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
-import { useQuery } from "@tanstack/react-query";
 import { DateTime } from "luxon";
-import { Database } from "../../domain/database.types";
 
-export const GameFragment = graphql(/* GraphQL */ `
-  fragment GameFragment on Game {
-    id
-    duration
-    gameEnded
-    name
-    date
 
-    teamGameCollection {
-      edges {
-        node {
-          id
-          team {
-            external
-            teamName
-          }
-        }
-      }
-    }
-  }
-`)
-
-export const GameListFragment = graphql(/* GraphQL */ `
-  fragment GameListFragment on GameEdge {
-    node {
-      id,
-      ...GameFragment
-    }
-  }
-`)
-
-type GameResult = Database["public"]["Views"]["GameResult"]["Row"]
-type Game = {
-  teamGame: GameResult[];
-  opponentTeamGame: GameResult[];
+export type GameResult = {
+  categoryId: number;
+  clubId: number;
+  count: number;
+  date: string;
+  duration: number;
+  external: boolean;
+  gameEnded: boolean;
+  id: number;
+  name: string;
+  teamGameId: number;
+  teamName: string;
+  type: string;
 }
-type GamesResult = Record<number, Game>
+
+type TeamGameResult = {
+  gameResults: GameResult[];
+  teamName: string;
+  external: boolean;
+  categoryId: number;
+}
+
+export type GameResultByTeam = {
+  teamGame: TeamGameResult;
+  opponentTeamGame: TeamGameResult;
+  id: number;
+  gameEnded: boolean;
+  name: string;
+  duration: number;
+  date: string;
+}
+
+export type GameContent = GameResultByTeam[]
+
+export type Game = {
+  id: number;
+  gameEnded: boolean;
+  name: string;
+  duration: number;
+  date: string;
+  GameResult: GameResult[];
+  TeamGame: {
+    id: number;
+    Team: {
+      teamName: string;
+      external: boolean;
+      categoryId: number;
+    };
+  }[];
+}
+
 
 export function GamesSection({ games, title }: {
-  games: GamesResult;
+  games: GameContent;
   title: string;
 }) {
   return (
     <SectionContainer >
       <SectionTitle label={title} />
-      {Object.entries(games).map((([key, game], i, arr) => {
+      {games.map(((game, i, arr) => {
         return (
           <GameListItem
-            key={key}
+            key={game.id}
             game={game}
-            gameId={Number(key)}
+            gameId={game.id}
             first={i === 0}
             last={i === arr.length - 1}
           />
@@ -78,7 +88,7 @@ export function GamesSection({ games, title }: {
 
 
 export function GameListItem({ game, first, last, gameId }: {
-  game: Game;
+  game: GameResultByTeam;
   first: boolean;
   last: boolean;
   gameId: number;
@@ -94,16 +104,14 @@ export function GameListItem({ game, first, last, gameId }: {
   const opponentTeamScore = useTeamScore(opponentTeamGame);
 
   const result = getGameResult({ teamScore, opponentTeamScore });
-  // const date = DateTime.fromISO(game.date).toFormat("dd-MM-yyyy");
-  const gameName = teamGame[0].name
-  const date = DateTime.fromISO(teamGame[0].date).toFormat("dd-MM-yyyy");
+  const date = DateTime.fromISO(game.date).toFormat("dd-MM-yyyy");
+  const gameName = game.name
   return (
     <Card
       cn="mb-1"
       first={first}
       last={last}
       isListItem
-      border={result === "draw"}
     >
       <LinearGradient
         start={{ x: 0, y: 0.5 }}
@@ -112,16 +120,16 @@ export function GameListItem({ game, first, last, gameId }: {
         className="rounded-xl py-1 px-4">
         <View className="flex-row">
           <View className="w-2/5">
-            <TeamScore cn="items-start" teamScore={teamScore} teamName={teamGame[0].teamName} />
+            <TeamScore cn="items-start" teamScore={teamScore} teamName={teamGame.teamName} />
           </View>
           <View className="items-center w-1/5">
-            <StyledText>{teamGame[0].duration}&apos;</StyledText>
+            <StyledText>{game.duration}&apos;</StyledText>
             {<CustomButton onPress={handleOnPress}>
               <AntDesign name="eye" size={24} color="#DF8C5F" />
             </CustomButton>}
           </View>
           <View className="w-2/5">
-            <TeamScore cn="items-end" teamScore={opponentTeamScore} teamName={opponentTeamGame[0].teamName} />
+            <TeamScore cn="items-end" teamScore={opponentTeamScore} teamName={opponentTeamGame.teamName} />
           </View>
         </View>
         <View className="flex flex-row justify-between">
@@ -140,12 +148,12 @@ export type TeamScore = {
   gameId: number;
 }
 
-const useTeamScore = (teamGame: GameResult[]) => {
+const useTeamScore = (teamGame: TeamGameResult) => {
   return {
-    pointCount: teamGame?.filter((gameResult) => gameResult.type === "point")[0]?.count ?? 0,
-    goalCount: teamGame?.filter((gameResult) => gameResult.type === "goal")[0]?.count ?? 0,
-    missedCount: teamGame?.filter((gameResult) => gameResult.type === "missed")[0]?.count ?? 0,
-    blockedCount: teamGame?.filter((gameResult) => gameResult.type === "blocked")[0]?.count ?? 0,
+    pointCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "point")[0]?.count ?? 0,
+    goalCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "goal")[0]?.count ?? 0,
+    missedCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "missed")[0]?.count ?? 0,
+    blockedCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "blocked")[0]?.count ?? 0,
   }
 }
 
