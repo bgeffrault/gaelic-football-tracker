@@ -1,19 +1,21 @@
 import { createTheme } from '@mui/material/styles'
+import { paletteTheme } from './paleteTheme'
 
 const theme = createTheme({
   components: {
-    MuiTypography: {
+    MuiDialogTitle: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgb(209, 130, 73)',
+          backgroundColor: paletteTheme.palette.primary,
           textAlign: 'center',
         },
       },
     },
+
     MuiDialogContent: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgb(246, 243, 243)',
+          backgroundColor: paletteTheme.palette.background.ligthGrey,
           border: '1px solid rgb(177, 176, 176)',
           borderRadius: '5px',
           margin: '30px',

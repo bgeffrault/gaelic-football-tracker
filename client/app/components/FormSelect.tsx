@@ -50,7 +50,6 @@ const FormSelect = <T extends FieldValues>({
           {children}
         </Select>
       </FormControl>
-
       {!isDirty
         ? errors[name] && <span error-message="">{errorMessage} </span>
         : null}

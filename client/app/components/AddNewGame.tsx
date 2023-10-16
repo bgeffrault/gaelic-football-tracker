@@ -11,7 +11,6 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from '@mui/material'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import FormField from './FormField'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import supabase, { Tables } from '../config/supabaseClient'
@@ -22,6 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import FormMultiSelect from './FormMultiSelect'
 import FormSelect from './FormSelect'
+import { useRouter } from 'next/navigation'
 
 type Inputs = {
   externalTeamName: string
@@ -33,6 +33,7 @@ type Inputs = {
 }
 
 export default function AddNewGame(): React.JSX.Element {
+  const router = useRouter()
   const [membersName, setMembersName] = useState<string[]>([])
   const [members, setMembers] = useState<Tables<'Members'>[] | null>(null)
   const [teams, setTeams] = useState<Tables<'Team'>[] | null>(null)
@@ -129,7 +130,7 @@ export default function AddNewGame(): React.JSX.Element {
       }))
     )
     setOpen(false)
-    window.location.href = '/game'
+    router.push('/game/' + gameId)
   }
 
   return (
@@ -141,10 +142,15 @@ export default function AddNewGame(): React.JSX.Element {
         }}
       >
         <Button
-          sx={{ textDecoration: 'none', color: 'black' }}
+          sx={{
+            textDecoration: 'none',
+            color: 'black',
+            border: '1px solid black',
+            borderRadius: '50%',
+          }}
           onClick={handleClickOpen}
         >
-          <AddCircleOutlineIcon />
+          New Game
         </Button>
       </Box>
 
@@ -196,12 +202,14 @@ export default function AddNewGame(): React.JSX.Element {
               placeholder="60"
               margin="dense"
               id="duration"
-              type="text"
+              type="number"
               register={register}
               control={control}
               isRequired={true}
               name="duration"
               errorMessage="La durée est requise"
+              min={0}
+              max={120}
             />
 
             <FormMultiSelect
