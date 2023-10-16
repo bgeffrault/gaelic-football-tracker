@@ -106,7 +106,7 @@ type Input = {
   [PLAYERS]: number[];
 }
 
-// @to-do: handle game between internal teams
+// @To-do: handle game between internal teams
 export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   const [categoryId, setCategoryId] = useState(1)
   const clubId = useClubIdContext();
@@ -302,6 +302,7 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
         <CustomButton
           variant="contained"
           onPress={handleSubmit(handleOnPress)}
+          strong
         >
           <Text className="text-white text-lg">Let&apos;s go</Text>
         </CustomButton>

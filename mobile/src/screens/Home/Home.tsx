@@ -7,17 +7,15 @@ import { AppNavigationProp, useAppNavigation } from "../../navigators";
 import { graphql } from "../../gql/gql";
 import { useFragment } from "../../gql";
 import Constants from 'expo-constants';
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import request from "graphql-request";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
-import { GameListFragment, GamesSection } from "./GameSection";
+import { Game, GameContent, GameResult, GameResultByTeam, GamesSection } from "./GameSection";
 import { CategoryFilter } from "../../components/CategoryFilter";
 import { StyledText } from "../../components/StyledText";
 import { SectionContainer } from "../../components/SectionContainer";
 import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
-import { Database } from "../../domain/database.types";
-import { useSubscription } from "../../useSupabaseSubscription";
 import { useIsFocused } from "@react-navigation/native";
 
 const HomeFragment = graphql(/* GraphQL */ `
@@ -49,45 +47,67 @@ const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
   </SectionContainer>
 )
 
-const groupById = <T extends Database["public"]["Views"]["GameResult"]["Row"]>(data: T[]) => {
+const groupById = (data?: Game[]): GameContent => {
+  if (!data) return [];
   const groupedData = data.reduce((acc, item) => {
     const id = item.id;
-    const isExternal = item.external;
-    const itemTeamGameId = item.teamGameId;
-    const accTeamGameId = acc[id]?.teamGame?.[0].teamGameId;
+    const gameResults = item.GameResult;
+    const internalTeamGame = item.TeamGame?.[0]?.Team.external ? item.TeamGame[1] : item.TeamGame[0];
 
-    if ((!accTeamGameId && !isExternal) || (accTeamGameId && accTeamGameId === itemTeamGameId)) {
-      acc[id] = {
-        ...acc[id],
-        teamGame: acc[id]?.teamGame ? [...acc[id]?.teamGame, item] : [item],
-      }
-    } else {
-      acc[id] = {
-        ...acc[id],
-        opponentTeamGame: acc[id]?.opponentTeamGame ? [...acc[id]?.opponentTeamGame, item] : [item],
-      }
+    if (item.TeamGame?.length != 2) return acc;
+
+    const externalTeamGame = item.TeamGame?.[0]?.Team.external ? item.TeamGame[0] : item.TeamGame[1];
+    const internalTeamGameId = internalTeamGame.id;
+
+    if (!gameResults?.length) {
+      acc.push({
+        teamGame: {
+          gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
+          teamName: internalTeamGame.Team.teamName,
+          external: internalTeamGame.Team.external,
+          categoryId: internalTeamGame.Team.categoryId,
+        },
+        opponentTeamGame: {
+          gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
+          teamName: externalTeamGame.Team.teamName,
+          external: externalTeamGame.Team.external,
+          categoryId: externalTeamGame.Team.categoryId,
+        },
+        id: item.id,
+        gameEnded: item.gameEnded,
+        name: item.name,
+        duration: item.duration,
+        date: item.date,
+      })
+      return acc;
     }
 
+    acc.push({
+      teamGame: {
+        gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
+        teamName: internalTeamGame.Team.teamName,
+        external: internalTeamGame.Team.external,
+        categoryId: internalTeamGame.Team.categoryId,
+      },
+      opponentTeamGame: {
+        gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
+        teamName: externalTeamGame.Team.teamName,
+        external: externalTeamGame.Team.external,
+        categoryId: externalTeamGame.Team.categoryId,
+      },
+      id: item.id,
+      gameEnded: item.gameEnded,
+      name: item.name,
+      duration: item.duration,
+      date: item.date,
+    })
+
     return acc;
-  }, {} as Record<number, {
-    teamGame: T[],
-    opponentTeamGame: T[],
-  }>);
+  }, [] as GameContent);
 
   return groupedData;
 }
 
-function filterObjectByMissingKey<T>(obj: Record<number, { teamGame: T; opponentTeamGame: T }>): Record<number, { teamGame: T; opponentTeamGame: T }> {
-  const filteredObject: Record<number, { teamGame: T; opponentTeamGame: T }> = {};
-
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key) && obj[key].teamGame !== undefined && obj[key].opponentTeamGame !== undefined) {
-      filteredObject[key] = obj[key];
-    }
-  }
-
-  return filteredObject;
-}
 
 const useGamesResult = (categoryId: number) => {
   const supabaseClient = useSupabaseClientContext();
@@ -95,15 +115,34 @@ const useGamesResult = (categoryId: number) => {
   const { data, ...queryResults } = useQuery({
     queryKey: ["games", { categoryId, clubId }],
     queryFn: async () => {
-      const result = await supabaseClient.from('GameResult').select('*').filter('categoryId', 'eq', categoryId).filter("clubId", 'eq', clubId)
-      return result.data
+      const result = await supabaseClient
+        .from('Game')
+        .select('id, gameEnded, name, duration, date, TeamGame(id, Team(teamName, external, categoryId))') // @To-improve: improve view by removing unnecessary fields
+        .filter('categoryId', 'eq', categoryId)
+        .filter("clubId", 'eq', clubId)
+        .order('date', { ascending: false })
+
+      const games = result.data
+      const gamesId = games.map(game => game.id)
+
+      const resultGameResults = await supabaseClient
+        .from('GameResult')
+        .select('*')
+        .in("id", gamesId)
+
+      const finalResult: Game[] = games.map((game) => {
+        const gameResults = resultGameResults.data.filter(gameResult => gameResult.id === game.id)
+        return { ...game, GameResult: gameResults as GameResult[] }
+      })
+
+      return finalResult
     },
   })
 
   return {
     ...queryResults,
-    gamesInProgress: filterObjectByMissingKey(groupById(data?.filter(game => !game.gameEnded) ?? [])),
-    gamesEnded: filterObjectByMissingKey(groupById(data?.filter(game => game.gameEnded) ?? [])),
+    gamesInProgress: groupById(data?.filter(game => !game.gameEnded)) ?? [],
+    gamesEnded: groupById(data?.filter(game => game.gameEnded)) ?? [],
   }
 }
 
@@ -121,6 +160,7 @@ const useRefetchOnScreenFocused = (refetch: ReturnType<typeof useQuery>["refetch
   }, [isFocused])
 }
 
+// @To-do: It does not work with games without shoots
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
 
@@ -142,7 +182,7 @@ export function Home({ }: AppNavigationProp<"Home">) {
   })
   const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
 
-  const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching, remove } = useGamesResult(categoryId)
+  const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching } = useGamesResult(categoryId)
 
   const onRefresh = () => {
     refetchGames()
