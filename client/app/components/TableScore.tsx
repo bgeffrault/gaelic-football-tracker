@@ -1,10 +1,56 @@
-import { Box } from '@mui/material'
+import { Box, Link, Typography } from '@mui/material'
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
-import React from 'react'
-import { Tables } from '../config/supabaseClient'
+import { Views, Tables } from '../config/supabaseClient'
+import { useRouter } from 'next/navigation'
+
+const usedTeamScore: (
+  teamGame: Tables<'TeamGame'> & {
+    Team: Tables<'Team'>
+  },
+  TeamScore?: Views<'TeamScore'>[]
+) => {
+  teamGoal: number
+  teamPoint: number
+  teamMissed: number
+  teamBlocked: number
+} = (
+  teamGame: Tables<'TeamGame'> & { Team: Tables<'Team'> },
+  TeamScore?: Views<'TeamScore'>[]
+) => {
+  const teamGameId = teamGame?.id
+
+  const teamGoal =
+    TeamScore?.filter(
+      (teamScore) => teamScore.teamGameId === teamGameId && teamScore.type === 'goal'
+    )[0]?.count ?? 0
+  const teamPoint =
+    TeamScore?.filter(
+      (teamScore) =>
+        teamScore.teamGameId === teamGameId && teamScore.type === 'point'
+    )[0]?.count ?? 0
+  const teamMissed =
+    TeamScore?.filter(
+      (teamScore) =>
+        teamScore.teamGameId === teamGameId && teamScore.type === 'missed'
+    )[0]?.count ?? 0
+  const teamBlocked =
+    TeamScore?.filter(
+      (teamScore) =>
+        teamScore.teamGameId === teamGameId && teamScore.type === 'blocked'
+    )[0]?.count ?? 0
+
+  return {
+    teamGoal,
+    teamPoint,
+    teamMissed,
+    teamBlocked,
+  }
+}
 
 export type TableScoreGame = Tables<'Game'> & {
   TeamGame: (Tables<'TeamGame'> & { Team: Tables<'Team'> })[]
+} & {
+  TeamScore: Views<'TeamScore'>[]
 }
 
 export type CardsProps = {
@@ -12,24 +58,42 @@ export type CardsProps = {
 }
 
 const TableScore = ({ game }: CardsProps): React.JSX.Element | null => {
-  const { TeamGame, gameEnded } = game
+  const router = useRouter()
+  const { TeamGame, gameEnded, TeamScore } = game
   if (TeamGame.length !== 2) {
     console.warn('This game has the wrong of TeamGame', game.id)
     return null
   }
 
   const isFirstTeamExternal = TeamGame[0].Team.external
+  const firstTeamGame = !isFirstTeamExternal ? TeamGame[0] : TeamGame[1]
+  const secondTeamGame = isFirstTeamExternal ? TeamGame[0] : TeamGame[1]
+  const firstTeamName = firstTeamGame.Team.teamName
+  const secondTeamName = secondTeamGame.Team.teamName
+  const duration = game.duration
 
-  const firstTeam = !isFirstTeamExternal
-    ? TeamGame[0].Team.teamName
-    : TeamGame[1].Team.teamName
+  const {
+    teamGoal: firstTeamGoal,
+    teamPoint: firstTeamPoint,
+    teamMissed: firstTeamMissed,
+    teamBlocked: firstTeamBlocked,
+  } = usedTeamScore(
+    firstTeamGame as Tables<'TeamGame'> & { Team: Tables<'Team'> },
+    TeamScore
+  )
+  const { teamGoal: secondTeamGoal, teamPoint: secondTeamPoint } = usedTeamScore(
+    secondTeamGame as Tables<'TeamGame'> & { Team: Tables<'Team'> },
+    TeamScore
+  )
 
-  const secondTeam = isFirstTeamExternal
-    ? TeamGame[0].Team.teamName
-    : TeamGame[1].Team.teamName
+  const firstTeamScore = firstTeamGoal + firstTeamPoint
+  const firstTeamMissedAnsBlocked = firstTeamMissed + firstTeamBlocked
+  const secondTeamScore = secondTeamGoal + secondTeamPoint
+  const win = firstTeamScore < secondTeamScore
+  const firstTeamAccuracy = Math.round(
+    (firstTeamScore / (firstTeamScore + firstTeamMissedAnsBlocked)) * 100
+  )
 
-  TeamGame[0].Team.teamName
-  const win = 'firstTeam.score' < 'secondTeam.score'
   return (
     <Box
       sx={{
@@ -46,13 +110,22 @@ const TableScore = ({ game }: CardsProps): React.JSX.Element | null => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
+          width: '35%',
         }}
       >
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>{firstTeam}</h4>
-        </div>
-        <p>Accuracy: {'accuracy'} </p>
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+            {firstTeamName}
+          </Typography>
+          <p>
+            {`${firstTeamPoint} - ${firstTeamGoal} (${
+              firstTeamPoint + firstTeamGoal * 3
+            })`}
+          </p>
+        </Box>
+        <p>{`Accuracy: ${!firstTeamAccuracy ? 100 : firstTeamAccuracy}%`}</p>
       </Box>
       <Box
         sx={{
@@ -61,19 +134,44 @@ const TableScore = ({ game }: CardsProps): React.JSX.Element | null => {
           alignItems: 'center',
         }}
       >
-        <h5> {'duration'} </h5>
-        {gameEnded === false ? <PlayCircleOutlineIcon /> : '-'}
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+          {duration}
+        </Typography>
+        {gameEnded === false ? (
+          <Link
+            style={{
+              textDecoration: 'none',
+              color: 'black',
+              display: 'flex',
+              marginTop: '5px',
+              cursor: 'pointer',
+            }}
+            onClick={() => router.push('/game/' + game.id)}
+          >
+            <PlayCircleOutlineIcon />
+          </Link>
+        ) : (
+          '-'
+        )}
       </Box>
       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          width: '35%',
         }}
       >
-        <div>
-          <h4 style={{ marginBottom: '15px' }}>{secondTeam}</h4>
-        </div>
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+            {secondTeamName}
+          </Typography>
+          <p>
+            {`${secondTeamPoint} - ${secondTeamGoal} (${
+              secondTeamPoint + secondTeamGoal * 3
+            })`}
+          </p>
+        </Box>
       </Box>
     </Box>
   )

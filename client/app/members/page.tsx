@@ -18,7 +18,7 @@ const MembersShoots = (): JSX.Element => {
         .select('*, Shoots(*)')
 
       if (error) {
-        setFetchError('Could not fetch the members')
+        setFetchError('Could not fetch the Members')
         setMemmbers(null)
         console.log(error)
       }
@@ -33,11 +33,7 @@ const MembersShoots = (): JSX.Element => {
   return (
     <>
       <Header name="Membres" backHome="" />
-      <div>
-        {fetchError && <p>{fetchError} </p>}
-        <div></div>
-      </div>
-
+      <div>{fetchError && <p>{fetchError} </p>}</div>
       <List
         sx={{
           margin: '50px',

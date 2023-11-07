@@ -1,5 +1,5 @@
 import React from 'react'
-import { ListItem } from '@mui/material'
+import { ListItem, Typography } from '@mui/material'
 import { Tables } from '../config/supabaseClient'
 
 export type TableMembersShoots = Tables<'Members'> & {
@@ -19,7 +19,7 @@ const MembersShootsList = ({ members }: CardsProps): React.JSX.Element => {
     return previousValue + currentValue
   }, 0)
   const drop = Shoots.map((drop) => {
-    return drop.type === 'drop' ? 1 : 0
+    return drop.type === 'point' ? 1 : 0
   }).reduce((previousValue: number, currentValue: number) => {
     return previousValue + currentValue
   }, 0)
@@ -34,9 +34,9 @@ const MembersShootsList = ({ members }: CardsProps): React.JSX.Element => {
           '&:first-of-type': { borderTop: 0 },
         }}
       >
-        <h4>
+        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
           {firstName} {lastName}
-        </h4>
+        </Typography>
 
         <p>{`${goal + drop} pts`}</p>
       </ListItem>

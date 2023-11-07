@@ -15,16 +15,17 @@ type FormFieldProps<T extends FieldValues> = {
   placeholder: string
   margin?: 'dense' | 'normal' | 'none' | undefined
   id: string
-  type: string
+  type: React.HTMLInputTypeAttribute | undefined
   errorMessage: string
   name: Path<T>
   isRequired: boolean
   control: Control<T>
+  min?: number
+  max?: number
 }
 
 const FormField = <T extends FieldValues>({
   register,
-
   label,
   placeholder,
   margin,
@@ -34,6 +35,8 @@ const FormField = <T extends FieldValues>({
   name,
   isRequired,
   control,
+  min,
+  max,
 }: FormFieldProps<T>): React.JSX.Element => {
   const { errors } = useFormState({ control })
   return (
@@ -45,7 +48,7 @@ const FormField = <T extends FieldValues>({
         id={id}
         type={type}
         fullWidth
-        {...register(name, { required: isRequired })}
+        {...register(name, { required: isRequired, min, max })}
       />
       {errors[name] && <span error-message="">{errorMessage} </span>}
     </>

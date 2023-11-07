@@ -47,6 +47,8 @@ export interface Database {
       }
       Game: {
         Row: {
+          categoryId: number
+          clubId: number
           created_at: string
           date: string
           duration: number
@@ -55,6 +57,8 @@ export interface Database {
           name: string
         }
         Insert: {
+          categoryId?: number
+          clubId: number
           created_at?: string
           date?: string
           duration: number
@@ -63,6 +67,8 @@ export interface Database {
           name: string
         }
         Update: {
+          categoryId?: number
+          clubId?: number
           created_at?: string
           date?: string
           duration?: number
@@ -70,7 +76,20 @@ export interface Database {
           id?: number
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'Game_categoryId_fkey'
+            columns: ['categoryId']
+            referencedRelation: 'Category'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'Game_clubId_fkey'
+            columns: ['clubId']
+            referencedRelation: 'Club'
+            referencedColumns: ['id']
+          },
+        ]
       }
       Members: {
         Row: {
@@ -80,15 +99,17 @@ export interface Database {
           firstName: string
           id: number
           lastName: string
+          license: string | null
           pseudo: string | null
         }
         Insert: {
           categoryId?: number | null
           clubId?: number | null
           created_at?: string
-          firstName: string
+          firstName?: string
           id?: number
-          lastName: string
+          lastName?: string
+          license?: string | null
           pseudo?: string | null
         }
         Update: {
@@ -98,6 +119,7 @@ export interface Database {
           firstName?: string
           id?: number
           lastName?: string
+          license?: string | null
           pseudo?: string | null
         }
         Relationships: [
@@ -117,15 +139,6 @@ export interface Database {
       }
       Shoots: {
         Row: {
-          Members: {
-            categoryId: number | null
-            clubId: number | null
-            created_at: string
-            firstName: string
-            id: number
-            lastName: string
-            pseudo: string | null
-          }
           created_at: string
           id: number
           memberId: number | null
@@ -160,15 +173,34 @@ export interface Database {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'Shoots_memberId_fkey'
+            columns: ['memberId']
+            referencedRelation: 'PlayerScore'
+            referencedColumns: ['memberId']
+          },
+          {
             foreignKeyName: 'Shoots_teamGameId_fkey'
             columns: ['teamGameId']
             referencedRelation: 'TeamGame'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'Shoots_teamGameId_fkey'
+            columns: ['teamGameId']
+            referencedRelation: 'GameResult'
+            referencedColumns: ['teamGameId']
+          },
+          {
+            foreignKeyName: 'Shoots_teamGameId_fkey'
+            columns: ['teamGameId']
+            referencedRelation: 'TeamScore'
+            referencedColumns: ['teamGameId']
+          },
         ]
       }
       Team: {
         Row: {
+          categoryId: number | null
           clubId: number | null
           created_at: string
           external: boolean
@@ -176,6 +208,7 @@ export interface Database {
           teamName: string
         }
         Insert: {
+          categoryId?: number | null
           clubId?: number | null
           created_at?: string
           external?: boolean
@@ -183,6 +216,7 @@ export interface Database {
           teamName: string
         }
         Update: {
+          categoryId?: number | null
           clubId?: number | null
           created_at?: string
           external?: boolean
@@ -190,6 +224,12 @@ export interface Database {
           teamName?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'Team_categoryId_fkey'
+            columns: ['categoryId']
+            referencedRelation: 'Category'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'Team_clubId_fkey'
             columns: ['clubId']
@@ -201,19 +241,19 @@ export interface Database {
       TeamGame: {
         Row: {
           created_at: string
-          gameId: number
+          gameId: number | null
           id: number
           teamId: number
         }
         Insert: {
           created_at?: string
-          gameId: number
+          gameId?: number | null
           id?: number
           teamId: number
         }
         Update: {
           created_at?: string
-          gameId?: number
+          gameId?: number | null
           id?: number
           teamId?: number
         }
@@ -222,6 +262,12 @@ export interface Database {
             foreignKeyName: 'TeamGame_gameId_fkey'
             columns: ['gameId']
             referencedRelation: 'Game'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'TeamGame_gameId_fkey'
+            columns: ['gameId']
+            referencedRelation: 'GameResult'
             referencedColumns: ['id']
           },
           {
@@ -259,16 +305,93 @@ export interface Database {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'TeamMembers_memberId_fkey'
+            columns: ['memberId']
+            referencedRelation: 'PlayerScore'
+            referencedColumns: ['memberId']
+          },
+          {
             foreignKeyName: 'TeamMembers_teamGameId_fkey'
             columns: ['teamGameId']
             referencedRelation: 'TeamGame'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'TeamMembers_teamGameId_fkey'
+            columns: ['teamGameId']
+            referencedRelation: 'GameResult'
+            referencedColumns: ['teamGameId']
+          },
+          {
+            foreignKeyName: 'TeamMembers_teamGameId_fkey'
+            columns: ['teamGameId']
+            referencedRelation: 'TeamScore'
+            referencedColumns: ['teamGameId']
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      GameResult: {
+        Row: {
+          categoryId: number | null
+          clubId: number | null
+          count: number | null
+          date: string | null
+          duration: number | null
+          external: boolean | null
+          gameEnded: boolean | null
+          id: number | null
+          name: string | null
+          teamGameId: number | null
+          teamName: string | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'Game_categoryId_fkey'
+            columns: ['categoryId']
+            referencedRelation: 'Category'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'Game_clubId_fkey'
+            columns: ['clubId']
+            referencedRelation: 'Club'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      PlayerScore: {
+        Row: {
+          count: number | null
+          memberId: number | null
+          type: string | null
+        }
+        Relationships: []
+      }
+      TeamScore: {
+        Row: {
+          count: number | null
+          gameId: number | null
+          teamGameId: number | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'TeamGame_gameId_fkey'
+            columns: ['gameId']
+            referencedRelation: 'Game'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'TeamGame_gameId_fkey'
+            columns: ['gameId']
+            referencedRelation: 'GameResult'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

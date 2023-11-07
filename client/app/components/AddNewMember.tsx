@@ -5,7 +5,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import { Box, MenuItem } from '@mui/material'
 import supabase, { Tables } from '../config/supabaseClient'
 import { useEffect, useState } from 'react'
@@ -78,7 +78,7 @@ export default function AddNewMember(): React.JSX.Element {
           sx={{ textDecoration: 'none', color: 'black' }}
           onClick={handleClickOpen}
         >
-          <AddCircleOutlineIcon />
+          <PersonAddAltIcon />
         </Button>
       </Box>
 
