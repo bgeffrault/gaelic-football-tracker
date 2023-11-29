@@ -12,6 +12,9 @@ import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import FormField from './FormField'
 import FormSelect from './FormSelect'
+import { useDispatch } from 'react-redux'
+import { addMembers } from '../actions/member.action'
+import { AppDispatch } from '../layout'
 
 type Inputs = {
   firstName: string
@@ -25,6 +28,8 @@ export default function AddNewMember(): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<Tables<'Category'>[] | null>(null)
   const [clubs, setClubs] = useState<Tables<'Club'>[] | null>(null)
+  const { register, control, handleSubmit } = useForm<Inputs>()
+  const dispatch: AppDispatch = useDispatch()
 
   const handleClickOpen = (): void => {
     setOpen(true)
@@ -52,17 +57,15 @@ export default function AddNewMember(): React.JSX.Element {
     fetchCategory()
   }, [])
 
-  const { register, control, handleSubmit } = useForm<Inputs>()
-
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    await supabase.from('Members').insert({
+    const postData = {
       firstName: data.firstName,
       lastName: data.lastName,
       categoryId: data.categoryId,
       clubId: data.clubId,
       pseudo: data.pseudo,
-    })
-
+    }
+    dispatch(addMembers(postData))
     setOpen(false)
   }
 

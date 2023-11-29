@@ -1,7 +1,6 @@
 'use client'
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import * as React from 'react'
-
 import {
   Control,
   FieldValues,
@@ -41,15 +40,9 @@ const MemberShooter = <T extends FieldValues>({
     <>
       <FormControl sx={{ m: 6, minWidth: 220, maxWidth: 300 }}>
         <InputLabel> {label} </InputLabel>
-        <Select
-          defaultValue=""
-          label={label}
-          {...register(name, {
-            required: true,
-          })}
-        >
+        <Select defaultValue="" label={label} {...register(name)}>
           {TeamMembers.map((teamMember) => (
-            <MenuItem key={teamMember.id} value={teamMember.Members.firstName}>
+            <MenuItem key={teamMember.id} value={teamMember.Members.id}>
               {teamMember.Members.firstName} {teamMember.Members.lastName}
             </MenuItem>
           ))}

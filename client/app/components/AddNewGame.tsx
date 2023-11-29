@@ -22,6 +22,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import FormMultiSelect from './FormMultiSelect'
 import FormSelect from './FormSelect'
 import { useRouter } from 'next/navigation'
+import SportsVolleyballIcon from '@mui/icons-material/SportsVolleyball'
 
 type Inputs = {
   externalTeamName: string
@@ -145,12 +146,10 @@ export default function AddNewGame(): React.JSX.Element {
           sx={{
             textDecoration: 'none',
             color: 'black',
-            border: '1px solid black',
-            borderRadius: '50%',
           }}
           onClick={handleClickOpen}
         >
-          New Game
+          <SportsVolleyballIcon />
         </Button>
       </Box>
 
