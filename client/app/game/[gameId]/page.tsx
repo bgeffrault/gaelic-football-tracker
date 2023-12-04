@@ -1,10 +1,11 @@
 'use client'
-import { Box } from '@mui/material'
+import { Box, Button, Typography, styled } from '@mui/material'
 import Header from '@/app/components/molecules/Header'
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import supabase, { Tables, Views } from '../../config/supabaseClient'
 import ShootButtons from '@/app/components/ShootButtons'
-import GameField from '@/app/gameField/[GameFieldId]/page'
+import GameField from './gameFiel'
+import { paletteTheme } from '../../theme/paleteTheme'
 
 type Params = {
   params: {
@@ -14,6 +15,18 @@ type Params = {
 
 const useTeamScore = (
   teamGame: Tables<'TeamGame'> & { Team: Tables<'Team'> },
+  setAddingShoot: Dispatch<
+    SetStateAction<{
+      type: string
+      teamId: number
+    } | null>
+  >,
+  addingShoot: {
+    type: string
+    teamId: number
+  } | null,
+  isFirstTeamExternal: boolean | undefined,
+  gameInProgress: TableScoreGame | undefined,
   TeamScore?: Views<'TeamScore'>[]
 ): {
   teamTotalPoint: number
@@ -30,14 +43,30 @@ const useTeamScore = (
   const [teamAddMissed, setTeamAddMissed] = useState(0)
   const [teamAddBlocked, setTeamAddBlocked] = useState(0)
 
-  const teamIncrementPoint = (): void =>
-    setTeamAddPoint((prevNumber) => prevNumber + 1)
-  const teamIncrementGoal = (): void =>
-    setTeamAddGoal((prevNumber) => prevNumber + 1)
-  const teamIncrementMissed = (): void =>
-    setTeamAddMissed((prevNumber) => prevNumber + 1)
-  const teamIncrementBlocked = (): void =>
-    setTeamAddBlocked((prevNumber) => prevNumber + 1)
+  const teamIncrementPoint = (): void => {
+    setAddingShoot({ type: 'point', teamId: teamGameId })
+    if (!addingShoot) {
+      setTeamAddPoint((prevNumber) => prevNumber + 1)
+    }
+  }
+  const teamIncrementGoal = (): void => {
+    setAddingShoot({ type: 'goal', teamId: teamGameId })
+    if (!addingShoot) {
+      setTeamAddGoal((prevNumber) => prevNumber + 1)
+    }
+  }
+  const teamIncrementMissed = (): void => {
+    setAddingShoot({ type: 'missed', teamId: teamGameId })
+    if (!addingShoot) {
+      setTeamAddMissed((prevNumber) => prevNumber + 1)
+    }
+  }
+  const teamIncrementBlocked = (): void => {
+    setAddingShoot({ type: 'blocked', teamId: teamGameId })
+    if (!addingShoot) {
+      setTeamAddBlocked((prevNumber) => prevNumber + 1)
+    }
+  }
 
   const teamGameId = teamGame?.id
 
@@ -90,6 +119,10 @@ export type TableScoreGame = Tables<'Game'> & {
 }
 
 export const Game = ({ params: { gameId } }: Params): JSX.Element => {
+  const [addingShoot, setAddingShoot] = useState<{
+    type: string
+    teamId: number
+  } | null>(null)
   const [fetchError, setFetchError] = useState<string | null>('')
   const [games, setGames] = useState<TableScoreGame[] | null>(null)
 
@@ -137,6 +170,10 @@ export const Game = ({ params: { gameId } }: Params): JSX.Element => {
     teamIncrementBlocked: firstTeamIncrementBlocked,
   } = useTeamScore(
     firstTeamGame as Tables<'TeamGame'> & { Team: Tables<'Team'> },
+    setAddingShoot,
+    addingShoot,
+    !isFirstTeamExternal,
+    gameInProgress,
     TeamScore
   )
   const {
@@ -150,8 +187,37 @@ export const Game = ({ params: { gameId } }: Params): JSX.Element => {
     teamIncrementBlocked: secondTeamIncrementBlocked,
   } = useTeamScore(
     secondTeamGame as Tables<'TeamGame'> & { Team: Tables<'Team'> },
+    setAddingShoot,
+    addingShoot,
+    isFirstTeamExternal,
+    gameInProgress,
+
     TeamScore
   )
+
+  const firstTeamGameId = firstTeamGame?.id
+  const secondTeamGameId = secondTeamGame?.id
+
+  const [teamChoice, setTeamChoice] = useState(true)
+  const [colorChoice, setColorChoice] = useState(false)
+
+  const handleClickFirstTeam = (): void => {
+    setTeamChoice(true)
+    setColorChoice(false)
+  }
+  const handleClickSecondTeam = (): void => {
+    setTeamChoice(false)
+    setColorChoice(true)
+  }
+
+  const TeamChoiceButton = styled(Button)({
+    color: 'black',
+    fontWeight: 'bold',
+    backgroundColor: !colorChoice ? paletteTheme.palette.primary : 'white',
+    '&:hover': {
+      backgroundColor: !colorChoice ? paletteTheme.palette.primary : 'white',
+    },
+  })
 
   if (fetchError) {
     return <Header name={fetchError} backHome={'game'} />
@@ -160,14 +226,48 @@ export const Game = ({ params: { gameId } }: Params): JSX.Element => {
     <>
       <Header name={`${firstTeamName} vs ${secondTeamName}`} backHome={'game'} />
       <Box
-        style={{
+        sx={{
           display: 'flex',
           alignItems: 'center',
           flexDirection: 'column',
           width: '100%',
         }}
       >
-        <GameField firstTeamGame={firstTeamGame!} />
+        {teamChoice ? (
+          <GameField
+            id={1}
+            teamGame={firstTeamGame!}
+            addingShoot={addingShoot}
+            setAddingShoot={setAddingShoot}
+            teamGameId={firstTeamGameId}
+          />
+        ) : (
+          <GameField
+            id={2}
+            teamGame={secondTeamGame!}
+            addingShoot={addingShoot}
+            setAddingShoot={setAddingShoot}
+            teamGameId={secondTeamGameId}
+          />
+        )}
+        <Box>
+          <TeamChoiceButton onClick={handleClickFirstTeam}>
+            {firstTeamName}
+          </TeamChoiceButton>
+          <TeamChoiceButton
+            sx={{
+              backgroundColor: colorChoice ? paletteTheme.palette.primary : 'white',
+              '&:hover': {
+                backgroundColor: colorChoice
+                  ? paletteTheme.palette.primary
+                  : 'white',
+              },
+            }}
+            onClick={handleClickSecondTeam}
+          >
+            {secondTeamName}
+          </TeamChoiceButton>
+        </Box>
         <Box
           sx={{
             backgroundColor: 'rgb(167, 196, 197)',
@@ -180,35 +280,89 @@ export const Game = ({ params: { gameId } }: Params): JSX.Element => {
             minWidth: '30%',
           }}
         >
-          <ShootButtons
-            teamName={firstTeamName as string}
-            totalPoint={firstTeamTotalPoint}
-            totalGoal={firstTeamTotalGoal}
-            totalShoots={firstTeamTotalShoots}
-            teamAccurancy={firstTeamAccuracy}
-            incrementPoint={firstTeamIncrementPoint}
-            incrementGoal={firstTeamIncrementGoal}
-            incrementMissed={firstTeamIncrementMissed}
-            incrementBlocked={firstTeamIncrementBlocked}
-          />
-          <p
-            style={{
-              textDecoration: 'underline',
-              padding: '0 20px',
-              fontWeight: 'bold',
-            }}
-          >{`${duration}'`}</p>
-          <ShootButtons
-            teamName={secondTeamName as string}
-            totalPoint={secondTeamTotalPoint}
-            totalGoal={secondTeamTotalGoal}
-            totalShoots={secondTeamTotalShoots}
-            teamAccurancy={secondTeamAccuracy}
-            incrementPoint={secondTeamIncrementPoint}
-            incrementGoal={secondTeamIncrementGoal}
-            incrementMissed={secondTeamIncrementMissed}
-            incrementBlocked={secondTeamIncrementBlocked}
-          />
+          {teamChoice ? (
+            <>
+              <ShootButtons
+                teamName={firstTeamName as string}
+                totalPoint={firstTeamTotalPoint}
+                totalGoal={firstTeamTotalGoal}
+                totalShoots={firstTeamTotalShoots}
+                teamAccurancy={firstTeamAccuracy}
+                incrementPoint={firstTeamIncrementPoint}
+                incrementGoal={firstTeamIncrementGoal}
+                incrementMissed={firstTeamIncrementMissed}
+                incrementBlocked={firstTeamIncrementBlocked}
+              />
+              <p
+                style={{
+                  textDecoration: 'underline',
+                  padding: '0 20px',
+                  fontWeight: 'bold',
+                }}
+              >{`${duration}'`}</p>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {secondTeamName}
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {`${secondTeamTotalPoint} - ${secondTeamTotalGoal}`}
+                </Typography>
+                <p style={{ fontSize: '15px' }}>
+                  {`${secondTeamTotalShoots} accuracy:  ${
+                    secondTeamAccuracy !== secondTeamAccuracy
+                      ? 100
+                      : secondTeamAccuracy
+                  }%`}
+                </p>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {firstTeamName}
+                </Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {`${firstTeamTotalPoint} - ${firstTeamTotalGoal}`}
+                </Typography>
+                <p style={{ fontSize: '15px' }}>
+                  {`${firstTeamTotalShoots} accuracy:  ${
+                    firstTeamAccuracy !== firstTeamAccuracy ? 100 : firstTeamAccuracy
+                  }%`}
+                </p>
+              </Box>
+              <p
+                style={{
+                  textDecoration: 'underline',
+                  padding: '0 20px',
+                  fontWeight: 'bold',
+                }}
+              >{`${duration}'`}</p>
+              <ShootButtons
+                teamName={secondTeamName as string}
+                totalPoint={secondTeamTotalPoint}
+                totalGoal={secondTeamTotalGoal}
+                totalShoots={secondTeamTotalShoots}
+                teamAccurancy={secondTeamAccuracy}
+                incrementPoint={secondTeamIncrementPoint}
+                incrementGoal={secondTeamIncrementGoal}
+                incrementMissed={secondTeamIncrementMissed}
+                incrementBlocked={secondTeamIncrementBlocked}
+              />
+            </>
+          )}
         </Box>
       </Box>
     </>
