@@ -1,14 +1,10 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { AddingShoot, FieldZone, Shoot, ShootType, TeamShoots } from "./FielZone";
+import { useEffect, useMemo, useState } from "react";
+import { AddingShoot, FieldZone, ShootType, TeamShoots } from "./FielZone";
 import { gameResultGradientColors } from "../../utils/shootsUtils";
-import { graphql } from "../../gql";
 import { useRoute } from "@react-navigation/native";
 import { SelectedShootOverview } from "./SelectedShootOverview";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
 
-import { Shoots } from "../../gql/graphql";
 import { useSubscription } from "../../useSupabaseSubscription";
 import { useAppNavigation } from "../../navigators";
 import { useAppSelector } from "../../stores/store";
@@ -16,6 +12,8 @@ import { ScoreTable, TeamShootAction, useScore } from "./ScoreTable";
 import { TouchFieldInfo } from "./TouchFieldInfo";
 import { setPlayerId } from "../../stores";
 import { useDispatch } from "react-redux";
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
+import { Shoot } from "../../domain/types";
 
 
 
@@ -23,7 +21,7 @@ const useShootSubscription = ({ teamGameState, opponentTeamGameState, updateTeam
     { teamGameState: TeamShoots, opponentTeamGameState: TeamShoots, updateTeamGameState: React.Dispatch<TeamShootAction>, updateOpponentGameState: React.Dispatch<TeamShootAction>, gameId: number }) => {
     const queryClient = useQueryClient();
 
-    useSubscription<Pick<Shoots, "id" | "created_at" | "memberId" | "x" | "y" | "type" | "teamGameId">>({
+    useSubscription<Pick<Shoot, "id" | "created_at" | "memberId" | "x" | "y" | "type" | "teamGameId">>({
         table: 'Shoots',
         filter: `teamGameId=in.(${teamGameState.teamGameId},${opponentTeamGameState.teamGameId})`
     }, (payload) => {
@@ -51,37 +49,27 @@ const useShootSubscription = ({ teamGameState, opponentTeamGameState, updateTeam
     })
 }
 
-const AddShootMutation = graphql(/* GraphQL */ `
-  mutation AddShootMutation($x: BigInt!, $y: BigInt!, $type: String!, $teamGameId: BigInt!, $memberId: BigInt!) {
-    insertIntoShootsCollection(objects: {x: $x, y: $y, type: $type, teamGameId: $teamGameId, memberId: $memberId}) {
-      records {
-        id
-      }
-    }
-  }
-`);
-
 const useAddShootingPlayer = ({ addingShoot,
     setAddingShoot, gameId }: {
         addingShoot: AddingShoot | null;
         setAddingShoot: React.Dispatch<React.SetStateAction<AddingShoot>>;
         gameId: number;
     }) => {
+    const supabaseClient = useSupabaseClientContext();
     const queryClient = useQueryClient();
     const { location, teamGameId } = useMemo(() => ({ location: addingShoot?.location, teamGameId: addingShoot?.teamGameId }), [addingShoot])
     const dispatch = useDispatch();
 
     const mutation = useMutation({
-        mutationFn: async ({ x, y, teamGameId, type, memberId }: Pick<Shoots, "x" | "y" | "teamGameId" | "type" | "memberId">) => {
-            return request(
-                Constants.expoConfig.extra.supabaseUrlGraphQl,
-                AddShootMutation,
-                { x, y, teamGameId, type, memberId },
-                {
-                    "content-type": "application/json",
-                    "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-                }
-            )
+        mutationFn: async ({ x, y, teamGameId, type, memberId }: Pick<Shoot, "x" | "y" | "teamGameId" | "type" | "memberId">) => {
+            const result = await supabaseClient.from('Shoots').insert({
+                x,
+                y,
+                type,
+                teamGameId,
+                memberId,
+            })
+            return result.data
         },
         onSuccess: () => {
             // @To do: invalidate games query

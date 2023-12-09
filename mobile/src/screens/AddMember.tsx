@@ -3,16 +3,14 @@ import { useEffect } from "react";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import { useForm } from "react-hook-form";
-import { graphql } from "../gql";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
-import { Members } from "../gql/graphql";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ControlledLabelledTextInput, Rules } from "../components/ControlledComponents";
 import { AppNavigationProp } from "../navigators";
 import { SectionContainer } from "../components/SectionContainer";
 import { CategoryFilter } from "../components/CategoryFilter";
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { MemberType } from "../domain/types";
 
 type Field = {
   label: string;
@@ -21,32 +19,23 @@ type Field = {
   rules?: Rules;
 }
 
-const AddMemberMutation = graphql(/* GraphQL */ `
-  mutation AddMemberMutation($firstName: String!, $lastName: String!, $pseudo: String, $clubId: BigInt, $categoryId: BigInt, $license: String) {
-    insertIntoMembersCollection(objects: {firstName: $firstName, lastName: $lastName, pseudo: $pseudo, clubId: $clubId, categoryId: $categoryId, license: $license}) {
-      records {
-        id
-      }
-    }
-  }
-`);
-
 export function AddMember({ navigation, route }: AppNavigationProp<"AddMember">) {
   const categoryId = route.params.categoryId;
+  const supabaseClient = useSupabaseClientContext();
   const clubId = useClubIdContext();
   const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm();
   const mutation = useMutation({
-    mutationFn: async (data: Pick<Members, "firstName" | "lastName" | "pseudo" | "license">) =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        AddMemberMutation,
-        { firstName: data.firstName, lastName: data.lastName, pseudo: data.pseudo, clubId, categoryId: 1, license: data.license },
+    mutationFn: async (data: MemberType) => {
+      const result = await supabaseClient.from('Members').insert(
         {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
+          ...data,
+          clubId,
+          categoryId,
         }
-      ),
+      )
+      return result.data
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       navigation.navigate("Members");

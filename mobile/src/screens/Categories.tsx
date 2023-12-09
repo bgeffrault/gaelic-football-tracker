@@ -8,10 +8,8 @@ import { CustomCheckbox } from "../components/CustomCheckbox";
 import { setCategory } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
-import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 
 const CategoryHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -25,15 +23,13 @@ const CategoryHeaderButton = memo(({ selectMode }: {
   ) : null;
 });
 
-const CategoryItemFragment = graphql(/* GraphQL */ `
-  fragment CategoryItemFragment on Category {
-    id
-    name
-  }
-`)
+type Category = {
+  id: number;
+  name: string;
+}
 
 function CategoryItem({ category, first, last, selectMode }: {
-  category: DocumentType<typeof CategoryItemFragment>;
+  category: Category;
   first: boolean;
   last: boolean;
   selectMode: boolean;
@@ -71,34 +67,15 @@ function CategoryItem({ category, first, last, selectMode }: {
   );
 }
 
-
-
-const categoriesQuery = graphql(/* GraphQL */ `
-  query categoriesQuery {
-    categoryCollection {
-      edges {
-        node {
-          ...CategoryItemFragment
-        }
-      }
-    }
-  }
-`)
-
-
 export function Categories({ navigation, route }: AppNavigationProp<"Categories">) {
+  const supabaseClient = useSupabaseClientContext();
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        categoriesQuery,
-        {},
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('Category').select('id, name')
+
+      return result.data as Category[]
+    },
   })
 
   const mode = route.params?.mode;
@@ -117,8 +94,7 @@ export function Categories({ navigation, route }: AppNavigationProp<"Categories"
   return (
     <View className="m-6">
       <ScrollView>
-        {data.categoryCollection.edges.map((edge, i, arr) => {
-          const category = useFragment(CategoryItemFragment, edge.node);
+        {data.map((category, i, arr) => {
           return (
             <CategoryItem
               key={category.id}

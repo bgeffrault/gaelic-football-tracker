@@ -4,13 +4,9 @@ import { FontAwesome } from "@expo/vector-icons";
 import { CustomButton } from "../../components/CustomButton";
 import { HeaderRightAddButton } from "../../components/Header/HeaderRightAddButton";
 import { AppNavigationProp, useAppNavigation } from "../../navigators";
-import { graphql } from "../../gql/gql";
-import { useFragment } from "../../gql";
-import Constants from 'expo-constants';
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
-import { Game, GameContent, GameResult, GameResultByTeam, GamesSection } from "./GameSection";
+import { Game, GameContent, GameResult, GamesSection } from "./GameSection";
 import { CategoryFilter } from "../../components/CategoryFilter";
 import { StyledText } from "../../components/StyledText";
 import { SectionContainer } from "../../components/SectionContainer";
@@ -18,25 +14,6 @@ import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { useIsFocused } from "@react-navigation/native";
 
-const HomeFragment = graphql(/* GraphQL */ `
-  fragment HomeFragment on Club {
-    id
-    name
-  }
-`);
-
-const clubQuery = graphql(/* GraphQL */ `
-  query clubQuery($clubId: BigInt!) {
-    clubCollection(filter: { id: {eq: $clubId} }) {
-      edges {
-        node {
-          id
-          ...HomeFragment
-        }
-      }
-    }
-  }
-`)
 
 const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
   <SectionContainer cn={cn} >
@@ -163,24 +140,18 @@ const useRefetchOnScreenFocused = (refetch: ReturnType<typeof useQuery>["refetch
 // @To-do: It does not work with games without shoots
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
+  const supabaseClient = useSupabaseClientContext();
 
   const navigation = useAppNavigation();
   const clubId = useClubIdContext();
 
-  const { data, isLoading } = useQuery({
+  const { data: club, isLoading } = useQuery({
     queryKey: ["club", { clubId }],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        clubQuery,
-        { clubId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('Club').select('id, name').filter('id', 'eq', clubId).single()
+      return result.data
+    },
   })
-  const club = useFragment(HomeFragment, data?.clubCollection.edges?.[0]?.node)
 
   const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching } = useGamesResult(categoryId)
 

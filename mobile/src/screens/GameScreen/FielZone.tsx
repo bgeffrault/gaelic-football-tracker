@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { clone } from "lodash";
 import { ShootPoint } from "./ShootPoint";
 import { Field, Goal } from "../../../assets";
-import { Shoots } from "../../gql/graphql";
+import { Shoot } from "../../domain/types";
 
 export const getShootColor = {
   team: {
@@ -50,7 +50,6 @@ const addingShoot = (teamState, key, location) => {
   return shoots;
 };
 
-export type Shoot = Pick<Shoots, "x" | "y" | "memberId" | "type" | "id">;
 export type ShootType = "point" | "goal" | "missed" | "blocked"
 export type TeamShoots = {
   pointShoots: Shoot[],
@@ -121,7 +120,8 @@ export function FieldZone({
         {!addingShoot && renderShoots(teamGameState.goalShoots, getShootColor[type].goal, disabled, onPress)}
         {!addingShoot && renderShoots(teamGameState.blockedShoots, getShootColor[type].blocked, disabled, onPress)}
         {!addingShoot && renderShoots(teamGameState.missedShoots, getShootColor[type].missed, disabled, onPress)}
-        {addingShoot && renderShoots([{ ...addingShoot.location, type: addingShoot.type, id: 0 }], getShootColor[type][addingShoot.type], disabled, onPress)}
+        {/* @TODO: fix this temporary state */}
+        {addingShoot && renderShoots([{ ...addingShoot.location, type: addingShoot.type, id: 0, memberId: 0, teamGameId: 0, created_at: "" }], getShootColor[type][addingShoot.type], disabled, onPress)}
       </View>
     </View>
   );

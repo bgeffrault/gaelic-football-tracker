@@ -1,15 +1,10 @@
 import { TouchableOpacity, View } from "react-native";
 import React from "react";
-import { CustomButton } from "./CustomButton";
-import { Ionicons } from '@expo/vector-icons';
 import clsx from "clsx";
-import { graphql, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
 import { StyledText } from "./StyledText";
 import { getCategoryName } from "../utils/getCategoryName";
-import { categoriesDataFixture } from "../fixtures/categoryFilterFixtures";
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 
 const FilterItem = ({ children, selected, onPress }: {
     children: React.ReactNode,
@@ -28,47 +23,30 @@ const FilterItem = ({ children, selected, onPress }: {
     </View>
 )
 
-const categoriesFilterQuery = graphql(/* GraphQL */ `
-  query categoriesFilterQuery {
-    categoryCollection {
-      edges {
-        node {
-          id
-          name
-        }
-      }
-    }
-  }
-`)
-
 export const CategoryFilter = ({ onPress, categoryId }: {
     onPress: (id: number) => void,
     categoryId: number
 }) => {
-    const { data, isLoading } = useQuery({
+    const supabaseClient = useSupabaseClientContext();
+
+    const { data: categories, isLoading } = useQuery({
         queryKey: ["categories"],
-        queryFn: async () =>
-            request(
-                Constants.expoConfig.extra.supabaseUrlGraphQl,
-                categoriesFilterQuery,
-                {},
-                {
-                    "content-type": "application/json",
-                    "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-                }
-            ),
+        queryFn: async () => {
+            const result = await supabaseClient.from('Category').select('id, name')
+            return result.data
+        },
     })
 
     if (isLoading) return null;
 
     return (
         <View className="flex flex-row justify-around">
-            {data.categoryCollection.edges.filter(edge => edge.node.name !== "mix").map((edge) => {
-                const selected = categoryId === Number(edge.node.id);
+            {categories.filter(category => category.name !== "mix").map((category) => {
+                const selected = categoryId === Number(category.id);
                 return (
-                    <FilterItem key={edge.node.id} onPress={() => onPress(Number(edge.node.id))} selected={selected}>
+                    <FilterItem key={category.id} onPress={() => onPress(Number(category.id))} selected={selected}>
                         <StyledText cn={clsx(selected ? "text-gray-800" : "text-white")}>
-                            {getCategoryName(edge.node.name)}
+                            {getCategoryName(category.name)}
                         </StyledText>
                     </FilterItem>
                 )

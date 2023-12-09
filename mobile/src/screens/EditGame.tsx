@@ -9,15 +9,10 @@ import { useClubIdContext } from "../providers/ClubIdProvider";
 import { Control, FieldValues, useController, useForm } from "react-hook-form";
 import { ControlledLabelledTextInput, ControlledSelect, Rules } from "../components/ControlledComponents";
 import { StyledText } from "../components/StyledText";
-import { resetGame, resetPlayers, setPlayers } from "../stores";
-import { CategoryFilter } from "../components/CategoryFilter";
+import { setPlayers } from "../stores";
 import clsx from "clsx";
-import { graphql } from "../gql";
-import request from "graphql-request";
-import Constants from 'expo-constants';
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { SectionContainer } from "../components/SectionContainer";
-import { GoHomeButton } from "../components/GoHomeButton";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";

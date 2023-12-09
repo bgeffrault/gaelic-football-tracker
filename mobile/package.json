@@ -23,7 +23,6 @@
     "expo-linear-gradient": "~12.0.1",
     "expo-splash-screen": "^0.17.5",
     "expo-status-bar": "~1.4.2",
-    "graphql-request": "^6.1.0",
     "lodash": "^4.17.21",
     "luxon": "^3.2.1",
     "nativewind": "^2.0.11",
