@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
 import { Card } from "../components/Card";
@@ -9,18 +9,16 @@ import { useClubIdContext } from "../providers/ClubIdProvider";
 import { Control, FieldValues, useController, useForm } from "react-hook-form";
 import { ControlledLabelledTextInput, ControlledSelect, Rules } from "../components/ControlledComponents";
 import { StyledText } from "../components/StyledText";
-import { resetGame, resetPlayers } from "../stores";
+import { resetGame } from "../stores";
 import { CategoryFilter } from "../components/CategoryFilter";
 import clsx from "clsx";
-import { graphql } from "../gql";
-import { Game } from "../gql/graphql";
-import request from "graphql-request";
-import Constants from 'expo-constants';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionContainer } from "../components/SectionContainer";
 import { GoHomeButton } from "../components/GoHomeButton";
 import { AppNavigationProp } from "../navigators";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { Game } from "./Home/GameSection";
 
 const useGameStoreParamWatcher = <T extends unknown>({ control, name, rules, defaultValue, onChange }: {
   control: Control<FieldValues, T>,
@@ -48,54 +46,13 @@ const TEAM = "team";
 const OPPONENT_TEAM = "opponentTeam";
 const PLAYERS = "players";
 
-const AddTeamMembersMutation = graphql(/* GraphQL */ `
-mutation AddTeamMembersMutation($teamMembers: [TeamMembersInsertInput!]!) {
-  insertIntoTeamMembersCollection(objects: $teamMembers) {
-    records {
-      id
-    }
-  }
-}
-`);
-
-const AddTeamGameMutation = graphql(/* GraphQL */ `
-  mutation AddTeamGameMutation($teamId: Int!, $gameId: BigInt!, $teamId2: Int!) {
-    insertIntoTeamGameCollection(objects: [
-      {
-        teamId: $teamId, 
-        gameId: $gameId, 
-      },
-      {
-        teamId: $teamId2, 
-        gameId: $gameId, 
-      },
-    ]) {
-      records {
-        id
-        teamId
-      }
-    }
-  }
-`);
 
 
-const AddGameMutation = graphql(/* GraphQL */ `
-  mutation AddGameMutation($date: Datetime!, $duration: Int!, $name: String, $clubId: BigInt!) {
-    insertIntoGameCollection(objects: {
-      date: $date, 
-      duration: $duration, 
-      name: $name, 
-      gameEnded: false, 
-      clubId: $clubId,
-    }) {
-      records {
-        id
-      }
-    }
-  }
-`);
-
-type GameMutation = Pick<Game, "date" | "duration" | "name">;
+type GameMutation = {
+  date: DateTime;
+  duration: number;
+  name: string;
+};
 
 type Input = {
   date: string;
@@ -113,18 +70,13 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   const queryClient = useQueryClient();
   const { control, handleSubmit, reset, getValues } = useForm()
   const gameIdRef = useRef<number>()
+  const supabaseClient = useSupabaseClientContext();
+
 
   const teamMembersMutation = useMutation({
     mutationFn: async (teamMembers: { teamGameId: number, memberId: number }[]) => {
-      return request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        AddTeamMembersMutation,
-        { teamMembers },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      )
+      const result = await supabaseClient.from('TeamMembers').insert(teamMembers)
+      return result.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['games'] });
@@ -134,19 +86,19 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
 
   const teamGameMutation = useMutation({
     mutationFn: async ({ teamId, gameId, teamId2 }: { teamId: number, gameId: number, teamId2: number }) => {
-      return request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        AddTeamGameMutation,
-        { teamId, gameId, teamId2 },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      )
+      const result = await supabaseClient.from('TeamGame').insert([{
+        teamId,
+        gameId,
+      },
+      {
+        teamId: teamId2,
+        gameId,
+      }]).select('id, teamId')
+      return result.data
     },
     onSuccess: (data) => {
       const formValues = getValues();
-      const teamGame = data.insertIntoTeamGameCollection.records[0]
+      const teamGame = data[0]
       const teamGameId = Number(teamGame?.id)
       const teamMembers = formValues.players().map(playerId => ({ memberId: playerId, teamGameId }))
       teamMembersMutation.mutate(teamMembers)
@@ -154,19 +106,19 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   })
 
   const gameMutation = useMutation({
-    mutationFn: async ({ date, duration, name }: GameMutation) =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        AddGameMutation,
-        { date, duration, name, clubId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    mutationFn: async ({ date, duration, name }: GameMutation) => {
+      const result = await supabaseClient.from('Game').insert({
+        date,
+        duration,
+        name,
+        gameEnded: false,
+        clubId,
+      }).select('id')
+      return result.data
+    },
     onSuccess: (data) => {
       const formValues = getValues();
-      const gameId = Number(data.insertIntoGameCollection.records[0].id);
+      const gameId = Number(data[0].id);
       gameIdRef.current = gameId
       teamGameMutation.mutate({ teamId: Number(formValues.team().id), gameId, teamId2: Number(formValues.opponentTeam().id) });
     },

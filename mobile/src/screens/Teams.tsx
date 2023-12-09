@@ -1,20 +1,16 @@
 import { ScrollView, View } from "react-native";
 import { memo, useEffect } from "react";
-import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
-import { CustomCheckbox } from "../components/CustomCheckbox";
 import { setOpponentTeam, setTeam } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
-import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ListItem } from "../components/ListItem";
 import { GoHomeButton } from "../components/GoHomeButton";
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 
 const TeamHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -28,24 +24,24 @@ const TeamHeaderButton = memo(({ selectMode }: {
   ) : null;
 });
 
-const TeamItemFragment = graphql(/* GraphQL */ `
-  fragment TeamItemFragment on Team {
-    id
-    teamName
-  }
-`)
+type Team = {
+  id: number;
+  teamName: string;
+  external: boolean;
+  categoryId: number;
+  clubId: number;
+}
 
-function TeamItem({ team, first, last, selectMode, external }: {
-  team: DocumentType<typeof TeamItemFragment>;
+function TeamItem({ team, first, last, selectMode }: {
+  team: Team;
   first: boolean;
   last: boolean;
   selectMode: boolean;
-  external: boolean;
 }) {
   const navigation = useAppNavigation();
   const isSelected = Boolean(
     useAppSelector(
-      (state) => external ? state.game.opponentTeam?.id === team.id : state.game.team?.id === team.id
+      (state) => team.external ? state.game.opponentTeam?.id === team.id : state.game.team?.id === team.id
     )
   );
   const dispatch = useDispatch();
@@ -68,44 +64,23 @@ function TeamItem({ team, first, last, selectMode, external }: {
   );
 }
 
-
-
-const teamsModalQuery = graphql(/* GraphQL */ `
-  query teamsModalQuery($clubId: Int, $external: Boolean!, $categoryId: BigInt) {
-    teamCollection(filter: {external: {eq: $external}, clubId: {eq: $clubId}, categoryId: {eq: $categoryId} }) {
-      edges {
-        node {
-          ...TeamItemFragment
-        }
-      }
-    }
-  }
-`)
-
-
 export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
   const clubId = useClubIdContext();
 
   const selectMode = route.params?.mode === "select";
   const categoryId = route.params?.categoryId;
   const external = route.params?.external;
+  const supabaseClient = useSupabaseClientContext();
 
-  const { data, isLoading } = useQuery({
+  const { data: teams, isLoading } = useQuery({
     queryKey: ["teams", { external, categoryId }],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        teamsModalQuery,
-        {
-          clubId,
-          external,
-          categoryId,
-        },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('Team').select('*, teamMembers: TeamMembers(*)')
+        .eq('clubId', clubId)
+        .eq('categoryId', categoryId)
+        .eq('external', external)
+      return result.data
+    },
   })
 
   useEffect(() => {
@@ -120,14 +95,11 @@ export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
 
   if (isLoading) return null;
 
-  const teamsEdges = data.teamCollection.edges;
-
   return (
     <>
       <View className="mt-3 bg-white rounded-xl">
         <ScrollView>
-          {teamsEdges?.length ? teamsEdges.map((edge, i, arr) => {
-            const team = useFragment(TeamItemFragment, edge.node);
+          {teams?.length ? teams.map((team, i, arr) => {
             return (
               <TeamItem
                 key={team.id}
@@ -135,7 +107,6 @@ export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
                 last={i === arr.length - 1}
                 selectMode={selectMode}
                 team={team}
-                external={external}
               />
             )
           }) : (

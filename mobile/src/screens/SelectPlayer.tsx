@@ -7,55 +7,24 @@ import { useDispatch } from "react-redux";
 import { CustomButton } from "../components/CustomButton";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp } from "../navigators";
-import { graphql, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
-import { SelectPlayerItemQueryFragment } from "../gql/graphql";
 import { setPlayerId } from "../stores";
-
-const SelectPlayerItemQuery = graphql(/* GraphQL */ `
-  fragment SelectPlayerItemQuery on Members {
-    id
-    firstName
-    lastName
-    pseudo
-  }
-`)
-
-const selectPlayerQuery = graphql(/* GraphQL */ `
-  query selectPlayerQuery($teamGameId: BigInt) {
-    teamMembersCollection(filter: { teamGameId: { eq: $teamGameId } }) {
-      edges {
-        node {
-          id
-          member {
-            ...SelectPlayerItemQuery
-          }
-        }
-      }
-    }
-  }
-`)
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { MemberType } from "../domain/types";
 
 
 export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPlayer">) {
   const teamGameId = route?.params?.teamGameId;
   const dispatch = useDispatch();
   const playerId = useAppSelector((state) => state.player.playerId);
+  const supabaseClient = useSupabaseClientContext();
 
-  const { data, isLoading } = useQuery({
+  const { data: teamMembers, isLoading } = useQuery({
     queryKey: ["teamMember", teamGameId],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        selectPlayerQuery,
-        { teamGameId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('TeamMembers').select('*, member: Members(*)').eq('teamGameId', teamGameId)
+      return result.data
+    },
   })
 
   useEffect(() => {
@@ -75,19 +44,19 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
 
   if (isLoading) return null;
 
-  const players = data.teamMembersCollection.edges.map((edge) => useFragment(SelectPlayerItemQuery, edge.node.member)) ?? [];
+  const players = teamMembers.map((teamMember) => teamMember.member)
 
   return (
     <View className="mt-3 bg-white rounded-xl">
       <ScrollView>
-        {players.map((member, i, arr) => (
+        {players.map((player, i, arr) => (
           <MemberItem
-            key={member.id}
+            key={player.id}
             first={i === 0}
             last={i === arr.length - 1}
-            member={member}
+            member={player}
             onPress={() => {
-              dispatch(setPlayerId(member.id));
+              dispatch(setPlayerId(player.id));
               navigation.goBack();
             }}
           />
@@ -99,7 +68,7 @@ export function SelectPlayer({ navigation, route }: AppNavigationProp<"SelectPla
 }
 
 function MemberItem({ member, first, last, onPress }: {
-  member: SelectPlayerItemQueryFragment;
+  member: MemberType;
   first: boolean;
   last: boolean;
   onPress?: () => void;

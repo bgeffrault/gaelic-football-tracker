@@ -1,15 +1,13 @@
 import { Shoot, ShootType, TeamShoots } from "./FielZone";
 import clsx from "clsx";
-import { SwitchComponent, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { CustomButton } from "../../components/CustomButton";
 import { StyledText } from "../../components/StyledText";
 import { AntDesign } from "@expo/vector-icons";
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import request from "graphql-request";
-import { graphql } from "../../gql";
-import Constants from 'expo-constants';
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 
 export type TeamShootAction = { type: "ADD_POINT" | "ADD_GOAL" | "ADD_MISSED" | "ADD_BLOCKED", payload: Shoot }
 
@@ -80,17 +78,6 @@ function PointsControl({ onShoot, disabled }: {
     );
 }
 
-const GameEndedMutation = graphql(/* GraphQL */ `
-mutation GameEndedMutation($gameId: BigInt!, $gameEnded: Boolean!) {
-  updateGameCollection(set: {gameEnded: $gameEnded}, filter: {id: {eq: $gameId}}){
-    records {
-      id
-      gameEnded
-    }
-  }
-}
-`);
-
 
 function Timer({ game: { gameEnded, gameId, duration } }: {
     game: {
@@ -101,18 +88,13 @@ function Timer({ game: { gameEnded, gameId, duration } }: {
 }) {
     const [gameInProgress, setGameInProgress] = useState(!gameEnded)
     const queryClient = useQueryClient();
+    const supabaseClient = useSupabaseClientContext();
 
     const mutation = useMutation({
-        mutationFn: async () =>
-            request(
-                Constants.expoConfig.extra.supabaseUrlGraphQl,
-                GameEndedMutation,
-                { gameEnded: gameInProgress, gameId },
-                {
-                    "content-type": "application/json",
-                    "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-                }
-            ),
+        mutationFn: async (gameEnded: boolean) => {
+            const result = await supabaseClient.from('Game').update({ gameEnded }).eq('id', gameId)
+            return result.data
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["games"] });
             setGameInProgress(!gameInProgress)
@@ -124,7 +106,7 @@ function Timer({ game: { gameEnded, gameId, duration } }: {
             <View className="border-b">
                 <StyledText>{duration}&apos;</StyledText>
             </View>
-            {<CustomButton onPress={() => mutation.mutate()}>
+            {<CustomButton onPress={() => mutation.mutate(!gameInProgress)}>
                 {!gameInProgress ? <AntDesign name="playcircleo" size={24} color="#DF8C5F" /> : <Ionicons name="stop-circle-outline" size={24} color="#DF8C5F" />}
             </CustomButton>}
         </View>

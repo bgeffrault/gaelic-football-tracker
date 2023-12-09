@@ -1,47 +1,9 @@
-import { SafeAreaView, ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { useEffect, useState } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import clsx from "clsx";
 import { StyledText } from "../components/StyledText";
-import { useDispatch } from "react-redux";
-
-import { CustomButton } from "../components/CustomButton";
-import { useAppSelector } from "../stores/store";
-import { AppNavigationProp, useAppNavigation } from "../navigators";
-import { graphql, useFragment } from "../gql";
+import { AppNavigationProp } from "../navigators";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
-import { SelectPlayerItemQueryFragment } from "../gql/graphql";
-import { set } from "react-hook-form";
-import { setPlayerId } from "../stores";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
-import { memberDataFixture } from "../fixtures/gameScreenFixtures";
-
-const SelectPlayerItemQuery = graphql(/* GraphQL */ `
-  fragment SelectPlayerItemQuery on Members {
-    id
-    firstName
-    lastName
-    pseudo
-  }
-`)
-
-const playerQuery = graphql(/* GraphQL */ `
-  query playerQuery($playerId: BigInt) {
-    membersCollection(filter: { id: { eq: $playerId } }) {
-      edges {
-        node {
-          id
-          firstName
-          lastName
-          pseudo
-          license
-        }
-      }
-    }
-  }
-`)
 
 export type PlayerShoots = {
   type: "point" | "goal" | "missed" | "blocked";
@@ -72,24 +34,19 @@ const usePlayerShoots = (playerId: number) => {
 
 export function Player({ navigation, route }: AppNavigationProp<"Player">) {
   const playerId = route?.params?.playerId;
-  const { data, isLoading } = useQuery({
+  const supabaseClient = useSupabaseClientContext();
+
+  const { data: player, isLoading } = useQuery({
     queryKey: ["player", { playerId }],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        playerQuery,
-        { playerId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('Members').select('id, firstName, lastName, pseudo, license').eq('id', playerId).single()
+      return result.data
+    },
   })
 
   const { pointCount, goalCount, blockedCount, missedCount, playerShoots } = usePlayerShoots(playerId)
   const accuracy = (((goalCount + pointCount) / (goalCount + missedCount + pointCount + blockedCount)) * 100)
   const accuracyString = isNaN(accuracy) ? "" : accuracy.toFixed(2)
-  const player = data?.membersCollection.edges?.[0]?.node;
 
   useEffect(() => {
     if (player) {

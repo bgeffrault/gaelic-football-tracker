@@ -7,10 +7,7 @@ import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
 import { useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
-import { graphql, DocumentType, useFragment } from "../gql";
 import { useQuery } from "@tanstack/react-query";
-import request from "graphql-request";
-import Constants from 'expo-constants';
 import { shootsAccuracy, sumShoots } from "../utils/shootsUtils";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ListItem } from "../components/ListItem";
@@ -18,6 +15,8 @@ import { SectionTitle } from "../components/SectionTitle";
 import { FontAwesome } from "@expo/vector-icons";
 import { GoHomeButton } from "../components/GoHomeButton";
 import { CategoryFilter } from "../components/CategoryFilter";
+import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { MemberType } from "../domain/types";
 
 const MembersHeaderButton = memo(({ selectMode, categoryId }: {
   selectMode: boolean;
@@ -34,26 +33,8 @@ const MembersHeaderButton = memo(({ selectMode, categoryId }: {
   );
 });
 
-const MemberItemFragment = graphql(/* GraphQL */ `
-  fragment MemberItemFragment on Members {
-    id
-    firstName
-    lastName
-    pseudo
-    license
-    shootsCollection {
-      edges {
-        node {
-          id
-          type
-        }
-      }
-    }
-  }
-`)
-
 function MemberItem({ member, first, last, selectMode }: {
-  member: DocumentType<typeof MemberItemFragment>;
+  member: MemberType & { shoots: { id: number, type: string }[] };
   first: boolean;
   last: boolean;
   selectMode: boolean;
@@ -76,7 +57,7 @@ function MemberItem({ member, first, last, selectMode }: {
   }
 
   const { totalPoints, accuracy } = useMemo(() => {
-    const shoots = member.shootsCollection.edges.map((e) => e.node)
+    const shoots = member.shoots
     const totalPoints = sumShoots(shoots);
     const accuracy = shootsAccuracy(shoots);
     return { totalPoints, accuracy };
@@ -103,22 +84,9 @@ function MemberItem({ member, first, last, selectMode }: {
 
 
 
-const membersQuery = graphql(/* GraphQL */ `
-  query membersQuery($clubId: BigInt!, $categoryId: BigInt) {
-    membersCollection(filter: {clubId: {eq: $clubId}, categoryId: {eq: $categoryId}}) {
-      edges {
-        node {
-          id
-          ...MemberItemFragment
-        }
-      }
-    }
-  }
-`)
-
-
 export function Members({ navigation, route }: AppNavigationProp<"Members">) {
   const clubId = useClubIdContext();
+  const supabaseClient = useSupabaseClientContext();
 
   const mode = route.params?.mode;
   const selectMode = mode === "select";
@@ -131,18 +99,12 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
     (state) => state.game.players
   );
 
-  const { data, isLoading } = useQuery({
+  const { data: members, isLoading } = useQuery({
     queryKey: ["members", { categoryId }],
-    queryFn: async () =>
-      request(
-        Constants.expoConfig.extra.supabaseUrlGraphQl,
-        membersQuery,
-        { clubId, categoryId },
-        {
-          "content-type": "application/json",
-          "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-        }
-      ),
+    queryFn: async () => {
+      const result = await supabaseClient.from('Members').select('*, shoots: Shoots(*)').eq('clubId', clubId).eq('categoryId', categoryId)
+      return result.data
+    }
   })
 
   useEffect(() => {
@@ -156,8 +118,6 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
     });
   }, [navigation, nbrSelected, selectMode, categoryId]);
 
-
-  const membersEdges = data?.membersCollection.edges
 
   return (<>
     {!selectMode && <CategoryFilter categoryId={categoryId} onPress={categoryId => {
@@ -173,11 +133,10 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
         </StyledText>
       </SectionTitle>
       <ScrollView>
-        {membersEdges.length ? membersEdges.map((edge, i, arr) => {
-          const member = useFragment(MemberItemFragment, edge.node);
+        {members.length ? members.map((member, i, arr) => {
           return (
             <MemberItem
-              key={edge.node.id}
+              key={member.id}
               first={i === 0}
               last={i === arr.length - 1}
               selectMode={selectMode}

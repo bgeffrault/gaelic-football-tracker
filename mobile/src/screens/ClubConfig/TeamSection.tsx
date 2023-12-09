@@ -3,36 +3,23 @@ import { SectionTitle } from "../../components/SectionTitle"
 import { StyledText } from "../../components/StyledText"
 import { ControlledLabelledTextInput } from "../../components/ControlledComponents"
 import { CustomButton } from "../../components/CustomButton"
-import { Control, FieldValues, useForm } from "react-hook-form"
-import { graphql, DocumentType } from "../../gql"
+import { useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Team } from "../../gql/graphql"
-import Constants from 'expo-constants';
-import request from "graphql-request"
 import { useClubIdContext } from "../../providers/ClubIdProvider"
-import { AntDesign } from "@expo/vector-icons"
+import { useSupabaseClientContext } from "../../providers/useSupabaseClient"
 
-export const TeamSectionFragment = graphql(/* GraphQL */ `
-    fragment TeamSectionFragment on TeamEdge {
-        node {
-          id
-            teamName
-        }
-    }
-    `)
 
-const AddTeamMutation = graphql(/* GraphQL */ `
-  mutation AddTeamMutation($teamName: String!, $external: Boolean!, $clubId: Int!, $categoryId: BigInt!) {
-    insertIntoTeamCollection(objects: {teamName: $teamName, external: $external, clubId: $clubId, categoryId: $categoryId}) {
-      records {
-        id
-      }
-    }
-  }
-`);
+type Team = {
+    categoryId: number;
+    clubId: number;
+    created_at: string;
+    external: boolean;
+    id: number;
+    teamName: string;
+}
 
 export const TeamSection = ({ teams, external, title, categoryId }: {
-    teams: readonly DocumentType<typeof TeamSectionFragment>[],
+    teams: Team[],
     external: boolean,
     title: string,
     categoryId: number
@@ -40,18 +27,18 @@ export const TeamSection = ({ teams, external, title, categoryId }: {
     const clubId = useClubIdContext();
     const queryClient = useQueryClient();
     const { control, handleSubmit, reset } = useForm();
+    const supabaseClient = useSupabaseClientContext();
 
     const mutation = useMutation({
-        mutationFn: async (data: Pick<Team, "external" | "teamName">) =>
-            request(
-                Constants.expoConfig.extra.supabaseUrlGraphQl,
-                AddTeamMutation,
-                { teamName: data.teamName, external: data.external, clubId, categoryId },
-                {
-                    "content-type": "application/json",
-                    "apikey": Constants.expoConfig.extra.supabaseAnonKey,
-                }
-            ),
+        mutationFn: async (data: Pick<Team, "external" | "teamName">) => {
+            const result = await supabaseClient.from('Team').insert({
+                teamName: data.teamName,
+                external,
+                clubId,
+                categoryId,
+            })
+            return result.data
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["teams", { external, categoryId }] });
         },
@@ -67,10 +54,10 @@ export const TeamSection = ({ teams, external, title, categoryId }: {
             <View className="p-2 my-3 bg-white rounded-xl" >
                 <SectionTitle label={title} />
                 <ScrollView className="max-h-48 mb-4">
-                    {teams.length ? teams.map((edge) => (
-                        <View key={edge.node.id}>
+                    {teams.length ? teams.map((team) => (
+                        <View key={team.id}>
                             <StyledText cn="font-bold text-lg">
-                                {edge.node.teamName}
+                                {team.teamName}
                             </StyledText>
                         </View>
                     )) : (
