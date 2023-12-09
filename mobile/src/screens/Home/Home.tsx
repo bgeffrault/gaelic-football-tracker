@@ -14,6 +14,7 @@ import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { useIsFocused } from "@react-navigation/native";
 import { GamesFilter } from "./GamesFilter";
+import { GamesFilter } from "./GamesFilter";
 import { getGameResult, getTeamResult, getActionsCountByType } from "../../utils/shootsUtils";
 
 
