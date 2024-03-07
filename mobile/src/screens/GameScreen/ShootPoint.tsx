@@ -1,7 +1,9 @@
 import { memo, useRef } from "react";
-import { Animated, PanResponder, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Animated, PanResponder, TouchableOpacity, View } from "react-native";
 
 const POINT_SIZE = 20;
+const halfPointSize = POINT_SIZE / 2;
+
 const OPACITIES = {
   active: 1,
   inactive: 0.8,
@@ -45,8 +47,8 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color, onPress }: {
       style={{
         position: "absolute",
         // @ts-ignore
-        x: -POINT_SIZE / 2,
-        y: -POINT_SIZE / 2,
+        x: -halfPointSize,
+        y: -halfPointSize,
         transform: [
           {
             translateX: pan.x.interpolate({
@@ -73,13 +75,13 @@ export const ShootPoint = memo(({ x, y, disabled, fieldSize, color, onPress }: {
       <TouchableOpacity
         style={{
           transform: [
-            { translateX: -POINT_SIZE / 2 },
-            { translateY: -POINT_SIZE / 2 },
+            { translateX: -halfPointSize },
+            { translateY: -halfPointSize },
           ],
           height: POINT_SIZE,
           width: POINT_SIZE,
           backgroundColor: color,
-          borderRadius: "50%" as unknown as number, // Check it works
+          borderRadius: halfPointSize,
           opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
           zIndex: 100,
         }}
