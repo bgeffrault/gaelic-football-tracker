@@ -5,12 +5,13 @@ import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
 import { setOpponentTeam, setTeam } from "../stores/slices/gameSlice";
 import { useAppSelector } from "../stores/store";
-import { AppNavigationProp, useAppNavigation } from "../navigators";
+import { AppNavigationProp, NavigationRoutes, useAppNavigation } from "../navigators";
 import { useQuery } from "@tanstack/react-query";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ListItem } from "../components/ListItem";
 import { GoHomeButton } from "../components/GoHomeButton";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 const TeamHeaderButton = memo(({ selectMode }: {
   selectMode: boolean;
@@ -38,7 +39,10 @@ function TeamItem({ team, first, last, selectMode }: {
   last: boolean;
   selectMode: boolean;
 }) {
+  const route = useRoute() as RouteProp<NavigationRoutes, "Teams">;
+
   const navigation = useAppNavigation();
+  const external = route.params.external;
   const isSelected = Boolean(
     useAppSelector(
       (state) => team.external ? state.game.opponentTeam?.id === team.id : state.game.team?.id === team.id
@@ -75,7 +79,7 @@ export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
   const { data: teams, isLoading } = useQuery({
     queryKey: ["teams", { external, categoryId }],
     queryFn: async () => {
-      const result = await supabaseClient.from('Team').select('*, teamMembers: TeamMembers(*)')
+      const result = await supabaseClient.from('Team').select('*')
         .eq('clubId', clubId)
         .eq('categoryId', categoryId)
         .eq('external', external)
