@@ -52,7 +52,11 @@ export default function App() {
                 <Stack.Group>
                   <Stack.Screen name="Home" component={Home} />
                   <Stack.Screen name="Members" component={Members} />
-                  <Stack.Screen name="NewGame" component={AddGame} />
+                  <Stack.Screen name="NewGame" component={AddGame}
+                    options={{
+                      headerTitle: "New game",
+                      headerLeft: () => <GoHomeButton />,
+                    }} />
                   <Stack.Screen name="EditGame" component={EditGame} />
                   <Stack.Screen name="Game" component={GameScreen} options={({route: {params: { gameResult }}}: any) => ({
                     headerTitle: gameResult.name,

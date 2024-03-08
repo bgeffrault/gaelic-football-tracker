@@ -142,14 +142,6 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
     setCategoryId(newCategoryId)
   }
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: "New game",
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => <GoHomeButton />,
-    });
-  }, [navigation]);
-
   useGameStoreParamWatcher({
     control, name: PLAYERS, rules: { required: "Au moins un joueur est obligatoire" }, defaultValue: [], onChange: (value) => value.map(v => Number(v.id))
   })
