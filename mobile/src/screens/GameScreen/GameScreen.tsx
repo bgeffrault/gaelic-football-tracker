@@ -3,7 +3,6 @@ import { SafeAreaView } from "react-native";
 import { AppNavigationProp, AppRouteProp, useAppNavigation } from "../../navigators";
 import { useQuery } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
-import { GoHomeButton } from "../../components/GoHomeButton";
 import { Game, TeamGame } from "./Game";
 import { useDispatch } from "react-redux";
 import { resetPlayerId } from "../../stores";
@@ -29,7 +28,7 @@ const EditGame = ({ gameId }) => {
 
 
 const useRouteGameId = (route: AppRouteProp<"Game">) => {
-  return route.params.gameId;
+  return route.params.gameResult.id;
 };
 
 
@@ -117,27 +116,17 @@ const useTeamShoots = (teamGame: TeamGame): [state: TeamShoots, update: React.Di
   return reducer;
 };
 
-const GameContainer = ({ teamGame, opponentTeamGame, gameName, gameId, gameEnded, duration }: {
+const GameContainer = ({ teamGame, opponentTeamGame, gameId, gameEnded, duration }: {
   teamGame: TeamGame;
   opponentTeamGame: TeamGame;
-  gameName: string;
   gameId: number;
   duration: number;
   gameEnded: boolean;
 }) => {
   const dispatch = useDispatch();
-  const navigation = useAppNavigation();
   const [teamGameState, updateTeamGameState] = useTeamShoots(teamGame);
   const [opponentTeamGameState, updateOpponentGameState] = useTeamShoots(opponentTeamGame);
 
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: gameName || "Game",
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => <GoHomeButton />,
-    });
-  }, [navigation, gameName]);
 
   useEffect(() => {
     return () => {
@@ -176,10 +165,8 @@ export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
     </StyledText>
   }
 
-  const gameName = game?.name;
-
   return (
-    <GameContainer teamGame={teamGame} opponentTeamGame={opponentTeamGame} gameName={gameName} gameId={gameId}
+    <GameContainer teamGame={teamGame} opponentTeamGame={opponentTeamGame} gameId={gameId}
       duration={game.duration} gameEnded={game.gameEnded}
     />
   );

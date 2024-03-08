@@ -154,19 +154,6 @@ export const Game = ({ gameId, teamGame, opponentTeamGame, game, teamGameState,
         // setSelectedShoot(shoot);
     };
 
-    const result = useMemo(() => {
-        if (teamScore.total > opponentTeamScore.total) return "win";
-        if (teamScore.total < opponentTeamScore.total) return "lose";
-        return "draw";
-    }, [teamScore, opponentTeamScore]);
-
-    useEffect(() => {
-        navigation.setOptions({
-            headerStyle: {
-                backgroundColor: gameResultGradientColors[result][result === "win" ? 0 : 1]
-            }
-        });
-    }, [navigation, result]);
 
     useAddShootingPlayer({ addingShoot, setAddingShoot, gameId });
 

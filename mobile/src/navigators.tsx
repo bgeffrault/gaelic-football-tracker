@@ -1,7 +1,8 @@
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
+import { GameResultByTeam } from "./screens/Home/GameSection";
 
-type NavigationRoutes = {
+export type NavigationRoutes = {
     SelectPlayer: {
         teamGameId: number;
     },
@@ -9,7 +10,7 @@ type NavigationRoutes = {
         playerId: number;
     },
     Game: {
-        gameId: number;
+        gameResult: GameResultByTeam;
         isOpponentTeamSelected: boolean;
     }
     Games: undefined,

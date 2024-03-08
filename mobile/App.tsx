@@ -17,6 +17,10 @@ import { Teams } from './src/screens/Teams';
 import { SupabaseClientProvider } from './src/providers/useSupabaseClient';
 import { Player } from './src/screens/Player';
 import { EditGame } from './src/screens/EditGame';
+import { GoHomeButton } from "./src/components/GoHomeButton";
+import { gameResultGradientColors } from './src/utils/shootsUtils';
+
+
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -50,7 +54,14 @@ export default function App() {
                   <Stack.Screen name="Members" component={Members} />
                   <Stack.Screen name="NewGame" component={AddGame} />
                   <Stack.Screen name="EditGame" component={EditGame} />
-                  <Stack.Screen name="Game" component={GameScreen} />
+                  <Stack.Screen name="Game" component={GameScreen} options={({route: {params: { gameResult }}}: any) => ({
+                    headerTitle: gameResult.name,
+                    // eslint-disable-next-line react/no-unstable-nested-components
+                    headerLeft: () => <GoHomeButton />,
+                    headerStyle: {
+                      backgroundColor: gameResultGradientColors[gameResult.outcome][gameResult.outcome === "win" ? 0 : 1]
+                    }
+                  })}/>
                   <Stack.Screen name="ClubConfig" component={ClubConfig} />
                 </Stack.Group>
                 <Stack.Group screenOptions={{ presentation: "modal" }}>

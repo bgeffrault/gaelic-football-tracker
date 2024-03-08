@@ -14,6 +14,7 @@ import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { useIsFocused } from "@react-navigation/native";
 import { GamesFilter } from "./GamesFilter";
+import { getGameResult, getTeamResult, getActionsCountByType } from "../../utils/shootsUtils";
 
 
 const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
@@ -37,49 +38,38 @@ const groupById = (data?: Game[]): GameContent => {
     const externalTeamGame = item.TeamGame?.[0]?.Team.external ? item.TeamGame[0] : item.TeamGame[1];
     const internalTeamGameId = internalTeamGame.id;
 
-    if (!gameResults?.length) {
-      acc.push({
-        teamGame: {
-          gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
-          teamName: internalTeamGame.Team.teamName,
-          external: internalTeamGame.Team.external,
-          categoryId: internalTeamGame.Team.categoryId,
-        },
-        opponentTeamGame: {
-          gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
-          teamName: externalTeamGame.Team.teamName,
-          external: externalTeamGame.Team.external,
-          categoryId: externalTeamGame.Team.categoryId,
-        },
-        id: item.id,
-        gameEnded: item.gameEnded,
-        name: item.name,
-        duration: item.duration,
-        date: item.date,
-      })
+    const {teamActions, opponentTeamActions} = gameResults.reduce((acc, gameResult) => {
+      if(gameResult.teamGameId === internalTeamGameId)
+        acc.teamActions.push(gameResult)
+      else 
+        acc.opponentTeamActions.push(gameResult)
       return acc;
+
+    }, {teamActions: [], opponentTeamActions: []})
+
+    const teamGame = {
+      gameResults: teamActions,
+      teamName: internalTeamGame.Team.teamName,
+      external: internalTeamGame.Team.external,
+      categoryId: internalTeamGame.Team.categoryId,
+      actionsCountByType: getActionsCountByType(teamActions)
+    }
+
+    const opponentTeamGame = {
+      gameResults: opponentTeamActions,
+      teamName: externalTeamGame.Team.teamName,
+      external: externalTeamGame.Team.external,
+      categoryId: externalTeamGame.Team.categoryId,
+      actionsCountByType: getActionsCountByType(opponentTeamActions)
     }
 
     acc.push({
-      teamGame: {
-        gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
-        teamName: internalTeamGame.Team.teamName,
-        external: internalTeamGame.Team.external,
-        categoryId: internalTeamGame.Team.categoryId,
-      },
-      opponentTeamGame: {
-        gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
-        teamName: externalTeamGame.Team.teamName,
-        external: externalTeamGame.Team.external,
-        categoryId: externalTeamGame.Team.categoryId,
-      },
-      id: item.id,
-      gameEnded: item.gameEnded,
-      name: item.name,
-      duration: item.duration,
-      date: item.date,
+      teamGame,
+      opponentTeamGame,
+      ...item,
+      outcome: getGameResult(teamGame.actionsCountByType, opponentTeamGame.actionsCountByType)
     })
-
+  
     return acc;
   }, [] as GameContent);
 
