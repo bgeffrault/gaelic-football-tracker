@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { SafeAreaView } from "react-native";
-import { AppNavigationProp, AppRouteProp, useAppNavigation } from "../../navigators";
+import { AppNavigationProp, AppRouteProp, NavigationRoutes, useAppNavigation } from "../../navigators";
 import { useQuery } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
 import { Game, TeamGame } from "./Game";
@@ -12,14 +12,16 @@ import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { TeamShoots } from "./FielZone";
 import { StyledText } from "../../components/StyledText";
 import { TeamShootAction } from "./ScoreTable";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 SplashScreen.preventAutoHideAsync();
 
-const EditGame = ({ gameId }) => {
+export const EditGameIconButton = () => {
+  const route = useRoute<RouteProp<NavigationRoutes, 'Game'>>()
   const navigation = useAppNavigation();
   return (<CustomButton
     onPress={() => {
-      navigation.navigate("EditGame", { gameId });
+      navigation.navigate("EditGame", { gameId: route.params.gameResult.id });
     }}
   >
     <Ionicons name="document-text" size={24} color="#DF8C5F" />
@@ -147,14 +149,6 @@ export function GameScreen({ navigation, route }: AppNavigationProp<"Game">) {
   const { game, isFetching } = useGameShoots(gameId)
 
   const { teamGame, opponentTeamGame } = useTeams(game);
-
-
-  useEffect(() => {
-    navigation.setOptions({
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => <EditGame gameId={gameId} />,
-    });
-  }, [navigation]);
 
   if (isFetching) {
     return null;

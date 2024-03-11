@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from "@react-navigation/native";
 import { NativeStackNavigationOptions, createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Provider } from "react-redux";
 import { Home } from "./src/screens/Home/Home";
-import { GameScreen } from "./src/screens/GameScreen/GameScreen";
+import { EditGameIconButton, GameScreen } from "./src/screens/GameScreen/GameScreen";
 import { Members } from "./src/screens/Members";
 import { AddMember } from "./src/screens/AddMember";
 import { AddGame } from "./src/screens/AddGame";
@@ -62,6 +62,7 @@ export default function App() {
                     headerTitle: gameResult.name,
                     // eslint-disable-next-line react/no-unstable-nested-components
                     headerLeft: () => <GoHomeButton />,
+                    headerRight: () => <EditGameIconButton />,
                     headerStyle: {
                       backgroundColor: gameResultGradientColors[gameResult.outcome][gameResult.outcome === "win" ? 0 : 1]
                     }
