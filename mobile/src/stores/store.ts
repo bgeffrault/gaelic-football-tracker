@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { TypedUseSelectorHook, useSelector } from "react-redux";
 import gameReducer from "./slices/gameSlice";
 import clubReducer from "./slices/clubSlice";
 import playerReducer from "./slices/playerSlice";
-import { TypedUseSelectorHook, useSelector } from "react-redux";
 
 export const store = configureStore({
   reducer: {
@@ -19,4 +19,4 @@ export interface RootState {
   club: ReturnType<typeof clubReducer>;
 }
 
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

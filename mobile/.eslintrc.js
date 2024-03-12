@@ -20,10 +20,15 @@ module.exports = {
   },
   plugins: ["react", "react-native", "@typescript-eslint", "prettier"],
   rules: {
+    "prettier/prettier": ["error"],
     "react/prop-types": "off",
     "import/prefer-default-export": "off",
     quotes: ["error", "double"],
-    "no-unused-vars": ["error", { ignoreRestSiblings: true }],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { ignoreRestSiblings: true },
+    ],
     "comma-dangle": "off",
     "no-underscore-dangle": "off",
     "react/react-in-jsx-scope": "off",
@@ -31,5 +36,10 @@ module.exports = {
     "no-use-before-define": "warn",
     "react/jsx-props-no-spreading": "off",
     "react/no-array-index-key": "warn",
+    "react/require-default-props": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "global-require": "off",
+    "no-use-before-define": "off",
   },
 };

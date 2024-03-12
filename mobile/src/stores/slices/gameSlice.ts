@@ -1,7 +1,18 @@
 /* eslint-disable no-param-reassign */
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { MemberType } from "../../domain/types";
+import { Team } from "../../types/Team";
+import { Category } from "../../types/Category";
 
-const initialState = {
+export type GameSliceState = {
+  players: MemberType[];
+  opponentTeam: null | Team;
+  team: null | Team;
+  gameName: string;
+  category: null | Category;
+};
+
+const initialState: GameSliceState = {
   players: [],
   opponentTeam: null,
   team: null,
@@ -13,30 +24,30 @@ const gameSlice = createSlice({
   name: "game",
   initialState,
   reducers: {
-    addPlayer: (state, action) => {
+    addPlayer: (state, action: PayloadAction<MemberType>) => {
       state.players.push(action.payload);
     },
-    removePlayer: (state, action) => {
+    removePlayer: (state, action: PayloadAction<MemberType>) => {
       state.players = state.players.filter(
-        (player) => player.id !== action.payload.id
+        (player) => player.id !== action.payload.id,
       );
     },
     resetPlayers: (state) => {
       state.players = [];
     },
-    setPlayers: (state, action) => {
+    setPlayers: (state, action: PayloadAction<MemberType[]>) => {
       state.players = action.payload;
     },
     resetGame: () => initialState,
-    setOpponentTeam: (state, action) => {
+    setOpponentTeam: (state, action: PayloadAction<Team>) => {
       state.opponentTeam = action.payload;
     },
-    setTeam: (state, action) => {
+    setTeam: (state, action: PayloadAction<Team>) => {
       state.team = action.payload;
     },
-    setCategory: (state, action) => {
+    setCategory: (state, action: PayloadAction<Category>) => {
       state.category = action.payload;
-    }
+    },
   },
 });
 
@@ -48,6 +59,6 @@ export const {
   setCategory,
   setTeam,
   resetPlayers,
-  setPlayers
+  setPlayers,
 } = gameSlice.actions;
 export default gameSlice.reducer;

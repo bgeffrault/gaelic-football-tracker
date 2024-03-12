@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 const initialState: {
   playerId: number | null | undefined;
@@ -11,7 +11,7 @@ const playerSlice = createSlice({
   name: "player",
   initialState,
   reducers: {
-    setPlayerId: (state, action) => {
+    setPlayerId: (state, action: PayloadAction<number>) => {
       state.playerId = action.payload;
     },
     resetPlayerId: (state) => {

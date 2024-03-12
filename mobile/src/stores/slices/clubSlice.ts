@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
-import { createSlice } from "@reduxjs/toolkit";
-import { ClubType } from "../../domain/types";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { ClubType, MemberType } from "../../domain/types";
 
 const initialState: ClubType = {
   members: [
@@ -17,13 +17,13 @@ const clubSlice = createSlice({
   name: "club",
   initialState,
   reducers: {
-    addMember: (state, action) => {
+    addMember: (state, action: PayloadAction<MemberType>) => {
       // @To do: check if member already exists + create an id
       state.members.push({ ...action.payload, id: state.members.length + 1 });
     },
-    removeMember: (state, action) => {
+    removeMember: (state, action: PayloadAction<MemberType>) => {
       state.members = state.members.filter(
-        (player) => player.id !== action.payload.id
+        (player) => player.id !== action.payload.id,
       );
     },
   },

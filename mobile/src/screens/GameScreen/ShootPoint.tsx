@@ -10,86 +10,96 @@ const OPACITIES = {
   disabled: 0.5,
 };
 
-export const ShootPoint = memo(({ x, y, disabled, fieldSize, color, onPress }: {
-  x: number;
-  y: number;
-  disabled: boolean;
-  fieldSize: { width: number; height: number; };
-  color: string;
-  onPress: () => void;
-}) => {
-  const pan = useRef(
-    new Animated.ValueXY({ x, y }, { useNativeDriver: false })
-  ).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset({
-          // @ts-ignore
-          x: pan.x._value,
-          // @ts-ignore
-          y: pan.y._value,
-        });
-      },
-      onPanResponderMove: (e, gestureState) =>
-        Animated.event([null, { dx: pan.x, dy: pan.y }], {
-          useNativeDriver: false,
-        })(e, gestureState),
-      onPanResponderRelease: () => {
-        pan.flattenOffset();
-      },
-    })
-  ).current;
+export const ShootPoint = memo(
+  ({
+    x,
+    y,
+    disabled,
+    fieldSize,
+    color,
+    onPress,
+  }: {
+    x: number;
+    y: number;
+    disabled: boolean;
+    fieldSize: { width: number; height: number };
+    color: string;
+    onPress: () => void;
+  }) => {
+    const pan = useRef(
+      new Animated.ValueXY({ x, y }, { useNativeDriver: false }),
+    ).current;
+    const panResponder = useRef(
+      PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          pan.setOffset({
+            // @ts-expect-error idk
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            x: pan.x._value,
+            // @ts-expect-error idk
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            y: pan.y._value,
+          });
+        },
+        onPanResponderMove: (e, gestureState) =>
+          Animated.event([null, { dx: pan.x, dy: pan.y }], {
+            useNativeDriver: false,
+          })(e, gestureState),
+        onPanResponderRelease: () => {
+          pan.flattenOffset();
+        },
+      }),
+    ).current;
 
-  return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        // @ts-ignore
-        x: -halfPointSize,
-        y: -halfPointSize,
-        transform: [
-          {
-            translateX: pan.x.interpolate({
-              inputRange: [0, fieldSize.width],
-              outputRange: [0, fieldSize.width],
-              extrapolate: "clamp",
-            }),
-          },
-          {
-            translateY: pan.y.interpolate({
-              inputRange: [0, fieldSize.height],
-              outputRange: [0, fieldSize.height],
-              extrapolate: "clamp",
-            }),
-          },
-        ],
-        zIndex: 100,
-        width: POINT_SIZE,
-        height: POINT_SIZE,
-      }}
-      {...panResponder.panHandlers}
-
-    >
-      <TouchableOpacity
+    return (
+      <Animated.View
         style={{
+          position: "absolute",
+          // @ts-expect-error idk
+          x: -halfPointSize,
+          y: -halfPointSize,
           transform: [
-            { translateX: -halfPointSize },
-            { translateY: -halfPointSize },
+            {
+              translateX: pan.x.interpolate({
+                inputRange: [0, fieldSize.width],
+                outputRange: [0, fieldSize.width],
+                extrapolate: "clamp",
+              }),
+            },
+            {
+              translateY: pan.y.interpolate({
+                inputRange: [0, fieldSize.height],
+                outputRange: [0, fieldSize.height],
+                extrapolate: "clamp",
+              }),
+            },
           ],
-          height: POINT_SIZE,
-          width: POINT_SIZE,
-          backgroundColor: color,
-          borderRadius: halfPointSize,
-          opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
           zIndex: 100,
+          width: POINT_SIZE,
+          height: POINT_SIZE,
         }}
-        onPress={onPress}
-        disabled={disabled}
+        {...panResponder.panHandlers}
       >
-        <View />
-      </TouchableOpacity>
-    </Animated.View>
-  );
-});
+        <TouchableOpacity
+          style={{
+            transform: [
+              { translateX: -halfPointSize },
+              { translateY: -halfPointSize },
+            ],
+            height: POINT_SIZE,
+            width: POINT_SIZE,
+            backgroundColor: color,
+            borderRadius: halfPointSize,
+            opacity: disabled ? OPACITIES.disabled : OPACITIES.inactive,
+            zIndex: 100,
+          }}
+          onPress={onPress}
+          disabled={disabled}
+        >
+          <View />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  },
+);

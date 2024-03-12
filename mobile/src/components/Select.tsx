@@ -1,10 +1,19 @@
 import { TouchableOpacity, View } from "react-native";
-import { useState, memo } from "react";
+import { useState } from "react";
 import { Entypo } from "@expo/vector-icons";
 import { StyledText } from "./StyledText";
 import { CustomDatePicker } from "./CustomDatePicker";
 
-export const Select = ({ onPress, label, value, cn, dateType = false, setDate, renderValue, disabled }: {
+export function Select({
+  onPress,
+  label,
+  value,
+  cn,
+  dateType = false,
+  setDate,
+  renderValue,
+  disabled,
+}: {
   onPress?: () => void;
   label: string;
   value: unknown;
@@ -13,13 +22,13 @@ export const Select = ({ onPress, label, value, cn, dateType = false, setDate, r
   setDate: (date: string) => void;
   renderValue: (value: unknown) => React.ReactNode;
   disabled?: boolean;
-}) => {
+}) {
   const [openDatePicker, setOpenDatePicker] = useState(false);
 
   return (
     <>
       <View className={cn}>
-        <StyledText cn={"text-gray-500 mb-1"}>{label}</StyledText>
+        <StyledText cn="text-gray-500 mb-1">{label}</StyledText>
         <TouchableOpacity
           onPress={() => (dateType ? setOpenDatePicker(true) : onPress())}
           disabled={disabled}
@@ -41,5 +50,4 @@ export const Select = ({ onPress, label, value, cn, dateType = false, setDate, r
       )}
     </>
   );
-};
-
+}

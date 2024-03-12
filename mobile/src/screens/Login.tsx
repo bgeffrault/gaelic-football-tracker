@@ -35,7 +35,7 @@ export function Login({ navigation }: AppNavigationProp<"Login">) {
           style={{
             marginVertical: 8,
             borderBottomColor: "#737373",
-            borderBottomWidth: "2px" as any,
+            borderBottomWidth: 2,
           }}
         />
         <View className="justify-center items-start mt-4">
