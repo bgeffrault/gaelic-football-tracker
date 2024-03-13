@@ -198,8 +198,8 @@ function Game({ game }: { game: GameType }) {
   return (
     <View className="flex-1">
       <KeyboardAwareScrollView>
-        <SectionContainer cn="mt-3">
-          <KeyboardAwareScrollView className="">
+        <View className="mt-3">
+          <SectionContainer>
             <Card cn="w-full">
               <ControlledSelect
                 onPress={() => {
@@ -286,18 +286,18 @@ function Game({ game }: { game: GameType }) {
                 name="name"
               />
             </Card>
-          </KeyboardAwareScrollView>
-        </SectionContainer>
+          </SectionContainer>
+          <View className="mt-8 flex-1 justify-end items-center pb-8">
+            <CustomButton
+              variant="contained"
+              strong
+              onPress={handleSubmit(onSubmit)}
+            >
+              <Text className="text-lg text-gray-200">Let&apos;s go</Text>
+            </CustomButton>
+          </View>
+        </View>
       </KeyboardAwareScrollView>
-      <View className="mt-8 flex-1 justify-end items-center pb-8">
-        <CustomButton
-          variant="contained"
-          strong
-          onPress={handleSubmit(onSubmit)}
-        >
-          <Text className="text-lg text-gray-200">Let&apos;s go</Text>
-        </CustomButton>
-      </View>
     </View>
   );
 }

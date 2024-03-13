@@ -218,104 +218,102 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
       <CategoryFilter onPress={onCategoryChange} categoryId={categoryId} />
       <KeyboardAwareScrollView>
         <SectionContainer>
-          <KeyboardAwareScrollView className="">
-            <Card cn="w-full">
-              <ControlledSelect
-                onPress={() => {
-                  navigation.navigate("Teams", {
-                    mode: "select",
-                    categoryId,
-                    external: false,
-                  });
-                }}
-                label="Equipe *"
-                control={control}
-                rules={{ required: "L'équipe est obligatoire" }}
-                name={TEAM}
-                renderValue={renderTeam}
-              />
-              <ControlledSelect
-                onPress={() => {
-                  navigation.navigate("Teams", {
-                    mode: "select",
-                    categoryId,
-                    external: true,
-                  });
-                }}
-                label="Equipe adverse *"
-                control={control}
-                rules={{ required: "L'équipe adverse est obligatoire" }}
-                name={OPPONENT_TEAM}
-                renderValue={renderTeam}
-              />
-              <ControlledSelect
-                onPress={() => {
-                  navigation.navigate("SelectMembers", {
-                    mode: "select",
-                    categoryId,
-                  });
-                }}
-                label="Joueurs *"
-                control={control}
-                rules={{ required: "Au moins un joueur est obligatoire" }}
-                name={PLAYERS}
-                renderValue={(value: unknown[] = []) => (
-                  <View
-                    className={clsx(
-                      value.length ? "bg-[#AB6C49]" : "bg-gray-400",
-                      "rounded-lg",
-                    )}
-                  >
-                    <StyledText cn={clsx("text-white px-1 overflow-hidden")}>
-                      {value.length}
-                    </StyledText>
-                  </View>
-                )}
-              />
-              <ControlledSelect
-                label="Date *"
-                dateType
-                control={control}
-                rules={{ required: "La date est obligatoire" }}
-                name="date"
-                renderValue={(value: string) => (
-                  <StyledText>
-                    {DateTime.fromISO(value).toFormat("dd-MM-yyyy")}
+          <Card cn="w-full">
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("Teams", {
+                  mode: "select",
+                  categoryId,
+                  external: false,
+                });
+              }}
+              label="Equipe *"
+              control={control}
+              rules={{ required: "L'équipe est obligatoire" }}
+              name={TEAM}
+              renderValue={renderTeam}
+            />
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("Teams", {
+                  mode: "select",
+                  categoryId,
+                  external: true,
+                });
+              }}
+              label="Equipe adverse *"
+              control={control}
+              rules={{ required: "L'équipe adverse est obligatoire" }}
+              name={OPPONENT_TEAM}
+              renderValue={renderTeam}
+            />
+            <ControlledSelect
+              onPress={() => {
+                navigation.navigate("SelectMembers", {
+                  mode: "select",
+                  categoryId,
+                });
+              }}
+              label="Joueurs *"
+              control={control}
+              rules={{ required: "Au moins un joueur est obligatoire" }}
+              name={PLAYERS}
+              renderValue={(value: unknown[] = []) => (
+                <View
+                  className={clsx(
+                    value.length ? "bg-[#AB6C49]" : "bg-gray-400",
+                    "rounded-lg",
+                  )}
+                >
+                  <StyledText cn={clsx("text-white px-1 overflow-hidden")}>
+                    {value.length}
                   </StyledText>
-                )}
-              />
-              <ControlledLabelledTextInput
-                label="Durée du match *"
-                inputProps={{
-                  placeholder: "60",
-                  keyboardType: "number-pad",
-                }}
-                control={control}
-                rules={{ required: "La durée est obligatoire" }}
-                name="duration"
-              />
-              <ControlledLabelledTextInput
-                label="Compétition"
-                inputProps={{
-                  placeholder: "Coupe de bretagne",
-                  keyboardType: "default",
-                }}
-                control={control}
-                name="gameName"
-              />
-            </Card>
-          </KeyboardAwareScrollView>
+                </View>
+              )}
+            />
+            <ControlledSelect
+              label="Date *"
+              dateType
+              control={control}
+              rules={{ required: "La date est obligatoire" }}
+              name="date"
+              renderValue={(value: string) => (
+                <StyledText>
+                  {DateTime.fromISO(value).toFormat("dd-MM-yyyy")}
+                </StyledText>
+              )}
+            />
+            <ControlledLabelledTextInput
+              label="Durée du match *"
+              inputProps={{
+                placeholder: "60",
+                keyboardType: "number-pad",
+              }}
+              control={control}
+              rules={{ required: "La durée est obligatoire" }}
+              name="duration"
+            />
+            <ControlledLabelledTextInput
+              label="Compétition"
+              inputProps={{
+                placeholder: "Coupe de bretagne",
+                keyboardType: "default",
+              }}
+              control={control}
+              name="gameName"
+            />
+          </Card>
         </SectionContainer>
+        <View className="mt-8 flex-1 justify-end items-center pb-8">
+          <CustomButton
+            variant="contained"
+            onPress={handleSubmit(handleOnPress)}
+            strong
+          >
+            <Text className="text-white text-lg">Let&apos;s go</Text>
+          </CustomButton>
+        </View>
       </KeyboardAwareScrollView>
-      <View className="mt-8 flex-1 justify-end items-center pb-8">
-        <CustomButton
-          variant="contained"
-          onPress={handleSubmit(handleOnPress)}
-          strong
-        >
-          <Text className="text-white text-lg">Let&apos;s go</Text>
-        </CustomButton>
-      </View>
     </>
   );
 }
