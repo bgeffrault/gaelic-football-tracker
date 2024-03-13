@@ -1,4 +1,4 @@
-import { RouteProp, useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -62,3 +62,6 @@ type RootNavigationProp = NativeStackNavigationProp<NavigationRoutes>;
 export const useAppNavigation = () => {
   return useNavigation<RootNavigationProp>();
 };
+
+export const useAppRoute = <TRoute extends RootNavigation>() =>
+  useRoute<RouteProp<NavigationRoutes, TRoute>>();
