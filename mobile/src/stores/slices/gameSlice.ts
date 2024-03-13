@@ -48,6 +48,9 @@ const gameSlice = createSlice({
     setCategory: (state, action: PayloadAction<Category>) => {
       state.category = action.payload;
     },
+    setGame: (state, action: PayloadAction<Partial<GameSliceState>>) => {
+      return { ...state, ...action.payload };
+    },
   },
 });
 
@@ -60,5 +63,6 @@ export const {
   setTeam,
   resetPlayers,
   setPlayers,
+  setGame,
 } = gameSlice.actions;
 export default gameSlice.reducer;

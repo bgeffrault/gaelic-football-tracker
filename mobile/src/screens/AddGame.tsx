@@ -2,33 +2,24 @@ import { Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
-import {
-  Control,
-  FieldPath,
-  FieldValues,
-  PathValue,
-  SubmitHandler,
-  useController,
-  useForm,
-} from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import clsx from "clsx";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
-import { useAppSelector } from "../stores/store";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import {
   ControlledLabelledTextInput,
   ControlledSelect,
-  Rules,
 } from "../components/ControlledComponents";
 import { StyledText } from "../components/StyledText";
-import { GameSliceState, resetGame } from "../stores";
+import { resetGame } from "../stores";
 import { CategoryFilter } from "../components/CategoryFilter";
 import { SectionContainer } from "../components/SectionContainer";
 import { AppNavigationProp } from "../navigators";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
+import { useGameStoreParamWatcher } from "../hooks/useGameStoreParamWatcher";
 
 const TEAM = "team";
 const OPPONENT_TEAM = "opponentTeam";
@@ -36,44 +27,11 @@ const PLAYERS = "players";
 
 type FormValues = {
   date: string;
-  duration?: string;
+  duration?: number;
   gameName?: string;
   [TEAM]: { id: number; teamName: string };
   [OPPONENT_TEAM]: { id: number; teamName: string };
   [PLAYERS]: number[];
-};
-
-const useGameStoreParamWatcher = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({
-  control,
-  name,
-  rules,
-  defaultValue,
-  onChange,
-}: {
-  control: Control<TFieldValues>;
-  name: TName;
-  rules: Rules;
-  defaultValue?: PathValue<TFieldValues, TName>;
-  onChange: (value: PathValue<TFieldValues, TName>) => unknown;
-}) => {
-  const storeValue = useAppSelector(
-    (state) => state.game[name as keyof GameSliceState],
-  );
-  const { field } = useController<TFieldValues, TName>({
-    control,
-    defaultValue,
-    name,
-    rules,
-  });
-
-  useEffect(() => {
-    field.onChange(() => {
-      return onChange(storeValue as PathValue<TFieldValues, TName>); // Not totaly true
-    });
-  }, [storeValue]);
 };
 
 type GameMutation = {
@@ -87,7 +45,15 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
   const [categoryId, setCategoryId] = useState(1);
   const clubId = useClubIdContext();
   const queryClient = useQueryClient();
-  const { control, handleSubmit, reset, getValues } = useForm<FormValues>();
+  const { control, handleSubmit, reset, getValues } = useForm<FormValues>({
+    defaultValues: {
+      date: DateTime.now().toJSDate().toISOString(),
+      duration: 60,
+      [PLAYERS]: [],
+      [TEAM]: null,
+      [OPPONENT_TEAM]: null,
+    },
+  });
   const supabaseClient = useSupabaseClientContext();
 
   const teamMembersMutation = useMutation({
@@ -226,14 +192,12 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
     control,
     name: TEAM,
     rules: { required: "L'équipe est obligatoire" },
-    defaultValue: null,
     onChange: (value) => value,
   });
   useGameStoreParamWatcher({
     control,
     name: OPPONENT_TEAM,
     rules: { required: "L'équipe adverse est obligatoire" },
-    defaultValue: null,
     onChange: (value) => value,
   });
 
@@ -295,7 +259,7 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
                 control={control}
                 rules={{ required: "Au moins un joueur est obligatoire" }}
                 name={PLAYERS}
-                renderValue={(value: number[]) => (
+                renderValue={(value: unknown[] = []) => (
                   <View
                     className={clsx(
                       value.length ? "bg-[#AB6C49]" : "bg-gray-400",
@@ -303,7 +267,7 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
                     )}
                   >
                     <StyledText cn={clsx("text-white px-1 overflow-hidden")}>
-                      {value?.length?.toString() ?? "0"}
+                      {value.length}
                     </StyledText>
                   </View>
                 )}
@@ -314,7 +278,6 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
                 control={control}
                 rules={{ required: "La date est obligatoire" }}
                 name="date"
-                defaultValue={DateTime.now().toJSDate().toISOString()}
                 renderValue={(value: string) => (
                   <StyledText>
                     {DateTime.fromISO(value).toFormat("dd-MM-yyyy")}
@@ -330,7 +293,6 @@ export function AddGame({ navigation }: AppNavigationProp<"AddGame">) {
                 control={control}
                 rules={{ required: "La durée est obligatoire" }}
                 name="duration"
-                defaultValue="60"
               />
               <ControlledLabelledTextInput
                 label="Compétition"

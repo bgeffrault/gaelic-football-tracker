@@ -60,6 +60,7 @@ const useGameShoots = (gameId: number) => {
       const result = await supabaseClient
         .from("Game")
         .select("*, TeamGame(*, Team(teamName, external), Shoots(*))")
+        .order("id", { referencedTable: "TeamGame", ascending: true })
         .filter("id", "eq", gameId)
         .limit(1)
         .single();

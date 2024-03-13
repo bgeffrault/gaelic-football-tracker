@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@types/lodash": "^4.17.0",
     "@types/luxon": "^3.4.2",
     "@types/react-native-modern-datepicker": "^1.0.5",
     "@types/react-redux": "^7.1.25",

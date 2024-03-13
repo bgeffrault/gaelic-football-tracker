@@ -125,14 +125,12 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
 
   return (
     <>
-      {!selectMode && (
-        <CategoryFilter
-          categoryId={categoryId}
-          onPress={(newCategoryId) => {
-            navigation.setParams({ categoryId: newCategoryId });
-          }}
-        />
-      )}
+      <CategoryFilter
+        categoryId={categoryId}
+        onPress={(newCategoryId) => {
+          navigation.setParams({ categoryId: newCategoryId });
+        }}
+      />
       {!isLoading && (
         <SafeAreaView className="my-3 bg-white rounded-xl">
           <SectionTitle cn="flex flex-row grow justify-between items-center p-1 px-4">
