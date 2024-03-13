@@ -12,7 +12,7 @@ import {
   useAppNavigation,
 } from "../../navigators";
 import { Game, TeamGame } from "./Game";
-import { resetPlayerId } from "../../stores";
+import { resetGame, resetPlayerId } from "../../stores";
 import { CustomButton } from "../../components/CustomButton";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { TeamShoots } from "./FielZone";
@@ -154,6 +154,7 @@ function GameContainer({
   useEffect(() => {
     return () => {
       dispatch(resetPlayerId());
+      dispatch(resetGame());
     };
   }, []);
 

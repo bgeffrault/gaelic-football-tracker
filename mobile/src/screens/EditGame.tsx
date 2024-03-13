@@ -112,7 +112,7 @@ function Game({ game }: { game: GameType }) {
         queries.push(gameQuery);
       }
 
-      const teamId = (team as unknown as () => Input[typeof TEAM])().id;
+      const teamId = team.id;
       if (teamId !== game.TeamGame[0].teamId) {
         const updateTeamQuery = supabaseClient
           .from("TeamGame")
@@ -121,9 +121,7 @@ function Game({ game }: { game: GameType }) {
         queries.push(updateTeamQuery);
       }
 
-      const opponentTeamId = (
-        opponentTeam as unknown as () => Input[typeof OPPONENT_TEAM]
-      )().id;
+      const opponentTeamId = opponentTeam.id;
       if (opponentTeamId !== game.TeamGame[1].teamId) {
         const updateTeamQuery = supabaseClient
           .from("TeamGame")
@@ -132,9 +130,7 @@ function Game({ game }: { game: GameType }) {
         queries.push(updateTeamQuery);
       }
 
-      const playerIds = (players as unknown as () => MemberType[])().map(
-        (p) => p.id,
-      );
+      const playerIds = players.map((p) => p.id);
       const prevPlayersIds = game.TeamGame[0].Members.map((m) => m.id);
 
       if (xor(playerIds, prevPlayersIds).length !== 0) {

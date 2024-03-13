@@ -1,5 +1,5 @@
 import { ScrollView, View } from "react-native";
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { useDispatch } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "@react-navigation/native";
@@ -15,19 +15,20 @@ import {
 } from "../navigators";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ListItem } from "../components/ListItem";
-import { GoHomeButton } from "../components/GoHomeButton";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 import { Team } from "../types/Team";
 
-const TeamHeaderButton = memo(({ selectMode }: { selectMode: boolean }) => {
-  const navigation = useAppNavigation();
+export const TeamHeaderButton = memo(
+  ({ selectMode }: { selectMode: boolean }) => {
+    const navigation = useAppNavigation();
 
-  return selectMode ? (
-    <CustomButton onPress={() => navigation.goBack()}>
-      <StyledText cn="">OK</StyledText>
-    </CustomButton>
-  ) : null;
-});
+    return selectMode ? (
+      <CustomButton onPress={() => navigation.goBack()}>
+        <StyledText cn="">OK</StyledText>
+      </CustomButton>
+    ) : null;
+  },
+);
 
 function TeamItem({
   team,
@@ -70,7 +71,7 @@ function TeamItem({
   );
 }
 
-export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
+export function Teams({ route }: AppNavigationProp<"Teams">) {
   const clubId = useClubIdContext();
 
   const selectMode = route.params?.mode === "select";
@@ -90,16 +91,6 @@ export function Teams({ navigation, route }: AppNavigationProp<"Teams">) {
       return result.data;
     },
   });
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: selectMode ? "Sélection de l'équipe" : "Teams",
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => <TeamHeaderButton selectMode={selectMode} />,
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => (selectMode ? null : <GoHomeButton />),
-    });
-  }, [navigation]);
 
   if (isLoading) return null;
 

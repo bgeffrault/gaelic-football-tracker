@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SafeAreaView, ScrollView } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
 import { useClubIdContext } from "../../providers/ClubIdProvider";
 import { TeamSection } from "./TeamSection";
 import { CategoryFilter } from "../../components/CategoryFilter";
-import { GoHomeButton } from "../../components/GoHomeButton";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
-import { AppNavigationProp } from "../../navigators";
 
-export function ClubConfig({ navigation }: AppNavigationProp<"ClubConfig">) {
+export function ClubConfig() {
   const [categoryId, setCategoryId] = useState(1);
   const clubId = useClubIdContext();
   const supabaseClient = useSupabaseClientContext();
@@ -40,15 +37,6 @@ export function ClubConfig({ navigation }: AppNavigationProp<"ClubConfig">) {
       return result.data;
     },
   });
-
-  useEffect(() => {
-    navigation.setOptions({
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerTitle: () => <FontAwesome name="cog" size={24} color="#1F2937" />,
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => <GoHomeButton />,
-    });
-  }, [navigation]);
 
   if (isLoadingClubTeams || isLoadingExternalTeams) return null;
 
