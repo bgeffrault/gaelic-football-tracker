@@ -3,7 +3,17 @@ import DatePicker from "react-native-modern-datepicker";
 import { StyledText } from "./StyledText";
 import { CustomButton } from "./CustomButton";
 
-export function CustomDatePicker({ visible, onClose, setDate }) {
+type CustomDatePickerProps = {
+  visible: boolean;
+  onClose: () => unknown;
+  setDate: (date: string) => unknown;
+};
+
+export function CustomDatePicker({
+  visible,
+  onClose,
+  setDate,
+}: CustomDatePickerProps) {
   return (
     <Modal visible={visible} transparent>
       <View className="flex-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>

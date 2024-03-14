@@ -1,4 +1,5 @@
-import { GameResult } from "../screens/Home/GameSection";
+import { GameResult } from "../types/Game";
+import { TeamShoots } from "../types/Team";
 
 export const gameResultColors = {
   win: "bg-[#DFF7EC]",
@@ -7,29 +8,29 @@ export const gameResultColors = {
 };
 
 export const gameResultGradientColors = {
-  win: ["#DFF7EC", '#FFF'],
-  lose: ['#FFF', "#FCC7B8"],
-  draw: ["#AAAAAA11", '#AAAAAA33', "#AAAAAA11"],
+  win: ["#DFF7EC", "#FFF"],
+  lose: ["#FFF", "#FCC7B8"],
+  draw: ["#AAAAAA11", "#AAAAAA33", "#AAAAAA11"],
 };
 
 type Shoot = {
   type: string;
-}
+};
 
 export const sumShoots = (shoots: Shoot[]) => {
-  let sum = 0;
-  for (const shoot of shoots) {
-    if (shoot.type === "goal") {
-      sum += 3;
-      continue;
+  return shoots.reduce((sum, shoot) => {
+    switch (shoot.type) {
+      case "goal":
+        return sum + 3;
+      case "drop":
+        return sum + 1;
+      default:
+        return sum;
     }
-    if (shoot.type === "drop") sum += 1;
-  }
-  return sum;
-}
+  }, 0);
+};
 
-export function gameResult(
-  shootsTeamA: Shoot[], shootsTeamB: Shoot[]) {
+export function gameResult(shootsTeamA: Shoot[], shootsTeamB: Shoot[]) {
   const teamA = sumShoots(shootsTeamA);
   const teamB = sumShoots(shootsTeamB);
 
@@ -42,38 +43,52 @@ export function shootsAccuracy(shoots: Shoot[]) {
   let scored = 0;
   let total = 0;
   shoots.forEach(({ type }) => {
-    if (type === "goal" || type === "drop") scored++;
-    total++;
+    if (type === "goal" || type === "drop") scored += 1;
+    total += 1;
   });
   if (total === 0) return null;
-  return Math.round(scored / total * 100);
+  return Math.round((scored / total) * 100);
 }
 
 // Utils with db views
-export type TeamShoots = {
-  pointCount: number,
-  goalCount: number,
-  missedCount: number,
-  blockedCount: number
-}
 
-export const getActionsCountByType = (teamActions: GameResult[]) : TeamShoots => {
+export const getActionsCountByType = (
+  teamActions: GameResult[],
+): TeamShoots => {
   return {
-    pointCount: teamActions.find((gameResult) => gameResult.type === "point")?.count ?? 0,
-    goalCount: teamActions.find((gameResult) => gameResult.type === "goal")?.count ?? 0,
-    missedCount: teamActions.find((gameResult) => gameResult.type === "missed")?.count ?? 0,
-    blockedCount: teamActions.find((gameResult) => gameResult.type === "blocked")?.count ?? 0,
-  }
+    pointCount: teamActions.find((gr) => gr.type === "point")?.count ?? 0,
+    goalCount: teamActions.find((gr) => gr.type === "goal")?.count ?? 0,
+    missedCount: teamActions.find((gr) => gr.type === "missed")?.count ?? 0,
+    blockedCount: teamActions.find((gr) => gr.type === "blocked")?.count ?? 0,
+  };
+};
+
+export function getTeamResult({
+  pointCount,
+  goalCount,
+  missedCount,
+  blockedCount,
+}: TeamShoots) {
+  return {
+    result: pointCount + goalCount * 3,
+    accuracy: Math.round(
+      ((pointCount + goalCount) /
+        (pointCount + goalCount + missedCount + blockedCount)) *
+        100,
+    ),
+  };
 }
 
-
-export function getTeamResult({ pointCount, goalCount, missedCount, blockedCount }: TeamShoots
+export function getGameResult(
+  teamActionsCountByType: TeamShoots,
+  opponentActionsCountByType: TeamShoots,
 ) {
-  return { result: pointCount + goalCount * 3, accuracy: Math.round((pointCount + goalCount) / (pointCount + goalCount + missedCount + blockedCount) * 100) };
-}
-
-export function getGameResult(teamActionsCountByType: TeamShoots, opponentActionsCountByType: TeamShoots) {
   const teamResult = getTeamResult(teamActionsCountByType);
   const opponentResult = getTeamResult(opponentActionsCountByType);
-  return teamResult.result > opponentResult.result ? "win" : teamResult.result < opponentResult.result ? "lose" : "draw";
+  // eslint-disable-next-line no-nested-ternary
+  return teamResult.result > opponentResult.result
+    ? "win"
+    : teamResult.result < opponentResult.result
+      ? "lose"
+      : "draw";
 }

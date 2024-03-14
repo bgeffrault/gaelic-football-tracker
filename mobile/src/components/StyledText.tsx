@@ -6,15 +6,19 @@ import clsx from "clsx";
 
 SplashScreen.preventAutoHideAsync();
 
-export function StyledText({ children, cn }: { children: React.ReactNode, cn?: string }) {
+export function StyledText({
+  children,
+  cn,
+}: {
+  children: React.ReactNode;
+  cn?: string;
+}) {
   const [fontsLoaded] = useFonts({
-    // eslint-disable-next-line global-require
+    // eslint-disable-next-line global-require, @typescript-eslint/no-unsafe-assignment
     "Lexend-Regular": require("../../assets/fonts/Lexend-Regular.ttf"),
   });
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
+  const onLayoutRootView = useCallback(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
