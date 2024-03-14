@@ -70,7 +70,7 @@ export function Player({ navigation, route }: AppNavigationProp<"Player">) {
           </View>
         </View>
         {playerShoots?.length ? playerShoots.map((shoot) => (
-          <View className="flex-row justify-around">
+          <View className="flex-row justify-around" key={shoot.type}>
             <View className="grow flex-1 items-start p-2" >
               <StyledText cn="text-gray-500" >{shoot.type}</StyledText>
             </View>

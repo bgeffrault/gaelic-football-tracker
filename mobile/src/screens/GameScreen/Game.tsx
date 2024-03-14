@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { AddingShoot, FieldZone, ShootType, TeamShoots } from "./FielZone";
 import { gameResultGradientColors } from "../../utils/shootsUtils";
-import { useRoute } from "@react-navigation/native";
+import { RouteProp, useRoute } from "@react-navigation/native";
 import { SelectedShootOverview } from "./SelectedShootOverview";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useSubscription } from "../../useSupabaseSubscription";
-import { useAppNavigation } from "../../navigators";
+import { NavigationRoutes, useAppNavigation } from "../../navigators";
 import { useAppSelector } from "../../stores/store";
 import { ScoreTable, TeamShootAction, useScore } from "./ScoreTable";
 import { TouchFieldInfo } from "./TouchFieldInfo";
@@ -114,9 +114,6 @@ export type TeamGame = {
     }[];
 }
 
-
-
-
 export const Game = ({ gameId, teamGame, opponentTeamGame, game, teamGameState,
     updateTeamGameState, opponentTeamGameState, updateOpponentGameState
 }: {
@@ -134,8 +131,8 @@ export const Game = ({ gameId, teamGame, opponentTeamGame, game, teamGameState,
     updateOpponentGameState: React.Dispatch<TeamShootAction>;
 }) => {
     const navigation = useAppNavigation();
-    const route = useRoute();
-    const isOpponentTeamSelected = (route.params as any).isOpponentTeamSelected
+    const route = useRoute<RouteProp<NavigationRoutes, "Game">>();
+    const isOpponentTeamSelected = route.params.isOpponentTeamSelected
 
     const [addingShoot, setAddingShoot] = useState<AddingShoot>(null);
     const [selectedShoot, setSelectedShoot] = useState<Shoot>(null);
@@ -154,19 +151,6 @@ export const Game = ({ gameId, teamGame, opponentTeamGame, game, teamGameState,
         // setSelectedShoot(shoot);
     };
 
-    const result = useMemo(() => {
-        if (teamScore.total > opponentTeamScore.total) return "win";
-        if (teamScore.total < opponentTeamScore.total) return "lose";
-        return "draw";
-    }, [teamScore, opponentTeamScore]);
-
-    useEffect(() => {
-        navigation.setOptions({
-            headerStyle: {
-                backgroundColor: gameResultGradientColors[result][result === "win" ? 0 : 1]
-            }
-        });
-    }, [navigation, result]);
 
     useAddShootingPlayer({ addingShoot, setAddingShoot, gameId });
 

@@ -1,3 +1,5 @@
+import { GameResult } from "../screens/Home/GameSection";
+
 export const gameResultColors = {
   win: "bg-[#DFF7EC]",
   lose: "bg-[#D3733D]",
@@ -48,21 +50,30 @@ export function shootsAccuracy(shoots: Shoot[]) {
 }
 
 // Utils with db views
-
-type TeamShoots = {
+export type TeamShoots = {
   pointCount: number,
   goalCount: number,
   missedCount: number,
   blockedCount: number
 }
 
+export const getActionsCountByType = (teamActions: GameResult[]) : TeamShoots => {
+  return {
+    pointCount: teamActions.find((gameResult) => gameResult.type === "point")?.count ?? 0,
+    goalCount: teamActions.find((gameResult) => gameResult.type === "goal")?.count ?? 0,
+    missedCount: teamActions.find((gameResult) => gameResult.type === "missed")?.count ?? 0,
+    blockedCount: teamActions.find((gameResult) => gameResult.type === "blocked")?.count ?? 0,
+  }
+}
+
+
 export function getTeamResult({ pointCount, goalCount, missedCount, blockedCount }: TeamShoots
 ) {
   return { result: pointCount + goalCount * 3, accuracy: Math.round((pointCount + goalCount) / (pointCount + goalCount + missedCount + blockedCount) * 100) };
 }
 
-export function getGameResult({ teamScore, opponentTeamScore }: { teamScore: TeamShoots, opponentTeamScore: TeamShoots }) {
-  const teamResult = getTeamResult(teamScore);
-  const opponentResult = getTeamResult(opponentTeamScore);
+export function getGameResult(teamActionsCountByType: TeamShoots, opponentActionsCountByType: TeamShoots) {
+  const teamResult = getTeamResult(teamActionsCountByType);
+  const opponentResult = getTeamResult(opponentActionsCountByType);
   return teamResult.result > opponentResult.result ? "win" : teamResult.result < opponentResult.result ? "lose" : "draw";
 }

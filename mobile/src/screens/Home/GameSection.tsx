@@ -3,7 +3,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { Card } from "../../components/Card";
 import { CustomButton } from "../../components/CustomButton";
 import { StyledText } from "../../components/StyledText";
-import { gameResultGradientColors, getGameResult, getTeamResult } from "../../utils/shootsUtils";
+import { TeamShoots, gameResultGradientColors, getActionsCountByType, getTeamResult } from "../../utils/shootsUtils";
 import { useAppNavigation } from "../../navigators";
 import { SectionTitle } from "../../components/SectionTitle";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,7 @@ type TeamGameResult = {
   teamName: string;
   external: boolean;
   categoryId: number;
+  actionsCountByType: TeamShoots;
 }
 
 export type GameResultByTeam = {
@@ -41,6 +42,7 @@ export type GameResultByTeam = {
   name: string;
   duration: number;
   date: string;
+  outcome: "win" | "lose" | "draw";
 }
 
 export type GameContent = GameResultByTeam[]
@@ -75,7 +77,6 @@ export function GamesSection({ games, title }: {
           <GameListItem
             key={game.id}
             game={game}
-            gameId={game.id}
             first={i === 0}
             last={i === arr.length - 1}
           />
@@ -87,25 +88,22 @@ export function GamesSection({ games, title }: {
 
 
 
-export function GameListItem({ game, first, last, gameId }: {
+export function GameListItem({ game, first, last}: {
   game: GameResultByTeam;
   first: boolean;
   last: boolean;
-  gameId: number;
 }) {
   const navigation = useAppNavigation();
-  const handleOnPress = () => {
-    navigation.navigate("Game", { gameId: gameId, isOpponentTeamSelected: false });
-  };
   const teamGame = game.teamGame;
   const opponentTeamGame = game.opponentTeamGame;
 
-  const teamScore = useTeamScore(teamGame);
-  const opponentTeamScore = useTeamScore(opponentTeamGame);
-
-  const result = getGameResult({ teamScore, opponentTeamScore });
   const date = DateTime.fromISO(game.date).toFormat("dd-MM-yyyy");
   const gameName = game.name
+
+  const handleOnPress = () => {
+    navigation.navigate("Game", { gameResult: game, isOpponentTeamSelected: false });
+  };
+  
   return (
     <Card
       cn="mb-1"
@@ -116,20 +114,20 @@ export function GameListItem({ game, first, last, gameId }: {
       <LinearGradient
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        colors={gameResultGradientColors[result]}
+        colors={gameResultGradientColors[game.outcome]}
         className="rounded-xl py-1 px-4">
         <View className="flex-row">
           <View className="w-2/5">
-            <TeamScore cn="items-start" teamScore={teamScore} teamName={teamGame.teamName} />
+            <TeamScore cn="items-start" teamScore={teamGame.actionsCountByType} teamName={teamGame.teamName} />
           </View>
           <View className="items-center w-1/5">
             <StyledText>{game.duration}&apos;</StyledText>
-            {<CustomButton onPress={handleOnPress}>
+            <CustomButton onPress={handleOnPress}>
               <AntDesign name="eye" size={24} color="#DF8C5F" />
-            </CustomButton>}
+            </CustomButton>
           </View>
           <View className="w-2/5">
-            <TeamScore cn="items-end" teamScore={opponentTeamScore} teamName={opponentTeamGame.teamName} />
+            <TeamScore cn="items-end" teamScore={opponentTeamGame.actionsCountByType} teamName={opponentTeamGame.teamName} />
           </View>
         </View>
         <View className="flex flex-row justify-between">
@@ -148,19 +146,10 @@ export type TeamScore = {
   gameId: number;
 }
 
-const useTeamScore = (teamGame: TeamGameResult) => {
-  return {
-    pointCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "point")[0]?.count ?? 0,
-    goalCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "goal")[0]?.count ?? 0,
-    missedCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "missed")[0]?.count ?? 0,
-    blockedCount: teamGame.gameResults.filter((gameResult) => gameResult.type === "blocked")[0]?.count ?? 0,
-  }
-}
-
 const TeamScore = ({ teamScore, teamName, cn }: {
   cn?: string;
   teamName: string;
-  teamScore: ReturnType<typeof useTeamScore>;
+  teamScore: ReturnType<typeof getActionsCountByType>;
 }) => {
   const { pointCount, goalCount, missedCount, blockedCount } = teamScore;
   const score = getTeamResult({ pointCount, goalCount, missedCount, blockedCount });

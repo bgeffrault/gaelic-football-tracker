@@ -5,23 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StyledText } from "./StyledText";
 import { getCategoryName } from "../utils/getCategoryName";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
-
-const FilterItem = ({ children, selected, onPress }: {
-    children: React.ReactNode,
-    onPress: () => void,
-    selected: boolean
-}) => (
-    <View className="flex grow p-3">
-        <TouchableOpacity className={clsx(
-            'w-full grow justify-center items-center p-2 ',
-            selected ? "bg-[#E3BBA6]" : "bg-[#ae9383]",
-            "rounded-lg"
-        )}
-            onPress={onPress}>
-            {children}
-        </TouchableOpacity>
-    </View>
-)
+import { FilterContainer, FilterItem } from "./Filter/Filter";
 
 export const CategoryFilter = ({ onPress, categoryId }: {
     onPress: (id: number) => void,
@@ -40,7 +24,7 @@ export const CategoryFilter = ({ onPress, categoryId }: {
     if (isLoading) return null;
 
     return (
-        <View className="flex flex-row justify-around">
+        <FilterContainer>
             {categories.filter(category => category.name !== "mix").map((category) => {
                 const selected = categoryId === Number(category.id);
                 return (
@@ -52,5 +36,5 @@ export const CategoryFilter = ({ onPress, categoryId }: {
                 )
             }
             )}
-        </View>)
+        </FilterContainer>)
 };

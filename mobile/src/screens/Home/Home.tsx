@@ -13,6 +13,8 @@ import { SectionContainer } from "../../components/SectionContainer";
 import { SectionTitle } from "../../components/SectionTitle";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { useIsFocused } from "@react-navigation/native";
+import { GamesFilter } from "./GamesFilter";
+import { getGameResult, getTeamResult, getActionsCountByType } from "../../utils/shootsUtils";
 
 
 const NoGames = ({ title, cn }: { title: string, cn?: string }) => (
@@ -36,49 +38,38 @@ const groupById = (data?: Game[]): GameContent => {
     const externalTeamGame = item.TeamGame?.[0]?.Team.external ? item.TeamGame[0] : item.TeamGame[1];
     const internalTeamGameId = internalTeamGame.id;
 
-    if (!gameResults?.length) {
-      acc.push({
-        teamGame: {
-          gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
-          teamName: internalTeamGame.Team.teamName,
-          external: internalTeamGame.Team.external,
-          categoryId: internalTeamGame.Team.categoryId,
-        },
-        opponentTeamGame: {
-          gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
-          teamName: externalTeamGame.Team.teamName,
-          external: externalTeamGame.Team.external,
-          categoryId: externalTeamGame.Team.categoryId,
-        },
-        id: item.id,
-        gameEnded: item.gameEnded,
-        name: item.name,
-        duration: item.duration,
-        date: item.date,
-      })
+    const {teamActions, opponentTeamActions} = gameResults.reduce((acc, gameResult) => {
+      if(gameResult.teamGameId === internalTeamGameId)
+        acc.teamActions.push(gameResult)
+      else 
+        acc.opponentTeamActions.push(gameResult)
       return acc;
+
+    }, {teamActions: [], opponentTeamActions: []})
+
+    const teamGame = {
+      gameResults: teamActions,
+      teamName: internalTeamGame.Team.teamName,
+      external: internalTeamGame.Team.external,
+      categoryId: internalTeamGame.Team.categoryId,
+      actionsCountByType: getActionsCountByType(teamActions)
+    }
+
+    const opponentTeamGame = {
+      gameResults: opponentTeamActions,
+      teamName: externalTeamGame.Team.teamName,
+      external: externalTeamGame.Team.external,
+      categoryId: externalTeamGame.Team.categoryId,
+      actionsCountByType: getActionsCountByType(opponentTeamActions)
     }
 
     acc.push({
-      teamGame: {
-        gameResults: gameResults.filter(gameResult => gameResult.teamGameId === internalTeamGameId) ?? [],
-        teamName: internalTeamGame.Team.teamName,
-        external: internalTeamGame.Team.external,
-        categoryId: internalTeamGame.Team.categoryId,
-      },
-      opponentTeamGame: {
-        gameResults: gameResults.filter(gameResult => gameResult.teamGameId !== internalTeamGameId) ?? [],
-        teamName: externalTeamGame.Team.teamName,
-        external: externalTeamGame.Team.external,
-        categoryId: externalTeamGame.Team.categoryId,
-      },
-      id: item.id,
-      gameEnded: item.gameEnded,
-      name: item.name,
-      duration: item.duration,
-      date: item.date,
+      teamGame,
+      opponentTeamGame,
+      ...item,
+      outcome: getGameResult(teamGame.actionsCountByType, opponentTeamGame.actionsCountByType)
     })
-
+  
     return acc;
   }, [] as GameContent);
 
@@ -118,7 +109,7 @@ const useGamesResult = (categoryId: number) => {
 
   return {
     ...queryResults,
-    gamesInProgress: groupById(data?.filter(game => !game.gameEnded)) ?? [],
+    games: groupById(data?.filter(game => !game.gameEnded)) ?? [],
     gamesEnded: groupById(data?.filter(game => game.gameEnded)) ?? [],
   }
 }
@@ -140,6 +131,7 @@ const useRefetchOnScreenFocused = (refetch: ReturnType<typeof useQuery>["refetch
 // @To-do: It does not work with games without shoots
 export function Home({ }: AppNavigationProp<"Home">) {
   const [categoryId, setCategoryId] = useState(1)
+  const [oldGamesFilter, setOldGamesFilter] = useState(true)
   const supabaseClient = useSupabaseClientContext();
 
   const navigation = useAppNavigation();
@@ -153,7 +145,34 @@ export function Home({ }: AppNavigationProp<"Home">) {
     },
   })
 
-  const { gamesInProgress, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching } = useGamesResult(categoryId)
+  const { games, gamesEnded, isLoading: isLoadingGames, refetch: refetchGames, isRefetching } = useGamesResult(categoryId)
+
+  const isInProgressGame = (game) => {
+    const setMidnight = (date) => {
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    // Get the current date and time, then set its time to midnight
+    const currentDate = setMidnight(new Date());
+    console.log('currentDate', currentDate);
+    const parsedDate = new Date(game.date);
+    console.log('parsedDate', parsedDate);
+    // Set the parsed date time to midnight
+    const comparedDate = setMidnight(new Date(parsedDate));
+    console.log('comparedDate > currentDate', comparedDate > currentDate);
+    return comparedDate <= currentDate;
+
+
+  }
+
+
+  const gamesToCome = useMemo(() => games.filter(game =>
+    !isInProgressGame(game)
+  ), [games])
+  const gamesInProgress = useMemo(() => games.filter(game =>
+    isInProgressGame(game)
+  ), [games])
 
   const onRefresh = () => {
     refetchGames()
@@ -186,14 +205,20 @@ export function Home({ }: AppNavigationProp<"Home">) {
       >
         {Object.keys(gamesInProgress).length > 0 ? (
           <View className="mb-3">
-            <GamesSection games={gamesInProgress} title="In progress" />
+            <GamesSection games={games} title="In progress" />
           </View>
-        ) : <NoGames title="In progress" cn="mb-3" />}
-        {Object.keys(gamesEnded).length > 0 ? (
+        ) : <NoGames title="In progress" cn="" />}
+        <GamesFilter oldGame={oldGamesFilter} onPress={(oldGames) => setOldGamesFilter(oldGames)} />
+        {!oldGamesFilter && (Object.keys(gamesToCome).length > 0 ? (
+          <View className="mb-3">
+            <GamesSection games={gamesToCome} title="Incoming Games" />
+          </View>
+        ) : <NoGames title="No incoming games" />)}
+        {oldGamesFilter && (Object.keys(gamesEnded).length > 0 ? (
           <View className="">
             <GamesSection games={gamesEnded} title="Last Games" />
           </View>
-        ) : <NoGames title="Last Games" />}
+        ) : <NoGames title="Last Games" />)}
       </ScrollView>
       <View className="flex-row justify-around items-center pb-8 pt-2">
         <CustomButton onPress={() => navigation.navigate("Members")}>
