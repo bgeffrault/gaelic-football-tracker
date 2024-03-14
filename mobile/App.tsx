@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import {
@@ -11,7 +12,7 @@ import {
   EditGameIconButton,
   GameScreen,
 } from "./src/screens/GameScreen/GameScreen";
-import { Members } from "./src/screens/Members";
+import { Members, getMemberScreenOptions } from "./src/screens/Members";
 import { AddMember } from "./src/screens/AddMember";
 import { AddGame } from "./src/screens/AddGame";
 import { store } from "./src/stores/store";
@@ -19,7 +20,7 @@ import { SelectPlayer } from "./src/screens/SelectPlayer";
 import { ClubIdProvider } from "./src/providers/ClubIdProvider";
 import { ClubConfig } from "./src/screens/ClubConfig/ClubConfig";
 import { Categories } from "./src/screens/Categories";
-import { Teams } from "./src/screens/Teams";
+import { TeamHeaderButton, Teams } from "./src/screens/Teams";
 import { SupabaseClientProvider } from "./src/providers/useSupabaseClient";
 import { Player } from "./src/screens/Player";
 import { EditGame } from "./src/screens/EditGame";
@@ -35,6 +36,7 @@ const defaultScreenOptions: NativeStackNavigationOptions = {
   headerTitleStyle: {
     fontWeight: "bold",
   },
+  headerTitleAlign: "center",
   contentStyle: {
     backgroundColor: "#F3F4F6",
   },
@@ -53,7 +55,11 @@ export default function App() {
               >
                 <Stack.Group>
                   <Stack.Screen name="Home" component={Home} />
-                  <Stack.Screen name="Members" component={Members} />
+                  <Stack.Screen
+                    name="Members"
+                    component={Members}
+                    options={getMemberScreenOptions}
+                  />
                   <Stack.Screen
                     name="NewGame"
                     component={AddGame}
@@ -72,7 +78,6 @@ export default function App() {
                       },
                     }) => ({
                       headerTitle: gameResult.name,
-                      // eslint-disable-next-line react/no-unstable-nested-components
                       headerLeft: GoHomeButton,
                       headerRight: EditGameIconButton,
                       headerStyle: {
@@ -83,14 +88,41 @@ export default function App() {
                       },
                     })}
                   />
-                  <Stack.Screen name="ClubConfig" component={ClubConfig} />
+                  <Stack.Screen
+                    name="ClubConfig"
+                    component={ClubConfig}
+                    options={{
+                      headerTitle: "Paramètres du Club",
+                      headerLeft: GoHomeButton,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="Teams"
+                    component={Teams}
+                    options={({
+                      route: {
+                        params: { mode },
+                      },
+                    }) => ({
+                      title:
+                        mode === "select" ? "Sélection de l'équipe" : "Teams",
+                      headerRight: () => (
+                        <TeamHeaderButton selectMode={mode === "select"} />
+                      ),
+                      headerLeft: () =>
+                        mode === "select" ? null : <GoHomeButton />,
+                    })}
+                  />
                 </Stack.Group>
                 <Stack.Group screenOptions={{ presentation: "modal" }}>
                   <Stack.Screen name="AddMember" component={AddMember} />
                   <Stack.Screen name="SelectPlayer" component={SelectPlayer} />
-                  <Stack.Screen name="SelectMembers" component={Members} />
+                  <Stack.Screen
+                    name="SelectMembers"
+                    component={Members}
+                    options={getMemberScreenOptions}
+                  />
                   <Stack.Screen name="Categories" component={Categories} />
-                  <Stack.Screen name="Teams" component={Teams} />
                   <Stack.Screen name="Player" component={Player} />
                 </Stack.Group>
               </Stack.Navigator>

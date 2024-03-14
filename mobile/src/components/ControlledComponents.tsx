@@ -57,8 +57,15 @@ export function ControlledLabelledTextInput<
       buttonProps={buttonProps}
       inputProps={{
         ...inputProps,
-        onChangeText: field.onChange,
-        value: field.value,
+        onChangeText: (text: string) =>
+          typeof field.value === "number"
+            ? field.onChange(Number(text))
+            : field.onChange(text),
+
+        value:
+          typeof field.value === "number"
+            ? (field.value as number).toString()
+            : field.value,
       }}
       error={error}
       cn={cn}
@@ -72,7 +79,7 @@ export function ControlledSelect<
 >({
   control,
   name,
-  defaultValue = null,
+  defaultValue,
   rules,
   disabled,
   ...props

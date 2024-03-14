@@ -12,7 +12,7 @@ import {
   useAppNavigation,
 } from "../../navigators";
 import { Game, TeamGame } from "./Game";
-import { resetPlayerId } from "../../stores";
+import { resetGame, resetPlayerId } from "../../stores";
 import { CustomButton } from "../../components/CustomButton";
 import { useSupabaseClientContext } from "../../providers/useSupabaseClient";
 import { TeamShoots } from "./FielZone";
@@ -60,6 +60,7 @@ const useGameShoots = (gameId: number) => {
       const result = await supabaseClient
         .from("Game")
         .select("*, TeamGame(*, Team(teamName, external), Shoots(*))")
+        .order("id", { referencedTable: "TeamGame", ascending: true })
         .filter("id", "eq", gameId)
         .limit(1)
         .single();
@@ -153,6 +154,7 @@ function GameContainer({
   useEffect(() => {
     return () => {
       dispatch(resetPlayerId());
+      dispatch(resetGame());
     };
   }, []);
 

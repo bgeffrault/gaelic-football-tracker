@@ -6,7 +6,11 @@ import { AddingShoot, FieldZone, ShootType, TeamShoots } from "./FielZone";
 import { SelectedShootOverview } from "./SelectedShootOverview";
 
 import { useSubscription } from "../../useSupabaseSubscription";
-import { NavigationRoutes, useAppNavigation } from "../../navigators";
+import {
+  NavigationRoutes,
+  useAppNavigation,
+  useAppRoute,
+} from "../../navigators";
 import { useAppSelector } from "../../stores/store";
 import { ScoreTable, TeamShootAction, useScore } from "./ScoreTable";
 import { TouchFieldInfo } from "./TouchFieldInfo";
@@ -132,16 +136,22 @@ const useAddShootingPlayer = ({
   });
 
   const navigation = useAppNavigation();
+  const route = useAppRoute<"Game">();
   const playerId = useAppSelector((state) => state.player.playerId);
 
   useEffect(() => {
-    if (location) {
+    if (location && !route.params.isOpponentTeamSelected) {
       navigation.navigate("SelectPlayer", { teamGameId });
+    } else if (location) {
+      setAddingShoot(undefined);
     }
   }, [location, teamGameId, navigation]);
 
   useEffect(() => {
-    if ((playerId || playerId === null) && addingShoot?.location) {
+    if (
+      (route.params.isOpponentTeamSelected || playerId || playerId === null) &&
+      addingShoot?.location
+    ) {
       mutation.mutate({
         ...addingShoot.location,
         teamGameId: addingShoot.teamGameId,

@@ -1,11 +1,12 @@
 import { Text, View } from "react-native";
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { DateTime } from "luxon";
 import { useForm } from "react-hook-form";
 import clsx from "clsx";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import difference from "lodash/difference";
+import xor from "lodash/xor";
 import { Card } from "../components/Card";
 import { CustomButton } from "../components/CustomButton";
 import {
@@ -13,12 +14,12 @@ import {
   ControlledSelect,
 } from "../components/ControlledComponents";
 import { StyledText } from "../components/StyledText";
-import { setPlayers } from "../stores";
 import { SectionContainer } from "../components/SectionContainer";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 import { Team } from "../types/Team";
 import { MemberType } from "../domain/types";
+import { useGameStoreParamWatcher } from "../hooks/useGameStoreParamWatcher";
 
 const TEAM = "team";
 const OPPONENT_TEAM = "opponentTeam";
@@ -39,6 +40,7 @@ type GameType = {
     id: number;
     teamId: number;
     Team: {
+      id: number;
       teamName: string;
     };
     Members: MemberType[];
@@ -52,7 +54,8 @@ const useGame = (gameId: number) => {
     queryFn: async () => {
       const result = await supabaseClient
         .from("Game")
-        .select("*, TeamGame(*, Team(teamName), TeamMembers(Members(*)))")
+        .select("*, TeamGame(*, Team(id, teamName), TeamMembers(Members(*)))")
+        .order("id", { referencedTable: "TeamGame", ascending: true })
         .filter("id", "eq", gameId)
         .limit(1)
         .single();
@@ -69,25 +72,117 @@ const useGame = (gameId: number) => {
 
 type Input = {
   date: string;
-  duration: string;
-  gameName: string;
-  [TEAM]: { teamName: string };
-  [OPPONENT_TEAM]: { teamName: string };
-  [PLAYERS]: number[];
+  duration: number;
+  name: string;
+  [TEAM]: { id: number; teamName: string };
+  [OPPONENT_TEAM]: { id: number; teamName: string };
+  [PLAYERS]: MemberType[];
 };
 
 function Game({ game }: { game: GameType }) {
   const navigation = useAppNavigation();
-  const dispatch = useDispatch();
-  const { control, handleSubmit, getValues } = useForm<Input>({
-    values: {
+  const queryClient = useQueryClient();
+
+  const { control, handleSubmit } = useForm<Input>({
+    defaultValues: {
       date: game.date,
-      duration: game.duration.toString(),
-      gameName: game.name,
+      duration: game.duration,
+      name: game.name,
       [TEAM]: game.TeamGame[0].Team, // @To do: adjust with external team
       [OPPONENT_TEAM]: game.TeamGame[1].Team,
-      [PLAYERS]: game.TeamGame[0].Members.map((m) => m.id), // @To do: adjust with external team
+      [PLAYERS]: game.TeamGame[0].Members, // @To do: adjust with external team
     },
+  });
+
+  const supabaseClient = useSupabaseClientContext();
+  const { mutateAsync } = useMutation({
+    mutationFn: async (values: Input) => {
+      const { players, team, opponentTeam, ...updatedGame } = values;
+      const { duration, date, name } = updatedGame;
+      const queries = [];
+      if (
+        duration !== game.duration ||
+        date !== game.date ||
+        name !== game.name
+      ) {
+        const gameQuery = supabaseClient
+          .from("Game")
+          .update({ ...updatedGame })
+          .eq("id", game.id);
+        queries.push(gameQuery);
+      }
+
+      const teamId = team.id;
+      if (teamId !== game.TeamGame[0].teamId) {
+        const updateTeamQuery = supabaseClient
+          .from("TeamGame")
+          .update({ teamId })
+          .eq("id", game.TeamGame[0].id);
+        queries.push(updateTeamQuery);
+      }
+
+      const opponentTeamId = opponentTeam.id;
+      if (opponentTeamId !== game.TeamGame[1].teamId) {
+        const updateTeamQuery = supabaseClient
+          .from("TeamGame")
+          .update({ teamId: opponentTeamId })
+          .eq("id", game.TeamGame[1].id);
+        queries.push(updateTeamQuery);
+      }
+
+      const playerIds = players.map((p) => p.id);
+      const prevPlayersIds = game.TeamGame[0].Members.map((m) => m.id);
+
+      if (xor(playerIds, prevPlayersIds).length !== 0) {
+        const deletePlayersQuery = supabaseClient
+          .from("TeamMembers")
+          .delete()
+          .not("memberId", "in", playerIds);
+
+        const newPlayersIds = difference(
+          playerIds,
+          game.TeamGame[0].Members.map((m) => m.id),
+        );
+
+        const insertPlayersQuery = supabaseClient.from("TeamMembers").insert(
+          newPlayersIds.map((pId) => ({
+            memberId: pId,
+            teamGameId: game.TeamGame[0].id,
+          })),
+        );
+
+        queries.push(deletePlayersQuery, insertPlayersQuery);
+      }
+
+      await Promise.all(queries);
+
+      queryClient.invalidateQueries(["game shoots", { gameId: game.id }]);
+      queryClient.invalidateQueries([
+        "game supabaseClient",
+        { gameId: game.id },
+      ]);
+    },
+  });
+
+  const onSubmit = async (values: Input) => {
+    await mutateAsync(values);
+    navigation.goBack();
+  };
+
+  useGameStoreParamWatcher({
+    control,
+    name: PLAYERS,
+    defaultValue: game.TeamGame[0].Members,
+  });
+  useGameStoreParamWatcher({
+    control,
+    name: TEAM,
+    defaultValue: game.TeamGame[0].Team,
+  });
+  useGameStoreParamWatcher({
+    control,
+    name: OPPONENT_TEAM,
+    defaultValue: game.TeamGame[1].Team,
   });
 
   const renderTeam = (value: Team) => (
@@ -99,36 +194,39 @@ function Game({ game }: { game: GameType }) {
   return (
     <View className="flex-1">
       <KeyboardAwareScrollView>
-        <SectionContainer cn="mt-3">
-          <KeyboardAwareScrollView className="">
+        <View className="mt-3">
+          <SectionContainer>
             <Card cn="w-full">
               <ControlledSelect
-                onPress={() => {}}
+                onPress={() => {
+                  navigation.navigate("Teams", {
+                    categoryId: game.categoryId,
+                    external: false,
+                    mode: "select",
+                  });
+                }}
                 label="Equipe *"
                 control={control}
                 rules={{ required: "L'équipe est obligatoire" }}
                 name={TEAM}
                 renderValue={renderTeam}
-                disabled
               />
               <ControlledSelect
-                onPress={() => {}}
+                onPress={() => {
+                  navigation.navigate("Teams", {
+                    categoryId: game.categoryId,
+                    external: true,
+                    mode: "select",
+                  });
+                }}
                 label="Equipe adverse *"
                 control={control}
                 rules={{ required: "L'équipe adverse est obligatoire" }}
                 name={OPPONENT_TEAM}
                 renderValue={renderTeam}
-                disabled
               />
               <ControlledSelect
                 onPress={() => {
-                  dispatch(
-                    setPlayers(
-                      game.TeamGame[0].Members.filter((m) =>
-                        getValues()[PLAYERS].includes(m.id),
-                      ),
-                    ),
-                  );
                   navigation.navigate("SelectMembers", {
                     mode: "select",
                     categoryId: game.categoryId,
@@ -173,7 +271,6 @@ function Game({ game }: { game: GameType }) {
                 control={control}
                 rules={{ required: "La durée est obligatoire" }}
                 name="duration"
-                defaultValue="60"
               />
               <ControlledLabelledTextInput
                 label="Compétition"
@@ -182,21 +279,21 @@ function Game({ game }: { game: GameType }) {
                   keyboardType: "default",
                 }}
                 control={control}
-                name="gameName"
+                name="name"
               />
             </Card>
-          </KeyboardAwareScrollView>
-        </SectionContainer>
+          </SectionContainer>
+          <View className="mt-8 flex-1 justify-end items-center pb-8">
+            <CustomButton
+              variant="contained"
+              strong
+              onPress={handleSubmit(onSubmit)}
+            >
+              <Text className="text-lg text-gray-200">Let&apos;s go</Text>
+            </CustomButton>
+          </View>
+        </View>
       </KeyboardAwareScrollView>
-      <View className="mt-8 flex-1 justify-end items-center pb-8">
-        <CustomButton
-          variant="contained"
-          strong
-          onPress={handleSubmit(() => {})}
-        >
-          <Text className="text-lg text-gray-200">Let&apos;s go</Text>
-        </CustomButton>
-      </View>
     </View>
   );
 }

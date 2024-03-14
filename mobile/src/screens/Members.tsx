@@ -1,24 +1,25 @@
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons";
+import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { StyledText } from "../components/StyledText";
 import { CustomButton } from "../components/CustomButton";
 import { addPlayer, removePlayer } from "../stores/slices/gameSlice";
 import { HeaderRightAddButton } from "../components/Header/HeaderRightAddButton";
-import { useAppSelector } from "../stores/store";
+import { store, useAppSelector } from "../stores/store";
 import { AppNavigationProp, useAppNavigation } from "../navigators";
 import { shootsAccuracy, sumShoots } from "../utils/shootsUtils";
 import { useClubIdContext } from "../providers/ClubIdProvider";
 import { ListItem } from "../components/ListItem";
 import { SectionTitle } from "../components/SectionTitle";
-import { GoHomeButton } from "../components/GoHomeButton";
 import { CategoryFilter } from "../components/CategoryFilter";
 import { useSupabaseClientContext } from "../providers/useSupabaseClient";
 import { MemberType } from "../domain/types";
+import { GoHomeButton } from "../components/GoHomeButton";
 
-const MembersHeaderButton = memo(
+export const MembersHeaderButton = memo(
   ({ selectMode, categoryId }: { selectMode: boolean; categoryId: number }) => {
     const navigation = useAppNavigation();
 
@@ -31,6 +32,27 @@ const MembersHeaderButton = memo(
     );
   },
 );
+
+export const getMemberScreenOptions: (
+  props: AppNavigationProp<"Members" | "SelectMembers">,
+) => NativeStackNavigationOptions = ({ route: { params } }) => {
+  const { mode, categoryId } = params ?? {};
+  const selectMode = mode === "select";
+  const nbrSelected = store.getState().game.players.length;
+  return {
+    // eslint-disable-next-line no-nested-ternary
+    headerTitle: selectMode
+      ? nbrSelected
+        ? `${nbrSelected} player${nbrSelected > 1 ? "s" : ""}`
+        : "Sélection des joueurs"
+      : () => <FontAwesome name="users" size={24} color="#6B7280" />,
+    headerLeft: () => (selectMode ? null : <GoHomeButton />),
+    headerBackVisible: false,
+    headerRight: () => (
+      <MembersHeaderButton selectMode={selectMode} categoryId={categoryId} />
+    ),
+  };
+};
 
 function MemberItem({
   member,
@@ -92,8 +114,6 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
   const selectMode = mode === "select";
   const categoryId = route.params?.categoryId ?? 1;
 
-  const nbrSelected = useAppSelector((state) => state.game.players.length);
-
   const { data: members, isLoading } = useQuery({
     queryKey: ["members", { categoryId }],
     queryFn: async () => {
@@ -106,33 +126,18 @@ export function Members({ navigation, route }: AppNavigationProp<"Members">) {
     },
   });
 
-  useEffect(() => {
-    navigation.setOptions({
-      // eslint-disable-next-line no-nested-ternary
-      headerTitle: selectMode
-        ? nbrSelected
-          ? `${nbrSelected} player${nbrSelected > 1 ? "s" : ""}`
-          : "Sélection des joueurs"
-        : () => <FontAwesome name="users" size={24} color="#6B7280" />,
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerRight: () => (
-        <MembersHeaderButton selectMode={selectMode} categoryId={categoryId} />
-      ),
-      // eslint-disable-next-line react/no-unstable-nested-components
-      headerLeft: () => (selectMode ? null : <GoHomeButton />),
-    });
-  }, [navigation, nbrSelected, selectMode, categoryId]);
+  // useEffect(() => {
+  //   navigation.setOptions(getMemberScreenOptions({ navigation, route }));
+  // }, [navigation, nbrSelected, route, categoryId]);
 
   return (
     <>
-      {!selectMode && (
-        <CategoryFilter
-          categoryId={categoryId}
-          onPress={(newCategoryId) => {
-            navigation.setParams({ categoryId: newCategoryId });
-          }}
-        />
-      )}
+      <CategoryFilter
+        categoryId={categoryId}
+        onPress={(newCategoryId) => {
+          navigation.setParams({ categoryId: newCategoryId });
+        }}
+      />
       {!isLoading && (
         <SafeAreaView className="my-3 bg-white rounded-xl">
           <SectionTitle cn="flex flex-row grow justify-between items-center p-1 px-4">
